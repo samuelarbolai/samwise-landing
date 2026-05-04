@@ -49,7 +49,7 @@ export default function Home() {
       </ul>
 
       <p>
-        <strong>2. Schedule the Diagnosis and Prescription session.</strong> It will last 90
+        <strong>2. Schedule the Problem Clarification and Belief System session.</strong> It will last 90
         minutes. (Yes we know, it is long. We need to make sure we do this part
         right to actually be able to help you). You will get a clear picture of
         your problem here, a clear path to a solution, and the first set up of
@@ -66,19 +66,14 @@ export default function Home() {
       <h3>Schedule your call:</h3>
 
       <p>
-        On WhatsApp (you can call this number if you like):{" "}
-        <a href="https://wa.me/573168248411">wa.me/573168248411</a>
-      </p>
-      <p>
-        On Google Calendar:{" "}
-        <a href="https://calendar.app.google/oSKXxJezow5JVigY8">
-          calendar.app.google/oSKXxJezow5JVigY8
+        <a href="https://cal.com/samuel-giraldo-concha-yqvtot/30min">
+          Problem Clarification and Belief System
         </a>
       </p>
-
-      <p style={{ marginTop: "20px" }}>
-        <em>If we have availability, we might be able to make the Fit Assessment
-        call right away if you call directly on WhatsApp.</em>
+      <p>
+        <a href="https://cal.com/samuel-giraldo-concha-yqvtot/15min">
+          Fit Assessment
+        </a>
       </p>
 
       <hr style={{ border: "none", borderTop: "1px solid #ccc", margin: "40px 0" }} />
