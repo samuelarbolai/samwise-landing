@@ -66,14 +66,24 @@ export default function Home() {
       <h3>Schedule your call:</h3>
 
       <p>
-        <a href="https://cal.com/samuel-giraldo-concha-yqvtot/30min">
-          Problem Clarification and Belief System
-        </a>
-      </p>
-      <p>
-        <a href="https://cal.com/samuel-giraldo-concha-yqvtot/15min">
+        <a
+          href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
+          style={{ textDecoration: "underline" }}
+        >
           Fit Assessment
         </a>
+        <br />
+        <em>Start here if it&apos;s your first time.</em>
+      </p>
+      <p>
+        <a
+          href="https://cal.com/samuel-giraldo-concha-yqvtot/new-belief"
+          style={{ textDecoration: "underline" }}
+        >
+          Problem Clarification and Belief System
+        </a>
+        <br />
+        <em>Only if you&apos;ve completed the Fit Assessment or are a current subscriber.</em>
       </p>
 
       <hr style={{ border: "none", borderTop: "1px solid #ccc", margin: "40px 0" }} />

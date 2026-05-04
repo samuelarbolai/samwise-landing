@@ -24,7 +24,7 @@ No new files, no new dependencies, no new components.
 2. **Copy mismatch (Fit Assessment 20 min vs cal.com 15min):** Leave copy untouched.
 3. **Step 2 in onboarding:** "Problem Clarification and Belief System" is the renamed "Diagnosis and Prescription session". Update step 2's name accordingly; keep its 90-minute description.
 4. **Button labels:** Exact names from the doc — "Problem Clarification and Belief System" and "Fit Assessment". No duration suffix on the buttons.
-5. **Visual treatment:** Plain `<a>` styled like the existing anchors (no border, no padding). Match the current page convention.
+5. **Visual treatment:** Plain anchors were indistinguishable from body text (Tailwind v4 preflight strips default link styling via `color: inherit; text-decoration: inherit`). The bordered-button variant rendered ugly in practice. Final treatment: `<a style={{ textDecoration: "underline" }}>` — minimal "clickable text" affordance, no color/shape/padding opinions, lowest possible design bar.
 6. **Orphan italic note** ("If we have availability, we might be able to make the Fit Assessment call right away if you call directly on WhatsApp."): Remove it.
 
 ## Modifications (in phases and steps)
@@ -42,17 +42,27 @@ No new files, no new dependencies, no new components.
   <h3>Schedule your call:</h3>
 
   <p>
-    <a href="https://cal.com/samuel-giraldo-concha-yqvtot/30min">
-      Problem Clarification and Belief System
-    </a>
-  </p>
-  <p>
-    <a href="https://cal.com/samuel-giraldo-concha-yqvtot/15min">
+    <a
+      href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
+      style={{ textDecoration: "underline" }}
+    >
       Fit Assessment
     </a>
+    <br />
+    <em>Start here if it's your first time.</em>
+  </p>
+  <p>
+    <a
+      href="https://cal.com/samuel-giraldo-concha-yqvtot/new-belief"
+      style={{ textDecoration: "underline" }}
+    >
+      Problem Clarification and Belief System
+    </a>
+    <br />
+    <em>Only if you've completed the Fit Assessment or are a current subscriber.</em>
   </p>
   ```
-- **Explanation:** Two plain `<a>` tags inside `<p>`s — exactly the pattern the previous WhatsApp and Google Calendar links used (no `target="_blank"`, no inline styles, no `rel`). This keeps the page styleless and consistent with itself.
+- **Explanation:** Two `<a>` tags inside `<p>`s, each followed by an `<em>` caption that explains who the meeting is for. Tailwind v4 preflight removes default link styling, so an explicit `text-decoration: underline` is needed for the anchors to be visually distinguishable from body text. Order is intentional: Fit Assessment first (entry point for new users); Problem Clarification and Belief System second (gated by Fit Assessment or active subscription).
 
 ### Testing phase
 - **Local test:** `pnpm dev` → open `http://localhost:3000` → confirm both links render under "Schedule your call:", confirm step 2 in the onboarding list says "Problem Clarification and Belief System", confirm the WhatsApp/Google Calendar links and the italic disclaimer are gone, click each link to confirm it lands on the correct cal.com page.
