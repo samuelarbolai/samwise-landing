@@ -233,34 +233,11 @@ export default function HeldPage() {
 
         {ornament}
 
-        {/* IV. THE WORK */}
-        <section style={sectionStyle}>
-          <div style={innerStyle}>
-            <p style={numberStyle} className={mono.className}>
-              iii — the work
-            </p>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "1.2rem",
-                color: inkSoft,
-                fontStyle: "italic",
-                lineHeight: 1.7,
-              }}
-            >
-              Samwise is built to act with you, against your own biology, when you cannot.
-              A system that does not loosen its grip until the work is done.
-            </p>
-          </div>
-        </section>
-
-        {ornament}
-
-        {/* V. THE PATH — three rites */}
+        {/* IV. THE PATH — three rites */}
         <section style={{ ...sectionStyle, minHeight: "100vh" }}>
           <div style={{ ...innerStyle, maxWidth: "600px" }}>
             <p style={numberStyle} className={mono.className}>
-              iv — the path
+              iii — the path
             </p>
             <p
               style={{
@@ -344,11 +321,11 @@ export default function HeldPage() {
 
         {ornament}
 
-        {/* VI. THE THRESHOLD — CTA */}
+        {/* V. THE THRESHOLD — CTA */}
         <section style={sectionStyle}>
           <div style={innerStyle}>
             <p style={numberStyle} className={mono.className}>
-              v — the threshold
+              iv — the threshold
             </p>
             <p
               style={{
@@ -395,11 +372,11 @@ export default function HeldPage() {
 
         {ornament}
 
-        {/* VII. THE WITNESS */}
+        {/* VI. THE WITNESS */}
         <section style={sectionStyle}>
           <div style={innerStyle}>
             <p style={numberStyle} className={mono.className}>
-              vi — the witness
+              v — the witness
             </p>
             <p
               style={{
