@@ -35,7 +35,22 @@ samwise-landing/
 ├── app/
 │   ├── globals.css         # Tailwind v4 base styles
 │   ├── layout.tsx          # Root layout: Geist font, Vercel Analytics in prod
-│   └── page.tsx            # The single landing page (inline styles, long-form copy)
+│   ├── page.tsx            # The canonical landing page (inline styles, long-form copy)
+│   ├── held*/              # Earlier visual variants (out of scope for new work)
+│   ├── frodo-literal/      # Frodo-journey variant — small literal motion glyphs
+│   │   ├── page.tsx
+│   │   ├── motion-section.tsx     # whileInView wrapper + reduced-motion fade
+│   │   ├── motion-cues.tsx        # Vingilot star, offered hand, struggle, horizon
+│   │   └── video-placeholder.tsx  # neutral 16:9 dashed-border placeholder
+│   ├── frodo-abstract/     # Frodo-journey variant — typographic/layout motion only
+│   │   ├── page.tsx
+│   │   ├── motion-section.tsx     # tone-driven (rise|lift|settle|offered|stillness)
+│   │   └── video-placeholder.tsx
+│   └── frodo-scene/        # Sacred-journey scene variant (mid-fi sketch)
+│       ├── page.tsx                 # asymmetric copy-left / scene-right (sticky desktop, fixed mobile)
+│       ├── scene.tsx                # silhouette stage: mountain, figure, hand, star, ring
+│       ├── aperture.tsx             # static placeholder for case-study videos and Dr. Ana photo
+│       └── tokens.ts                # OKLCH colour tokens + easings
 ├── components/
 │   ├── theme-provider.tsx  # next-themes wrapper (not currently used on page.tsx)
 │   └── ui/                 # shadcn/ui components (button, card, etc.) — available but mostly unused
@@ -46,7 +61,7 @@ samwise-landing/
 ├── styles/                 # Additional stylesheet (if any)
 ├── components.json         # shadcn config
 ├── next.config.mjs
-├── package.json            # next 16, react 19, tailwind 4, radix, lucide, etc.
+├── package.json            # next 16, react 19, tailwind 4, motion 12, radix, lucide
 ├── postcss.config.mjs
 └── tsconfig.json
 ```
@@ -55,3 +70,6 @@ samwise-landing/
 - Keep the page **styleless / canvas-like**. Prefer plain HTML elements and inline `style` over Tailwind classes or shadcn components, so designers see content with no aesthetic suggestion.
 - Existing scheduling links are anchors (`<a href="...">`), not buttons. New scheduling controls should match that visual restraint.
 - All copy is in English.
+- **Variant pattern:** experimental designs live as sibling folders under `app/` (e.g. `app/frodo-literal/`, `app/frodo-abstract/`, `app/frodo-scene/`). Each variant is fully self-contained — no shared components across variants — so any losing variant can be deleted as a single folder. The canonical page (`app/page.tsx`) is never modified by variant work.
+- **Motion:** when a variant needs animation, use the `motion` package (formerly `framer-motion`) with `whileInView` + `viewport={{ once: true, amount: 0.3 }}`, and always honor `prefers-reduced-motion` via `useReducedMotion()` (degrade to a single short opacity fade and skip decorative glyphs).
+- **Mobile-first:** all variants must render without horizontal overflow at 375px viewport, video placeholders use `aspectRatio: "16 / 9"`, no `100vh` (use `dvh` units if needed).

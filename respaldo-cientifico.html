@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Respaldo Científico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4EEE3;
+    --bg-deep: #EBE3D2;
+    --paper: #FAF6EE;
+    --ink: #1C1814;
+    --ink-soft: #3D352B;
+    --ink-mute: #6B5F50;
+    --rule: #C9BEAA;
+    --accent: #2E4632;        /* deep forest */
+    --accent-warm: #8A4B2A;   /* terracotta */
+    --highlight: #E8D9B8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Subtle paper grain */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.08 0 0 0 0 0.05 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    z-index: 1;
+    mix-blend-mode: multiply;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 2;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  /* ─────── HERO ─────── */
+  header.hero {
+    padding: 100px 0 80px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(48px, 7.5vw, 96px);
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    max-width: 14ch;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--accent);
+    font-variation-settings: "opsz" 144, "SOFT" 100;
+  }
+
+  .lede {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(20px, 2.4vw, 26px);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 640px;
+    margin-top: 36px;
+    font-variation-settings: "opsz" 36;
+  }
+
+  /* ─────── BIG NUMBERS ─────── */
+  section.headline-stats {
+    padding: 90px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .section-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 56px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .section-label .count {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 14px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 1px solid var(--rule);
+  }
+
+  .stat {
+    padding: 56px 48px;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
+    position: relative;
+    transition: background 0.4s ease;
+  }
+
+  .stat:hover {
+    background: var(--highlight);
+  }
+
+  .stat-tag {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-warm);
+    margin-bottom: 24px;
+  }
+
+  .stat-figure {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: clamp(72px, 9vw, 128px);
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    margin-bottom: 8px;
+    font-variation-settings: "opsz" 144;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .stat-figure .approx {
+    font-style: italic;
+    font-weight: 300;
+    font-size: 0.4em;
+    color: var(--ink-mute);
+    transform: translateY(-0.3em);
+  }
+
+  .stat-figure .symbol {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .stat-meaning {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-variation-settings: "opsz" 36, "SOFT" 100;
+  }
+
+  .stat-detail {
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 38ch;
+  }
+
+  .stat-source {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px dotted var(--rule);
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─────── INTERPRETATION ─────── */
+  section.interpretation {
+    padding: 100px 0;
+    border-bottom: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 80px;
+  }
+
+  .interp-heading {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(32px, 4vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variation-settings: "opsz" 72, "SOFT" 50;
+  }
+
+  .interp-heading em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .interp-body {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 300;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    font-variation-settings: "opsz" 36;
+  }
+
+  .interp-body p + p {
+    margin-top: 22px;
+  }
+
+  .interp-body strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .pullquote {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--accent);
+    border-left: 2px solid var(--accent);
+    padding: 6px 0 6px 28px;
+    margin: 36px 0;
+    font-variation-settings: "opsz" 36, "SOFT" 100;
+  }
+
+  /* ─────── BIBLIOGRAPHY ─────── */
+  section.bibliography {
+    padding: 100px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .biblio-heading {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(32px, 4vw, 44px);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 12px;
+    font-variation-settings: "opsz" 72, "SOFT" 50;
+  }
+
+  .biblio-sub {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 18px;
+    color: var(--ink-mute);
+    margin-bottom: 56px;
+  }
+
+  .biblio-group {
+    margin-bottom: 56px;
+  }
+
+  .biblio-group-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-warm);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .biblio-list {
+    list-style: none;
+    counter-reset: ref;
+  }
+
+  .biblio-list li {
+    counter-increment: ref;
+    padding: 22px 0 22px 56px;
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    transition: padding-left 0.3s ease;
+  }
+
+  .biblio-list li:hover {
+    padding-left: 64px;
+  }
+
+  .biblio-list li::before {
+    content: counter(ref, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 24px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .biblio-list li:last-child {
+    border-bottom: none;
+  }
+
+  .biblio-list .authors {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .biblio-list .journal {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .biblio-list a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+
+  .biblio-list a:hover {
+    border-bottom-color: var(--accent);
+  }
+
+  /* ─────── HONESTY NOTE ─────── */
+  section.honesty {
+    padding: 100px 32px;
+    background: var(--bg-deep);
+  }
+
+  .honesty-inner {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .honesty-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-warm);
+    margin-bottom: 28px;
+  }
+
+  .honesty-heading {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(28px, 3.5vw, 38px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 32px;
+    font-variation-settings: "opsz" 72, "SOFT" 100;
+  }
+
+  .honesty-body {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 300;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    font-variation-settings: "opsz" 36;
+  }
+
+  .honesty-body p + p {
+    margin-top: 18px;
+  }
+
+  /* ─────── FOOTER ─────── */
+  footer {
+    padding: 60px 0 80px;
+    text-align: center;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+  }
+
+  footer .ornament {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--accent);
+    font-size: 24px;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  /* ─────── REVEAL ANIMATION ─────── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal:nth-child(2) { transition-delay: 0.1s; }
+  .reveal:nth-child(3) { transition-delay: 0.2s; }
+  .reveal:nth-child(4) { transition-delay: 0.3s; }
+
+  /* ─────── RESPONSIVE ─────── */
+  @media (max-width: 800px) {
+    .wrap { padding: 0 24px; }
+    header.hero { padding: 70px 0 60px; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .stat { padding: 44px 32px; }
+    section.interpretation {
+      grid-template-columns: 1fr;
+      gap: 36px;
+      padding: 70px 0;
+    }
+    section.headline-stats,
+    section.bibliography { padding: 70px 0; }
+    section.honesty { padding: 70px 24px; }
+    .pullquote { font-size: 20px; padding-left: 22px; }
+  }
+
+  @media (max-width: 500px) {
+    .biblio-list li { padding-left: 44px; font-size: 14px; }
+    .biblio-list li:hover { padding-left: 50px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── HERO ── -->
+  <header class="hero">
+    <div class="eyebrow reveal">Respaldo Científico</div>
+    <h1 class="reveal">Lo que <em>realmente</em> hace que la terapia funcione.</h1>
+    <p class="lede reveal">Décadas de investigación clínica apuntan a una sola variable como el predictor más fuerte y replicado del éxito terapéutico — y es la variable sobre la que está construida nuestra solución.</p>
+  </header>
+
+  <!-- ── HEADLINE STATS ── -->
+  <section class="headline-stats">
+    <div class="section-label">
+      <span>Los Hallazgos</span>
+      <span class="count">Meta-análisis de Kazantzis et al., 2016</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat reveal">
+        <div class="stat-tag">Cantidad de tareas completadas</div>
+        <div class="stat-figure"><span class="symbol">g</span> <span class="approx">≈</span> 0.79</div>
+        <div class="stat-meaning">Efecto grande sobre los resultados al final del tratamiento.</div>
+        <div class="stat-detail">Cuando los pacientes realmente completan las tareas asignadas entre sesiones, la mejoría clínica medida al terminar la terapia es de magnitud grande (Hedges' <em>g</em>).</div>
+        <div class="stat-source">15 estudios · n = 1,537 · IC 95% [0.57, 1.02]</div>
+      </div>
+
+      <div class="stat reveal">
+        <div class="stat-tag">Calidad de las tareas — seguimiento</div>
+        <div class="stat-figure"><span class="symbol">g</span> <span class="approx">≈</span> 1.07</div>
+        <div class="stat-meaning">Efecto aún mayor en seguimiento. Los cambios duran.</div>
+        <div class="stat-detail">No basta con hacer las tareas: hacerlas con calidad predice mejoras todavía mayores semanas y meses después de terminada la terapia. La gente no recae.</div>
+        <div class="stat-source">Behavior Therapy · 47(5), 755–772</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INTERPRETATION ── -->
+  <section class="interpretation">
+    <h2 class="interp-heading reveal">Qué significa, en lenguaje claro.</h2>
+
+    <div class="interp-body reveal">
+      <p>En psicoterapia, los efectos clínicos rara vez son enormes. Un efecto considerado "grande" (Hedges' <em>g</em> ≥ 0.80) es excepcional — equivale a un cambio que el paciente, su familia y el clínico pueden reconocer claramente en la vida diaria.</p>
+
+      <p>El meta-análisis de 2016 de Kazantzis et al., publicado en <em>Behavior Therapy</em>, encontró exactamente eso: cuando los pacientes completan las tareas que les indica su terapeuta entre sesiones, el efecto sobre los resultados clínicos es <strong>grande</strong>. Y cuando esas tareas se hacen <strong>con calidad</strong>, el beneficio en seguimiento es todavía <strong>mayor</strong> que al final del tratamiento.</p>
+
+      <div class="pullquote">"La calidad de la práctica fuera del consultorio predice mejoras más grandes en seguimiento que las observadas al terminar la terapia."</div>
+
+      <p>Es un hallazgo poco frecuente en la literatura clínica: la mayoría de las intervenciones <em>pierden</em> efecto con el tiempo. Aquí, los cambios crecen. Por eso construimos toda nuestra solución alrededor de esta única variable: lograr que las tareas se hagan, y que se hagan bien.</p>
+    </div>
+  </section>
+
+  <!-- ── BIBLIOGRAPHY ── -->
+  <section class="bibliography">
+    <h2 class="biblio-heading">La Literatura</h2>
+    <p class="biblio-sub">Estudios revisados por pares que respaldan nuestro enfoque.</p>
+
+    <div class="biblio-group">
+      <div class="biblio-group-label">Estudio principal</div>
+      <ol class="biblio-list">
+        <li>
+          <span class="authors">Kazantzis, N., Whittington, C., Zelencich, L., Kyrios, M., Norton, P. J., &amp; Hofmann, S. G.</span> (2016). Quantity and quality of homework compliance: A meta-analysis of relations with outcome in cognitive behavior therapy. <span class="journal">Behavior Therapy, 47</span>(5), 755–772.
+          <a href="https://doi.org/10.1016/j.beth.2016.05.002" target="_blank" rel="noopener">doi.org/10.1016/j.beth.2016.05.002</a>
+        </li>
+      </ol>
+    </div>
+
+    <div class="biblio-group">
+      <div class="biblio-group-label">Meta-análisis de respaldo</div>
+      <ol class="biblio-list">
+        <li>
+          <span class="authors">Kazantzis, N., Deane, F. P., &amp; Ronan, K. R.</span> (2000). Homework assignments in cognitive and behavioral therapy: A meta-analysis. <span class="journal">Clinical Psychology: Science and Practice, 7</span>(2), 189–202.
+          <a href="https://doi.org/10.1093/clipsy.7.2.189" target="_blank" rel="noopener">doi.org/10.1093/clipsy.7.2.189</a>
+        </li>
+        <li>
+          <span class="authors">Kazantzis, N., Whittington, C. J., &amp; Dattilio, F. M.</span> (2010). Meta-analysis of homework effects in cognitive and behavioral therapy: A replication and extension. <span class="journal">Clinical Psychology: Science and Practice, 17</span>(2), 144–156.
+          <a href="https://doi.org/10.1111/j.1468-2850.2010.01204.x" target="_blank" rel="noopener">doi.org/10.1111/j.1468-2850.2010.01204.x</a>
+        </li>
+        <li>
+          <span class="authors">Mausbach, B. T., Moore, R., Roesch, S., Cardenas, V., &amp; Patterson, T. L.</span> (2010). The relationship between homework compliance and therapy outcomes: An updated meta-analysis. <span class="journal">Cognitive Therapy and Research, 34</span>(5), 429–438.
+          <a href="https://doi.org/10.1007/s10608-010-9297-z" target="_blank" rel="noopener">doi.org/10.1007/s10608-010-9297-z</a>
+        </li>
+      </ol>
+    </div>
+
+    <div class="biblio-group">
+      <div class="biblio-group-label">Revisiones modernas y mecanismo</div>
+      <ol class="biblio-list">
+        <li>
+          <span class="authors">Ryum, T., &amp; Kazantzis, N.</span> (2024). Homework as a driver of change in psychotherapy. <span class="journal">Journal of Clinical Psychology, 80</span>(5).
+          <a href="https://doi.org/10.1002/jclp.23627" target="_blank" rel="noopener">doi.org/10.1002/jclp.23627</a>
+        </li>
+        <li>
+          <span class="authors">Lim, J. A., &amp; Kazantzis, N.</span> (2023). Integrating between-session homework in psychotherapy: A systematic review of immediate in-session and intermediate outcomes. <span class="journal">Psychotherapy, 60</span>(2), 232–247.
+          <a href="https://doi.org/10.1037/pst0000488" target="_blank" rel="noopener">doi.org/10.1037/pst0000488</a>
+        </li>
+        <li>
+          <span class="authors">Kazantzis, N., Luong, H. K., Usatoff, A. S., Impala, T., Yew, R. Y., &amp; Hofmann, S. G.</span> (2018). The processes of cognitive behavioral therapy: A review of meta-analyses. <span class="journal">Cognitive Therapy and Research, 42</span>(4), 349–357.
+        </li>
+        <li>
+          <span class="authors">Wheaton, M. G., &amp; Chen, S. R.</span> (2021). Homework completion in treating obsessive–compulsive disorder with exposure and ritual prevention: A review of the empirical literature. <span class="journal">Cognitive Therapy and Research, 45</span>(2), 236–249.
+          <a href="https://doi.org/10.1007/s10608-020-10125-0" target="_blank" rel="noopener">doi.org/10.1007/s10608-020-10125-0</a>
+        </li>
+      </ol>
+    </div>
+
+    <div class="biblio-group">
+      <div class="biblio-group-label">Estudios empíricos clave</div>
+      <ol class="biblio-list">
+        <li>
+          <span class="authors">Burns, D. D., &amp; Spangler, D. L.</span> (2000). Does psychotherapy homework lead to improvements in depression in cognitive-behavioral therapy or does improvement lead to increased homework compliance? <span class="journal">Journal of Consulting and Clinical Psychology, 68</span>(1), 46–56.
+        </li>
+        <li>
+          <span class="authors">Conklin, L. R., &amp; Strunk, D. R.</span> (2015). A session-to-session examination of homework engagement in cognitive therapy for depression: Do patients experience immediate benefits? <span class="journal">Behaviour Research and Therapy, 72</span>, 56–62.
+        </li>
+        <li>
+          <span class="authors">Decker, S. E., Kiluk, B. D., Frankforter, T., Babuscio, T., Nich, C., &amp; Carroll, K. M.</span> (2016). Just showing up is not enough: Homework adherence and outcome in cognitive-behavioral therapy for cocaine dependence. <span class="journal">Journal of Consulting and Clinical Psychology, 84</span>(10), 907–912.
+        </li>
+        <li>
+          <span class="authors">Stirman, S. W., Gutner, C. A., Suvak, M. K., Adler, A., Calloway, A., &amp; Resick, P. A.</span> (2018). Homework completion, patient characteristics, and symptom change in cognitive processing therapy for PTSD. <span class="journal">Behavior Therapy, 49</span>(5), 741–755.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── HONESTY NOTE ── -->
+<section class="honesty">
+  <div class="honesty-inner">
+    <div class="honesty-label">Una nota sobre honestidad</div>
+    <h3 class="honesty-heading">No prometemos certezas absolutas. Prometemos trabajar sobre la variable que la ciencia ha identificado como la más importante.</h3>
+    <div class="honesty-body">
+      <p>Ningún tratamiento psicológico funciona para el 100% de las personas. Lo que sí podemos decir, con respaldo replicado en cuatro meta-análisis distintos, es que la adherencia y la calidad en las tareas entre sesiones es uno de los predictores más fuertes y consistentes del cambio terapéutico — comparable en magnitud al efecto de la alianza terapéutica misma.</p>
+      <p>Por eso construimos nuestra herramienta alrededor de esa variable. No reinventamos la psicoterapia; la potenciamos en el punto donde la evidencia dice que más se rompe.</p>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer>
+    <span class="ornament">·</span>
+    Última actualización · Mayo 2026
+  </footer>
+</div>
+
+<script>
+  // Subtle reveal-on-scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
