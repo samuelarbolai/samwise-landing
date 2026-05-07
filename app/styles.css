@@ -1,16 +1,16 @@
 /* ─── Editorial variant — shared brand system inherited from respaldo-cientifico.html ─── */
 
 .editorial-root {
-  --bg: #F4EEE3;
-  --bg-deep: #EBE3D2;
-  --paper: #FAF6EE;
-  --ink: #1C1814;
-  --ink-soft: #3D352B;
-  --ink-mute: #6B5F50;
-  --rule: #C9BEAA;
-  --accent: #2E4632;
-  --accent-warm: #8A4B2A;
-  --highlight: #E8D9B8;
+  --bg:          #FFFFFF;  /* pure white */
+  --bg-deep:     #F2F2F2;  /* honesty band — neutral grey shift */
+  --paper:       #FFFFFF;  /* same as bg — cards defined by hairline only */
+  --ink:         #000000;  /* pure black */
+  --ink-soft:    #1A1A1A;
+  --ink-mute:    #555555;  /* pure neutral grey */
+  --rule:        #E0E0E0;  /* pure neutral light grey */
+  --accent:      #1F3023;  /* deep forest — the only chromatic note */
+  --accent-warm: #1F3023;  /* terracotta dropped — collapsed onto --accent */
+  --highlight:   #F5F5F5;  /* very subtle grey for stat hover */
 
   background: var(--bg);
   color: var(--ink);
@@ -24,16 +24,7 @@
   overflow-x: hidden;
 }
 
-.editorial-root::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.08 0 0 0 0 0.05 0 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  opacity: 0.5;
-  z-index: 1;
-  mix-blend-mode: multiply;
-}
+/* Grain overlay removed — pure white surface, no texture. */
 
 .editorial-root * { box-sizing: border-box; }
 .editorial-root p, .editorial-root h1, .editorial-root h2, .editorial-root h3, .editorial-root ul, .editorial-root ol, .editorial-root li { margin: 0; padding: 0; }
@@ -146,7 +137,7 @@
 
 /* ── Hero ── */
 header.hero {
-  padding: 100px 0 80px;
+  padding: 180px 0 140px;
   border-bottom: 1px solid var(--rule);
   position: relative;
 }
@@ -188,7 +179,7 @@ header.hero {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-mute);
-  margin-bottom: 56px;
+  margin-bottom: 80px;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -206,7 +197,7 @@ header.hero {
 }
 
 /* ── Stats ── */
-.headline-stats { padding: 90px 0; border-bottom: 1px solid var(--rule); }
+.headline-stats { padding: 160px 0; border-bottom: 1px solid var(--rule); }
 
 .stats-grid {
   display: grid;
@@ -294,11 +285,11 @@ header.hero {
 
 /* ── Two-column interpretation ── */
 .interpretation {
-  padding: 100px 0;
+  padding: 180px 0;
   border-bottom: 1px solid var(--rule);
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 80px;
+  gap: 120px;
 }
 
 .interp-heading {
@@ -343,7 +334,7 @@ header.hero {
 }
 
 /* ── Bibliography ── */
-.bibliography { padding: 100px 0; border-bottom: 1px solid var(--rule); }
+.bibliography { padding: 160px 0; border-bottom: 1px solid var(--rule); }
 
 .biblio-heading {
   font-family: 'Fraunces', serif;
@@ -427,7 +418,7 @@ header.hero {
 
 /* ── Honesty band ── */
 .honesty {
-  padding: 100px 32px;
+  padding: 180px 32px;
   background: var(--bg-deep);
   position: relative;
   z-index: 2;
@@ -470,7 +461,7 @@ header.hero {
 
 /* ── Footer ── */
 .editorial-footer {
-  padding: 60px 0 80px;
+  padding: 120px 0;
   text-align: center;
   font-family: 'Manrope', sans-serif;
   font-size: 12px;
@@ -491,12 +482,12 @@ header.hero {
 
 /* ── Landing-specific (editorial) ── */
 .editorial-landing-hero {
-  padding: 100px 0 80px;
+  padding: 180px 0 140px;
   border-bottom: 1px solid var(--rule);
 }
 
 .editorial-section {
-  padding: 90px 0;
+  padding: 160px 0;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -809,17 +800,18 @@ header.hero {
   .editorial-wrap { padding: 0 24px; }
   .editorial-nav { padding: 18px 24px; flex-wrap: wrap; gap: 12px; }
   .editorial-nav .nav-right { gap: 18px; }
-  header.hero, .editorial-landing-hero { padding: 70px 0 60px; }
+  header.hero, .editorial-landing-hero { padding: 110px 0 90px; }
   .stats-grid, .schedule-grid { grid-template-columns: 1fr; }
   .stat, .schedule-card { padding: 44px 32px; }
   .interpretation, .validation-teaser, .author-panel {
     grid-template-columns: 1fr;
-    gap: 36px;
-    padding: 70px 0;
+    gap: 56px;
+    padding: 110px 0;
   }
   .author-panel img { width: 140px; height: 140px; }
-  .headline-stats, .bibliography, .editorial-section { padding: 70px 0; }
-  .honesty { padding: 70px 24px; }
+  .headline-stats, .bibliography, .editorial-section { padding: 100px 0; }
+  .honesty { padding: 100px 24px; }
+  .section-label { margin-bottom: 56px; }
   .pullquote { font-size: 20px; padding-left: 22px; }
   .step { grid-template-columns: 1fr; gap: 14px; padding: 36px 0; }
   .step-number { font-size: 44px; }
