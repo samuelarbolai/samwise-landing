@@ -21,9 +21,9 @@ The parent project (`arbor`) is Samwise: a system that helps users overcome beha
 - `samuel-2026/` — sandbox / personal scratch space.
 
 ## Module Overview — samwise-landing
-Public landing page for Samwise. The canonical page (`app/page.tsx`) now uses a multi-scene scroll choreography (promoted from the former `/letter` variant): collapse-to-star navbar, fixed hero, sticky lede pin-fade, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned steps section with viewport-relative reveals for steps 2/3, and a single Fit Assessment CTA in Step 1. The previous minimal/styleless canonical is preserved at `/previous` for reference.
+Public landing page for Samwise. The canonical page (`app/page.tsx`) uses a multi-scene scroll choreography with a SINGLE-CTA structure (promoted from the former `/tease` variant): collapse-to-star navbar, fixed hero, sticky lede pin-fade, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned single CTA block (Fit Assessment), then a teaser block in natural flow with a manifesto-style headline ("We watch what works. We adapt. You stop fighting alone.") + supporting italic lines describing the 90-min Problem Clarification session and the optimization consultation. The earlier 3-step variant is preserved at `/three-step`; the original minimal/styleless canonical is at `/previous`.
 
-The app uses Next.js 16 (app router), React 19, Tailwind v4, motion 12 (formerly framer-motion). Canonical styling lives in `app/styles.css` (with the scenes overrides scoped under `.letter-root` so they don't leak into the older `/previous` page that imports the same CSS). shadcn/ui-style components in `components/ui/` are available but mostly unused.
+The app uses Next.js 16 (app router), React 19, Tailwind v4, motion 12 (formerly framer-motion). Canonical styling lives in `app/styles.css` with the scenes overrides scoped under `.letter-root` (used by `/` and `/three-step`) and the single-CTA + teaser overrides scoped under `.tease-root` (used only by `/`). The root element uses both classes: `<div class="editorial-root letter-root tease-root">`. shadcn/ui-style components in `components/ui/` are available but mostly unused.
 
 ## Module Structure (Directories and files)
 ```
@@ -31,29 +31,38 @@ samwise-landing/
 ├── app/
 │   ├── globals.css         # Tailwind v4 base styles
 │   ├── layout.tsx          # Root layout: Geist font, Vercel Analytics in prod
-│   ├── page.tsx            # CANONICAL — multi-scene scroll choreography:
+│   ├── page.tsx            # CANONICAL — single-CTA + teaser structure:
 │   │                       #   FixedScene (hero, interp+sigs)
 │   │                       #   PinFadeScene (voice/lede)
-│   │                       #   ChallengesFreezeScene (sticky pin + opacity fade-out
-│   │                       #     with ChallengeItem one-by-one reveals)
-│   │                       #   StickyScene (steps): StepItem for Step 1 during pin,
-│   │                       #     ViewTriggeredStep (viewport-relative) for Steps 2/3
+│   │                       #   ChallengesFreezeScene (sticky pin + opacity fade-out,
+│   │                       #     ChallengeItem one-by-one reveals + ChallengePostscript)
+│   │                       #   interp-snap-anchor (scroll-snap stop at 3.5vh on mobile)
+│   │                       #   StickyScene (try): one CtaBlockReveal
+│   │                       #   Teaser section in natural flow:
+│   │                       #     TeaserLine (label) → TeaserHeadline (manifesto h3)
+│   │                       #     → TeaserLine (90-min) → TeaserLine (optimization)
 │   │                       # Collapse-to-star navbar (FourPointStar SVG, 4 links:
 │   │                       #   Us / Try / Advisors / Scientific Evidence)
-│   │                       # Single .cta--primary in Step 1; postscript paragraph
-│   │                       # after the challenges list. Root has both
-│   │                       # `editorial-root` and `letter-root` classes — the
-│   │                       # latter is the scoping hook for the scenes overrides
-│   │                       # in styles.css.
-│   ├── styles.css          # Canonical CSS. Includes the original editorial
-│   │                       # base + all scenes overrides (FixedScene,
-│   │                       # PinFadeScene, freeze-scene, collapse-to-star nav,
-│   │                       # cta--primary, etc.) scoped under .letter-root.
+│   │                       # Root: `editorial-root letter-root tease-root` — letter-root
+│   │                       # for the scenes overrides, tease-root for the single-CTA
+│   │                       # + teaser overrides.
+│   ├── styles.css          # Canonical CSS:
+│   │                       #   editorial base + scenes overrides (.letter-root scope)
+│   │                       #   + single-CTA & teaser overrides (.tease-root scope).
 │   ├── previous/           # Previous canonical, preserved as a variant.
 │   │   └── page.tsx                 # minimal editorial page with hero + challenges
 │   │                                # + interp + steps + schedule + advisors. No
 │   │                                # scroll choreography — natural flow with
 │   │                                # IntersectionObserver `.reveal` only.
+│   ├── three-step/         # Multi-step variant (former canonical, before the
+│   │   │                                # single-CTA promotion). Same scenes-style
+│   │   │                                # scroll choreography but the steps section
+│   │   │                                # is three StepItem/ViewTriggeredStep blocks
+│   │   │                                # with the Fit Assessment CTA inside Step 1.
+│   │   │                                # Root: `editorial-root letter-root` (no
+│   │   │                                # tease-root, so .tease-root rules don't
+│   │   │                                # apply — uses canonical .step layout).
+│   │   └── page.tsx
 │   ├── held*/              # Earlier visual variants (out of scope for new work)
 │   ├── frodo-literal/      # Frodo-journey variant — small literal motion glyphs
 │   │   ├── page.tsx

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
-import "./styles.css"
+import "../styles.css"
 
 type Lang = "en" | "es"
 
@@ -27,13 +27,18 @@ const copy = {
     sig1Title: "Founder",
     sig2Name: "Dr. Ana María Reyes Tirado",
     sig2Title: "Clinical Director",
-    ctaTitle: "Find out if Samwise can break the loop.",
-    ctaBody: "30 minutes. Free. We'll tell you if you're ready — and if you're not, we'll point you to someone that can get you ready.",
-    ctaButton: "Schedule the call",
-    teaserLabel: "What awaits, if we're a fit",
-    teaserHeadline: ["We watch what works.", "We adapt.", "You stop fighting alone."],
-    teaserStep2: "A 90-minute session maps exactly how the loop runs in you — and ends with an AI that calls you, every day, to make it easy for you to keep yourself out of it.",
-    teaserStep3: "As soon as the loop creeps back, we open another consultation — fine-tuning the ritual or your daily call until it works for you. Always included, always works.",
+    stepsLabel: "How can you make Samwise part of your life?",
+    step1Title: "Schedule a Fit Assessment call.",
+    step1Body: "All the questions about the program will be answered here. The outcome will be whether we are a good fit for your needs or not. It will last 30 minutes.",
+    step1ListIfFit: "If we are a fit, program starts!",
+    step1ListIfNot: "If we are not, don't worry! We will recommend you other services, so you can always get help.",
+    step2Title: "Schedule the Problem Clarification and Belief System session.",
+    step2Body: "After the session, you will start receiving daily calls on track to ensure the sustainability of your rituals and desired behaviour.",
+    step2Detail: "It will last 90 minutes. You will get a clear picture of your problem here, a clear path to a solution, and the first set up of your first ritual and AI Agent for your calls.",
+    step3Title: "You will start your ritual.",
+    step3Body: "We will monitor your progress, so we can schedule an optimization session to help you achieve progress faster.",
+    step1Cta: "Schedule here",
+    step1Free: "This call is free of charge.",
     authorLabel: "Clinical advisor",
     authorIntro: "The Samwise program has been designed with the close advice of",
     authorName: "Dr. Ana María Reyes Tirado",
@@ -65,17 +70,22 @@ const copy = {
     sig1Title: "Fundador",
     sig2Name: "Dra. Ana María Reyes Tirado",
     sig2Title: "Directora Clínica",
-    ctaTitle: "Descubre si Samwise puede romper el ciclo.",
-    ctaBody: "30 minutos. Gratis. Te diremos si estás listo — y si no, te indicaremos a alguien que pueda ayudarte a estarlo.",
-    ctaButton: "Agenda la llamada",
-    teaserLabel: "Lo que viene después, si encajamos",
-    teaserHeadline: ["Observamos qué funciona.", "Adaptamos.", "Dejas de luchar solo."],
-    teaserStep2: "Una sesión de 90 minutos traza cómo se ejecuta el ciclo en ti — y termina con una IA que te llama, cada día, para que te sea fácil mantenerte fuera de él.",
-    teaserStep3: "En cuanto el ciclo vuelve a colarse, abrimos otra consulta — afinando el ritual o tu llamada diaria hasta que funcione para ti. Siempre incluida, siempre funciona.",
+    stepsLabel: "¿Cómo puedes hacer parte de tu vida a Samwise?",
+    step1Title: "Agenda una llamada de Evaluación de Ajuste.",
+    step1Body: "Todas las preguntas sobre el programa se responderán aquí. El resultado será determinar si somos un buen ajuste para tus necesidades o no. Durará 30 minutos.",
+    step1ListIfFit: "Si somos un buen ajuste, ¡el programa comienza!",
+    step1ListIfNot: "Si no lo somos, ¡no te preocupes! Te recomendaremos otros servicios, para que siempre puedas recibir ayuda.",
+    step2Title: "Agenda la sesión de Clarificación del Problema y Sistema de Creencias.",
+    step2Body: "Después de la sesión, comenzarás a recibir llamadas diarias de seguimiento para asegurar la sostenibilidad de tus rituales y del comportamiento deseado.",
+    step2Detail: "Durará 90 minutos. Aquí obtendrás una imagen clara de tu problema, un camino claro hacia una solución, y la primera configuración de tu primer ritual y Agente de IA para tus llamadas.",
+    step3Title: "Comenzarás tu ritual.",
+    step3Body: "Monitorearemos tu progreso, para poder agendar una sesión de optimización que te ayude a avanzar más rápido.",
+    step1Cta: "Agenda aquí",
+    step1Free: "Esta llamada es gratuita.",
     authorLabel: "Asesoría clínica",
     authorIntro: "El programa Samwise ha sido diseñado con la asesoría cercana de",
     authorName: "Dra. Ana María Reyes Tirado",
-    authorCred1: "Especialista en Neurofeedback de New Wind Academy, EE. UU.",
+    authorCred1: "Especialista en Neurofeedback of New Wind Academy, EE. UU.",
     authorCred2: "Directora Clínica de la Fundación Syncronía.",
     navUs: "Nosotros",
     navTry: "Probar",
@@ -85,7 +95,9 @@ const copy = {
   },
 }
 
-/* FourPointStar — thin four-pointed sparkle. */
+/* FourPointStar — thin four-pointed sparkle (✦), ink black via
+   currentColor. Subtle quadratic curves between points so it reads as
+   elegant rather than geometric. Used as the navbar's collapsed state. */
 function FourPointStar({ size = 18 }: { size?: number }) {
   return (
     <svg
@@ -182,10 +194,7 @@ function StickyScene({
   )
 }
 
-/* CtaBlockReveal — generic motion.div with scrollY-tied opacity + rise.
-   No .step className — the canonical's CTA block doesn't use the step
-   grid layout, so this stays a plain container. */
-function CtaBlockReveal({
+function StepItem({
   children, fadeInStart, fadeInEnd,
 }: {
   children: ReactNode; fadeInStart: number; fadeInEnd: number;
@@ -194,39 +203,12 @@ function CtaBlockReveal({
   const opacity = useTransform(scrollY, [fadeInStart, fadeInEnd], [0, 1])
   const y = useTransform(scrollY, [fadeInStart, fadeInEnd], [20, 0])
   return (
-    <motion.div className="cta-block" style={{ opacity, y }}>{children}</motion.div>
+    <motion.div className="step" style={{ opacity, y }}>{children}</motion.div>
   )
 }
 
-/* TeaserHeadline — manifesto-style stacked headline. 3 short clauses,
-   each on its own line, big Fraunces Roman with the SOFT axis (matches
-   the page hero's display register). Fades in as a single block via
-   viewport-relative scrollY when the section scrolls into the upper
-   reading area. */
-function TeaserHeadline({ lines }: { lines: readonly string[] }) {
-  const ref = useRef<HTMLHeadingElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 85%", "start 40%"],
-  })
-  const opacity = useTransform(scrollYProgress, [0, 1], [0, 1])
-  const y = useTransform(scrollYProgress, [0, 1], [20, 0])
-  return (
-    <motion.h3 ref={ref} className="teaser-headline" style={{ opacity, y }}>
-      {lines.map((l, i) => <span key={i}>{l}</span>)}
-    </motion.h3>
-  )
-}
-
-/* TeaserLine — italic preview line that fades in via viewport-relative
-   scrollY (offset start 80% → start 30%), so each line transitions in
-   as the user scrolls past pin release. */
-function TeaserLine({
-  children, className = "teaser-line",
-}: {
-  children: ReactNode; className?: string;
-}) {
-  const ref = useRef<HTMLParagraphElement>(null)
+function ViewTriggeredStep({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start 80%", "start 30%"],
@@ -234,7 +216,19 @@ function TeaserLine({
   const opacity = useTransform(scrollYProgress, [0, 1], [0, 1])
   const y = useTransform(scrollYProgress, [0, 1], [20, 0])
   return (
-    <motion.p ref={ref} className={className} style={{ opacity, y }}>{children}</motion.p>
+    <motion.div ref={ref} className="step" style={{ opacity, y }}>{children}</motion.div>
+  )
+}
+
+function FadeWrapper({
+  children, fadeInStart, fadeInEnd, className = "",
+}: {
+  children: ReactNode; fadeInStart: number; fadeInEnd: number; className?: string;
+}) {
+  const { scrollY } = useScroll()
+  const opacity = useTransform(scrollY, [fadeInStart, fadeInEnd], [0, 1])
+  return (
+    <motion.div className={className} style={{ opacity }}>{children}</motion.div>
   )
 }
 
@@ -284,7 +278,7 @@ function ChallengesFreezeScene({
   )
 }
 
-export default function EditorialHome() {
+export default function ThreeStepHome() {
   const [lang, setLang] = useState<Lang>("en")
   const [navOpen, setNavOpen] = useState(false)
   const t = copy[lang]
@@ -308,9 +302,8 @@ export default function EditorialHome() {
   const midParts = t.interpBody1.split("Samwise")
   const vh = useViewportHeight()
 
-
   return (
-    <div className="editorial-root letter-root tease-root">
+    <div className="editorial-root letter-root">
       <nav
         className={`editorial-nav editorial-nav--fixed editorial-nav--star ${navOpen ? "is-open" : "is-closed"}`}
         onMouseEnter={() => setNavOpen(true)}
@@ -326,7 +319,7 @@ export default function EditorialHome() {
         </button>
 
         <div className="nav-content" aria-hidden={!navOpen}>
-          <a href="/" className="brand">Samwise</a>
+          <a href="/three-step" className="brand">Samwise</a>
           <div className="nav-right">
             <a href="#us" className="nav-link">{t.navUs}</a>
             <a href="#try" className="nav-link">{t.navTry}</a>
@@ -394,11 +387,6 @@ export default function EditorialHome() {
       <main className="letter-main">
         <div id="us" className="hero-spacer" aria-hidden="true" />
 
-        {/* Lede snap anchor — invisible 1px element at hero-spacer's bottom
-            (doc Y = 1.0vh on any viewport). With scroll-snap-stop:always
-            and scroll-margin-top:-30vh, the browser snaps scroll to
-            1.0vh − (-30vh) = 1.3vh, exactly when the lede's fade-in
-            completes. Mirrors the interp-snap-anchor below the freeze. */}
         <PinFadeScene
           id="voice"
           className="voice-section"
@@ -437,43 +425,67 @@ export default function EditorialHome() {
 
         <div className="interp-snap-anchor" aria-hidden="true" />
 
-        {/* CTA — single block, pinned and faded in. The teaser block
-            below sits in natural flow as a separate "what awaits"
-            preview in lesser hierarchy. */}
         <StickyScene id="try" className="steps-section">
           <div className="editorial-wrap">
             <section className="editorial-section">
-              <CtaBlockReveal fadeInStart={vh * 4.3} fadeInEnd={vh * 4.46}>
-                <h2 className="cta-title">{t.ctaTitle}</h2>
-                <p className="cta-body">{t.ctaBody}</p>
-                <p className="cta-action">
-                  <a
-                    className="cta cta--primary"
-                    href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t.ctaButton}
-                  </a>
-                </p>
-              </CtaBlockReveal>
+              <FadeWrapper
+                className="section-label"
+                fadeInStart={vh * 4.3}
+                fadeInEnd={vh * 4.46}
+              >
+                <span>{t.stepsLabel}</span>
+              </FadeWrapper>
+
+              <StepItem fadeInStart={vh * 4.3} fadeInEnd={vh * 4.46}>
+                <div className="step-number">01</div>
+                <div>
+                  <h3 className="step-title">{t.step1Title}</h3>
+                  <div className="step-body">
+                    <p>{t.step1Body}</p>
+                    <ul>
+                      <li>{t.step1ListIfFit}</li>
+                      <li>{t.step1ListIfNot}</li>
+                    </ul>
+                    <p style={{ marginTop: 24, fontStyle: "italic" }}>
+                      {t.step1Free}
+                    </p>
+                    <p style={{ marginTop: 16 }}>
+                      <a
+                        className="cta cta--primary"
+                        href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t.step1Cta}
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </StepItem>
+
+              <ViewTriggeredStep>
+                <div className="step-number">02</div>
+                <div>
+                  <h3 className="step-title">{t.step2Title}</h3>
+                  <div className="step-body">
+                    <p>{t.step2Body}</p>
+                    <p className="step-detail">{t.step2Detail}</p>
+                  </div>
+                </div>
+              </ViewTriggeredStep>
+
+              <ViewTriggeredStep>
+                <div className="step-number">03</div>
+                <div>
+                  <h3 className="step-title">{t.step3Title}</h3>
+                  <div className="step-body">
+                    <p>{t.step3Body}</p>
+                  </div>
+                </div>
+              </ViewTriggeredStep>
             </section>
           </div>
         </StickyScene>
-
-        {/* Teaser — what comes after, in a smaller editorial register.
-            Sits in natural flow after the CTA's pin releases, so the
-            user only acts on one thing (the Fit Assessment) but glimpses
-            the journey. The manifesto headline carries the section's
-            main message. */}
-        <div className="editorial-wrap">
-          <section className="editorial-section teaser-section">
-            <TeaserLine className="teaser-label">{t.teaserLabel}</TeaserLine>
-            <TeaserHeadline lines={t.teaserHeadline} />
-            <TeaserLine>{t.teaserStep2}</TeaserLine>
-            <TeaserLine>{t.teaserStep3}</TeaserLine>
-          </section>
-        </div>
 
         <div className="editorial-wrap">
           <section id="advisors" className="editorial-section">

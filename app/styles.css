@@ -1238,11 +1238,11 @@ header.hero {
    interp's fade-in completes (scrollY = 3.5vh).
      - scroll-snap-align: start aligns the anchor's top with the scroll
        container's top (= scrollY = anchor.docY).
-     - scroll-margin-top: 63vh shifts the alignment so scrollY lands at
-       (anchor.docY - 63vh) = (4.13vh - 0.63vh) = 3.5vh.
-     - scroll-snap-stop: always forces fling-scrolls to stop here
-       instead of passing over.
-   Scoped to .letter-root so it doesn't affect other variants. */
+     - scroll-margin-top: 63vh on /three-step (voice height calc(30vh +
+       750px) ⇒ challenges.bottom ≈ 4.13vh ⇒ target = 3.5vh).
+     - scroll-margin-top: 99vh on / (voice height calc(60vh + 800px) ⇒
+       challenges.bottom ≈ 4.49vh ⇒ target = 3.5vh). Override below.
+     - scroll-snap-stop: always forces fling-scrolls to stop here. */
 .letter-root .interp-snap-anchor {
   display: block;
   height: 1px;
@@ -1341,4 +1341,114 @@ html { scroll-snap-type: y proximity; }
   /* Mobile nav: when open, allow links to wrap. */
   .editorial-nav--star .nav-content { flex-wrap: wrap; gap: 8px 16px; }
   .editorial-nav--star .nav-content .nav-right { flex-wrap: wrap; gap: 12px 18px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Tease overrides — promoted from the former /tease variant. The new
+   canonical uses a single CTA block (instead of three steps) and a
+   teaser block below in lesser hierarchy with a manifesto headline.
+   All rules scoped under .tease-root so they don't leak into the
+   /three-step or /previous variants that import this same CSS.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Shorter pin for the canonical's smaller CTA block.
+   Content (including .editorial-section's 160/160 padding) ≈ 600–700px
+   depending on viewport (vs 1139px raw + section padding in three-step).
+   Pin must outlast CTA fade-in ending at 4.46vh:
+     section.height ≥ 0.33*vh + 88 + content.height + safety_buffer */
+.tease-root .steps-section {
+  min-height: calc(40vh + 800px);
+}
+
+/* CTA block — single prominent moment. h2 sized like an editorial sub-
+   heading (smaller than the page hero h1, larger than step-title). */
+.tease-root .cta-block {
+  /* container — opacity/y from JS via CtaBlockReveal */
+  will-change: opacity, transform;
+}
+
+.tease-root .cta-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(30px, 4.5vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  max-width: 18ch;
+  margin: 0 0 28px;
+}
+
+.tease-root .cta-body {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(18px, 1.6vw, 22px);
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 56ch;
+  margin: 0;
+}
+
+.tease-root .cta-action {
+  margin: 28px 0 0;
+}
+
+/* Teaser block — italic, sits in lesser hierarchy below the CTA. The
+   label is small caps Manrope to clearly separate it from the editorial
+   body voice; the lines themselves are Fraunces italic at a slightly
+   smaller register than the lede. */
+.tease-root .teaser-section {
+  border-top: 1px solid var(--rule);
+}
+
+.tease-root .teaser-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 40px;
+}
+
+/* Teaser headline — the manifesto moment. Big Fraunces Roman with the
+   SOFT-axis (same display register as the page hero's editorial-hero-
+   statement). Three clauses stacked, each on its own line. This is the
+   section's "main message" — sized larger than the supporting copy
+   below to give it the gravity of a section-level declaration. */
+.tease-root .teaser-headline {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  color: var(--ink);
+  margin: 0 0 56px;
+  max-width: 24ch;
+  will-change: opacity, transform;
+}
+.tease-root .teaser-headline span {
+  display: block;
+}
+
+.tease-root .teaser-line {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(20px, 1.8vw, 24px);
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  max-width: 60ch;
+  margin: 36px 0 0;
+  will-change: opacity, transform;
+}
+
+@media (max-width: 800px) {
+  .tease-root .cta-title { margin-bottom: 20px; }
+  .tease-root .cta-action { margin-top: 24px; }
+  .tease-root .teaser-label { margin-bottom: 40px; }
+  .tease-root .teaser-line { margin-top: 28px; }
 }
