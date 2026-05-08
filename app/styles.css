@@ -486,12 +486,174 @@ header.hero {
   border-bottom: 1px solid var(--rule);
 }
 
+/* Hero statement — short declarative h1, breathes wider than .editorial-h1 */
+.editorial-hero-statement {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  max-width: 22ch;
+  margin-top: 36px;
+}
+
+.editorial-hero-statement em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--accent);
+  font-variation-settings: "opsz" 144, "SOFT" 100;
+}
+
 .editorial-section {
   padding: 160px 0;
   border-bottom: 1px solid var(--rule);
 }
 
 .editorial-section:last-of-type { border-bottom: none; }
+
+/* ── Letter ── single warm-paper artifact pinned in the white field. */
+.letter {
+  padding: 160px 0;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: center;
+}
+
+.letter-paper {
+  position: relative;
+  max-width: 620px;
+  width: 100%;
+  background: #FAF6EE;
+  padding: 88px 72px;
+  border: 1px solid var(--rule);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+}
+
+/* Subtle warm grain — only here, only inside the letter. */
+.letter-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='ln'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.09 0 0 0 0 0.05 0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23ln)'/></svg>");
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+
+.letter-paper > * {
+  position: relative;
+  z-index: 1;
+}
+
+.letter-body {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1.65;
+  color: #2A2520;
+  font-variation-settings: "opsz" 36;
+}
+
+.letter-body p + p { margin-top: 22px; }
+.letter-body strong { color: var(--ink); font-weight: 600; }
+
+/* The "These are just a few examples..." line — sits as the first line of
+   letter Part 2, treated as a hand-marked passage with a subtle underline
+   that mimics a reader having underlined a sentence. */
+.letter-aside {
+  font-style: italic;
+  position: relative;
+  display: inline;
+  background-image: linear-gradient(transparent calc(100% - 2px), rgba(46, 70, 50, 0.35) 2px);
+  background-size: 100% 1.65em;
+  background-repeat: repeat-y;
+  padding-bottom: 2px;
+}
+
+/* Challenges list, embedded in the letter. Decimal-leading-zero counters,
+   italic Fraunces — already letter-y in voice. */
+.letter-list {
+  list-style: none;
+  counter-reset: lc;
+  margin: 40px 0;
+  padding: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.letter-list li {
+  counter-increment: lc;
+  padding: 16px 0 16px 44px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  position: relative;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1.4;
+  color: #2A2520;
+  font-variation-settings: "opsz" 36, "SOFT" 80;
+}
+
+.letter-list li::before {
+  content: counter(lc, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 18px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+/* Signatures — two side by side, italic name + hand-drawn underline + small caps title. */
+.letter-signature {
+  margin-top: 56px;
+  padding-top: 36px;
+  border-top: 1px solid rgba(0, 0, 0, 0.18);
+  display: flex;
+  gap: 56px;
+  flex-wrap: wrap;
+}
+
+.sig {
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.sig-name {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 8px;
+  font-variation-settings: "opsz" 36, "SOFT" 100;
+}
+
+.sig-underline {
+  display: block;
+  width: 96px;
+  height: 8px;
+  margin-bottom: 10px;
+  color: var(--accent);
+  overflow: visible;
+}
+
+.sig-title {
+  display: block;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
 
 .editorial-h2 {
   font-family: 'Fraunces', serif;
@@ -812,6 +974,9 @@ header.hero {
   .headline-stats, .bibliography, .editorial-section { padding: 100px 0; }
   .honesty { padding: 100px 24px; }
   .section-label { margin-bottom: 56px; }
+  .letter { padding: 100px 0; }
+  .letter-paper { padding: 56px 32px; }
+  .letter-signature { gap: 28px; padding-top: 28px; margin-top: 40px; }
   .pullquote { font-size: 20px; padding-left: 22px; }
   .step { grid-template-columns: 1fr; gap: 14px; padding: 36px 0; }
   .step-number { font-size: 44px; }
@@ -821,4 +986,328 @@ header.hero {
   .biblio-list li { padding-left: 44px; font-size: 14px; }
   .biblio-list li:hover { padding-left: 50px; }
   .challenge-list li { padding-left: 44px; font-size: 18px; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Scroll-choreography overrides — promoted from the former /letter
+   variant. The canonical landing page now uses these scene primitives:
+
+     1. .fixed-scene — anchor beats (hero, interp+sigs). Always
+        position:fixed. Never move; only opacity changes. Tied to
+        explicit scrollY ranges.
+
+     2. .pin-fade-scene — browseable beats (voice, steps). The inner
+        content is `position: sticky` so it pins while the user scrolls
+        into the section, fades from 0 to 1 while pinned, and once
+        fade-in completes and the section's container ends, the content
+        unpins and continues scrolling naturally with the page.
+
+     3. .freeze-scene — same as pin-fade but with a fade-OUT at the end
+        (used for the challenges list).
+
+   The .letter-root class is kept as a scoping hook so the overrides
+   here only apply to the canonical scenes-style page, not to other
+   variants (e.g. /previous, /styleless) that import this same CSS.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─── Letter root override ─── */
+/* The base .editorial-root sets `overflow-x: hidden` to suppress horizontal
+   scroll. Combined with the implicit `overflow-y: visible`, the browser
+   computes both to `auto`, turning .editorial-root into a scroll container
+   — which breaks `position: sticky` for our pin-fade scenes (sticky needs
+   to stick relative to the page scroll, not a nested scroll container).
+   Restore `overflow: visible` here. */
+.letter-root.editorial-root {
+  overflow: visible;
+}
+
+/* ─── Fixed nav ─── */
+.letter-root .pin-fade-scene[id],
+.letter-root #advisors {
+  scroll-margin-top: 88px;
+}
+
+/* Collapse-to-star navbar.
+   Default state: only a thin 4-point sparkle floats centered at top.
+   On hover (desktop) or tap (mobile), the full nav fades in over the
+   star and the backdrop appears.
+   Centered floating layout — not full-width — so the morph reads as
+   "everything contracts toward the center." */
+.editorial-nav.editorial-nav--fixed.editorial-nav--star {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 12px 24px;
+
+  /* Backdrop only when expanded. */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+
+  transition:
+    background 250ms ease,
+    border-color 250ms ease,
+    backdrop-filter 250ms ease,
+    -webkit-backdrop-filter 250ms ease;
+}
+
+.editorial-nav--star.is-open {
+  background: rgba(255, 255, 255, 0.82);
+  border-bottom-color: var(--rule);
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  backdrop-filter: saturate(150%) blur(14px);
+}
+
+/* Star — always rendered; visible only when nav is closed. */
+.nav-star {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  background: transparent;
+  border: 0;
+  padding: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 200ms ease, transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.editorial-nav--star.is-open .nav-star {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.6);
+}
+
+/* Nav content — links + brand + lang toggle. Hidden by default,
+   horizontally laid out + visible when open. */
+.nav-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1100px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+  transition: opacity 250ms ease, transform 250ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.editorial-nav--star.is-open .nav-content {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+/* Hover hit area — when closed, only the star area should respond to
+   mouseenter so casual mouse motion across the top of the page doesn't
+   trigger expansion. Use pointer-events:none on the nav (closed) and
+   pointer-events:auto on the star itself. */
+.editorial-nav--star.is-closed { pointer-events: none; }
+.editorial-nav--star.is-closed .nav-star { pointer-events: auto; }
+.editorial-nav--star.is-open { pointer-events: auto; }
+
+/* ─── Anchor scenes (fixed always) ─── */
+.fixed-scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  padding-top: 88px; /* clear the fixed nav */
+  overflow: hidden;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.fixed-scene a,
+.fixed-scene button {
+  pointer-events: auto;
+}
+
+.fixed-scene-inner {
+  width: 100%;
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.fixed-scene .editorial-landing-hero,
+.fixed-scene .editorial-section,
+.fixed-scene .interpretation,
+.fixed-scene .headline-stats,
+.fixed-scene .bibliography {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  min-height: 0;
+}
+
+/* ─── Pin-fade scenes (sticky during fade-in, then release) ─── */
+.pin-fade-scene {
+  position: relative;
+  pointer-events: none;
+}
+
+.pin-fade-scene a,
+.pin-fade-scene button {
+  pointer-events: auto;
+}
+
+.pin-fade-content {
+  position: sticky;
+  top: 88px;
+  /* opacity from JS */
+  will-change: opacity;
+}
+
+/* Voice section height is sized so the sticky pin lasts past the
+   fade-in's end on every viewport. Pin duration = section.height −
+   content.height; pin starts 88px before fade-in starts (the sticky
+   top:88 offset). Fade-in is 0.3*vh long. So we need:
+     section.height ≥ 0.3*vh + 88 + content.height + safety_buffer
+   Lede content (eyebrow + ~6-line lede + 92/140 padding) ≈ 504px on
+   desktop and grows on narrower viewports as the lede wraps to more
+   lines. Using a calc with a generous absolute floor (750px) covers
+   both, so the lede stays pinned until fade-in is 100% complete. */
+.voice-section { min-height: calc(30vh + 750px); }
+
+/* Steps sticky-pin section. Pin must outlast Step 1's fade-in (which
+   ends at 4.26vh) so Step 1 finishes its transition while pinned, and
+   then release shortly after so the screen can move and Steps 2/3 can
+   fade in via whileInView as they scroll into viewport. With Step 1
+   ending at 4.26vh and section.top at 4.13vh, pin needs:
+     section.height ≥ 0.13*vh + 88 + content.height + small_buffer
+   Using calc with an absolute floor for narrower viewports where step
+   copy wraps to more lines. */
+.steps-section { min-height: calc(15vh + 1450px); }
+
+/* Challenges freeze scene — section is 200vh tall to give CSS sticky
+   scroll real estate to pin against AFTER the natural reveal phase ends.
+   Visible padding matches canonical (160/160 via .challenges-section);
+   only the section's overall height differs. */
+.freeze-scene {
+  position: relative;
+  min-height: 200vh;
+}
+
+.freeze-content {
+  position: sticky;
+  top: 88px;
+  will-change: opacity;
+}
+
+/* Hero spacer — gives the hero's fixed overlay 100vh of scrollY range. */
+.hero-spacer {
+  height: 100vh;
+  pointer-events: none;
+}
+
+/* Voice top padding so the eyebrow + lede land at ~180px from viewport top —
+   the same vertical position the canonical hero uses. Sticky offset is 88px;
+   adding 92px of internal padding totals 180px from the viewport top. */
+.voice-section .voice-hero {
+  /* 92px top: clear fixed nav (88px) + 4px → eyebrow lands at 180px from
+     viewport top (matches canonical .editorial-landing-hero's 180px top).
+     140px bottom: matches canonical .editorial-landing-hero's bottom padding. */
+  padding: 92px 0 140px;
+  border-bottom: none;
+  min-height: 0;
+}
+
+/* Challenges section padding — matches canonical .editorial-section
+   (160/160). The min-height is set by .freeze-scene above. */
+.challenges-section {
+  padding: 160px 0;
+  border-bottom: none;
+}
+
+/* Postscript paragraph after the challenges list — italic, slightly
+   smaller than the lede, sitting in the same editorial register as the
+   rest of the section. Mirrors the styleless variant's "these are just
+   a few examples..." beat that closes out the list. Selector uses
+   .letter-root to outweigh the canonical reset
+   `.editorial-root p { margin: 0 }`. */
+.letter-root .challenge-postscript {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 20px;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  max-width: 56ch;
+  margin: 56px 0 0;
+  will-change: opacity, transform;
+}
+
+/* Primary CTA used in Step 1. Hairline-bordered, restrained, color-swap
+   on hover. No gradient, no shadow, no animation — fits the editorial
+   restraint of the rest of the page. */
+.cta--primary {
+  display: inline-block;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink);
+  padding: 14px 24px;
+  text-decoration: none;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.cta--primary:hover {
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+/* ─── Signatures (used inside .interpretation's letter-signature) ─── */
+.letter-root .sig-name {
+  font-family: 'Caveat', cursive;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: 0.005em;
+  margin-bottom: 4px;
+  font-variation-settings: normal;
+}
+
+.letter-root .letter-signature {
+  border-top-color: var(--rule);
+}
+
+/* ─── Responsive (canonical scenes) ─── */
+@media (max-width: 800px) {
+  .letter-root .pin-fade-scene[id],
+  .letter-root #advisors,
+  .letter-root #try { scroll-margin-top: 72px; }
+  .editorial-nav.editorial-nav--fixed.editorial-nav--star {
+    padding: 8px 16px;
+    min-height: 48px;
+  }
+  .fixed-scene { padding-top: 72px; }
+  .fixed-scene-inner { max-height: calc(100vh - 72px); }
+  .pin-fade-content { top: 72px; }
+  .freeze-content { top: 72px; }
+  .voice-section .voice-hero { padding-top: 76px; }
+  .letter-root .sig-name { font-size: 24px; }
+
+  /* Mobile nav: when open, allow links to wrap. */
+  .editorial-nav--star .nav-content { flex-wrap: wrap; gap: 8px 16px; }
+  .editorial-nav--star .nav-content .nav-right { flex-wrap: wrap; gap: 12px 18px; }
 }

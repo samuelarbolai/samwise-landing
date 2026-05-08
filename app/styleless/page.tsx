@@ -54,7 +54,7 @@ export default function Home() {
       <h2>How can you make Samwise part of your life?</h2>
 
       <p>
-        <strong>1. Schedule a Fit Assessment call.</strong> It will last 20 minutes. All the
+        <strong>1. Schedule a Fit Assessment call.</strong> It will last 30 minutes. All the
         questions about the program will be answered here. The outcome will be
         whether we are a good fit for your needs or not.
       </p>

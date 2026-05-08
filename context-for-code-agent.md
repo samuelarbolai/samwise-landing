@@ -21,13 +21,9 @@ The parent project (`arbor`) is Samwise: a system that helps users overcome beha
 - `samuel-2026/` — sandbox / personal scratch space.
 
 ## Module Overview — samwise-landing
-Public landing page for Samwise. Intentionally minimal / "styleless": it is shown to prospects and to designers, and Samuel does not want a predetermined visual style to bias the designers' proposals. Content is currently a single long-form text page in `app/page.tsx` that:
-- Explains who Samwise is and what behaviours it targets.
-- Lists the three onboarding steps (Fit Assessment → Diagnosis & Prescription → Ritual start).
-- Provides a "Schedule your call" section with a WhatsApp link and a Google Calendar link.
-- Credits Dr. Ana María Reyes Tirado.
+Public landing page for Samwise. The canonical page (`app/page.tsx`) now uses a multi-scene scroll choreography (promoted from the former `/letter` variant): collapse-to-star navbar, fixed hero, sticky lede pin-fade, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned steps section with viewport-relative reveals for steps 2/3, and a single Fit Assessment CTA in Step 1. The previous minimal/styleless canonical is preserved at `/previous` for reference.
 
-The app uses Next.js 16 (app router), React 19, Tailwind v4, and shadcn/ui-style components in `components/ui/` (most of them currently unused on the page itself). Styling on the live page is done with inline `style={...}` props, not Tailwind classes — this keeps it deliberately bare.
+The app uses Next.js 16 (app router), React 19, Tailwind v4, motion 12 (formerly framer-motion). Canonical styling lives in `app/styles.css` (with the scenes overrides scoped under `.letter-root` so they don't leak into the older `/previous` page that imports the same CSS). shadcn/ui-style components in `components/ui/` are available but mostly unused.
 
 ## Module Structure (Directories and files)
 ```
@@ -35,7 +31,29 @@ samwise-landing/
 ├── app/
 │   ├── globals.css         # Tailwind v4 base styles
 │   ├── layout.tsx          # Root layout: Geist font, Vercel Analytics in prod
-│   ├── page.tsx            # The canonical landing page (inline styles, long-form copy)
+│   ├── page.tsx            # CANONICAL — multi-scene scroll choreography:
+│   │                       #   FixedScene (hero, interp+sigs)
+│   │                       #   PinFadeScene (voice/lede)
+│   │                       #   ChallengesFreezeScene (sticky pin + opacity fade-out
+│   │                       #     with ChallengeItem one-by-one reveals)
+│   │                       #   StickyScene (steps): StepItem for Step 1 during pin,
+│   │                       #     ViewTriggeredStep (viewport-relative) for Steps 2/3
+│   │                       # Collapse-to-star navbar (FourPointStar SVG, 4 links:
+│   │                       #   Us / Try / Advisors / Scientific Evidence)
+│   │                       # Single .cta--primary in Step 1; postscript paragraph
+│   │                       # after the challenges list. Root has both
+│   │                       # `editorial-root` and `letter-root` classes — the
+│   │                       # latter is the scoping hook for the scenes overrides
+│   │                       # in styles.css.
+│   ├── styles.css          # Canonical CSS. Includes the original editorial
+│   │                       # base + all scenes overrides (FixedScene,
+│   │                       # PinFadeScene, freeze-scene, collapse-to-star nav,
+│   │                       # cta--primary, etc.) scoped under .letter-root.
+│   ├── previous/           # Previous canonical, preserved as a variant.
+│   │   └── page.tsx                 # minimal editorial page with hero + challenges
+│   │                                # + interp + steps + schedule + advisors. No
+│   │                                # scroll choreography — natural flow with
+│   │                                # IntersectionObserver `.reveal` only.
 │   ├── held*/              # Earlier visual variants (out of scope for new work)
 │   ├── frodo-literal/      # Frodo-journey variant — small literal motion glyphs
 │   │   ├── page.tsx
