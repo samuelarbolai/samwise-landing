@@ -1185,14 +1185,12 @@ header.hero {
 .voice-section { min-height: calc(30vh + 750px); }
 
 /* Steps sticky-pin section. Pin must outlast Step 1's fade-in (which
-   ends at 4.26vh) so Step 1 finishes its transition while pinned, and
-   then release shortly after so the screen can move and Steps 2/3 can
-   fade in via whileInView as they scroll into viewport. With Step 1
-   ending at 4.26vh and section.top at 4.13vh, pin needs:
-     section.height ≥ 0.13*vh + 88 + content.height + small_buffer
+   ends at 4.46vh — shifted 0.2vh later to make room for the extended
+   interp hold and fade-out). With section.top at 4.13vh, pin needs:
+     section.height ≥ 0.33*vh + 88 + content.height + small_buffer
    Using calc with an absolute floor for narrower viewports where step
    copy wraps to more lines. */
-.steps-section { min-height: calc(15vh + 1450px); }
+.steps-section { min-height: calc(20vh + 1550px); }
 
 /* Challenges freeze scene — section is 200vh tall to give CSS sticky
    scroll real estate to pin against AFTER the natural reveal phase ends.
@@ -1232,6 +1230,39 @@ header.hero {
 .challenges-section {
   padding: 160px 0;
   border-bottom: none;
+}
+
+/* Interp snap anchor — invisible 1px element placed between the
+   challenges-section and steps-section. Combined with scroll-snap-type
+   on html, this forces the browser to snap scroll to the position where
+   interp's fade-in completes (scrollY = 3.5vh).
+     - scroll-snap-align: start aligns the anchor's top with the scroll
+       container's top (= scrollY = anchor.docY).
+     - scroll-margin-top: 63vh shifts the alignment so scrollY lands at
+       (anchor.docY - 63vh) = (4.13vh - 0.63vh) = 3.5vh.
+     - scroll-snap-stop: always forces fling-scrolls to stop here
+       instead of passing over.
+   Scoped to .letter-root so it doesn't affect other variants. */
+.letter-root .interp-snap-anchor {
+  display: block;
+  height: 1px;
+  width: 100%;
+  pointer-events: none;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  scroll-margin-top: 63vh;
+}
+
+html { scroll-snap-type: y proximity; }
+
+/* Step detail — secondary paragraph inside .step-body that sits in
+   lesser hierarchy than the primary step copy. Smaller size + lighter
+   weight, same ink color (no muted greys per the editorial register). */
+.letter-root .step-body .step-detail {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.55;
+  margin-top: 18px;
 }
 
 /* Postscript paragraph after the challenges list — italic, slightly

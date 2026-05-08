@@ -29,11 +29,12 @@ const copy = {
     sig2Title: "Clinical Director",
     stepsLabel: "How can you make Samwise part of your life?",
     step1Title: "Schedule a Fit Assessment call.",
-    step1Body: "It will last 30 minutes. All the questions about the program will be answered here. The outcome will be whether we are a good fit for your needs or not.",
+    step1Body: "All the questions about the program will be answered here. The outcome will be whether we are a good fit for your needs or not. It will last 30 minutes.",
     step1ListIfFit: "If we are a fit, program starts!",
     step1ListIfNot: "If we are not, don't worry! We will recommend you other services, so you can always get help.",
     step2Title: "Schedule the Problem Clarification and Belief System session.",
-    step2Body: "It will last 90 minutes. (Yes we know, it is long. We need to make sure we do this part right to actually be able to help you). You will get a clear picture of your problem here, a clear path to a solution, and the first set up of your first ritual and AI Agent for your calls.",
+    step2Body: "After the session, you will start receiving daily calls on track to ensure the sustainability of your rituals and desired behaviour.",
+    step2Detail: "It will last 90 minutes. You will get a clear picture of your problem here, a clear path to a solution, and the first set up of your first ritual and AI Agent for your calls.",
     step3Title: "You will start your ritual.",
     step3Body: "We will monitor your progress, so we can schedule an optimization session to help you achieve progress faster.",
     step1Cta: "Schedule here",
@@ -71,11 +72,12 @@ const copy = {
     sig2Title: "Directora Clínica",
     stepsLabel: "¿Cómo puedes hacer parte de tu vida a Samwise?",
     step1Title: "Agenda una llamada de Evaluación de Ajuste.",
-    step1Body: "Durará 30 minutos. Todas las preguntas sobre el programa se responderán aquí. El resultado será determinar si somos un buen ajuste para tus necesidades o no.",
+    step1Body: "Todas las preguntas sobre el programa se responderán aquí. El resultado será determinar si somos un buen ajuste para tus necesidades o no. Durará 30 minutos.",
     step1ListIfFit: "Si somos un buen ajuste, ¡el programa comienza!",
     step1ListIfNot: "Si no lo somos, ¡no te preocupes! Te recomendaremos otros servicios, para que siempre puedas recibir ayuda.",
     step2Title: "Agenda la sesión de Clarificación del Problema y Sistema de Creencias.",
-    step2Body: "Durará 90 minutos. (Sí, sabemos que es larga. Necesitamos hacer esta parte bien para poder ayudarte de verdad). Aquí obtendrás una imagen clara de tu problema, un camino claro hacia una solución, y la primera configuración de tu primer ritual y Agente de IA para tus llamadas.",
+    step2Body: "Después de la sesión, comenzarás a recibir llamadas diarias de seguimiento para asegurar la sostenibilidad de tus rituales y del comportamiento deseado.",
+    step2Detail: "Durará 90 minutos. Aquí obtendrás una imagen clara de tu problema, un camino claro hacia una solución, y la primera configuración de tu primer ritual y Agente de IA para tus llamadas.",
     step3Title: "Comenzarás tu ritual.",
     step3Body: "Monitorearemos tu progreso, para poder agendar una sesión de optimización que te ayude a avanzar más rápido.",
     step1Cta: "Agenda aquí",
@@ -448,12 +450,15 @@ export default function EditorialHome() {
       </FixedScene>
 
       {/* Interp+sigs — fixed always (anchor beat). Lives at scrollY range
-          [3.2vh, 4.1vh]. */}
+          [3.2vh, 4.3vh] with 0.5vh hold at full opacity (3.5 → 4.0). The
+          .interp-snap-anchor below freeze-scene forces a scroll-snap stop
+          at scrollY = 3.5vh so mobile fling-scrolls can't blow past this
+          beat. */}
       <FixedScene
         fadeInStart={vh * 3.2}
         fadeInEnd={vh * 3.5}
-        fadeOutStart={vh * 3.8}
-        fadeOutEnd={vh * 4.1}
+        fadeOutStart={vh * 4.0}
+        fadeOutEnd={vh * 4.3}
       >
         <div className="editorial-wrap">
           <section className="interpretation">
@@ -539,25 +544,34 @@ export default function EditorialHome() {
           </div>
         </ChallengesFreezeScene>
 
+        {/* Snap anchor — invisible 1px element placed at challenges-section
+            bottom. With CSS scroll-snap-align:start + scroll-snap-stop:always
+            and a 63vh scroll-margin-top, the browser snaps scroll to
+            scrollY = anchor.docY - 63vh = 3.5vh, exactly when interp's
+            fade-in completes. Forces mobile fling-scrolls to stop at this
+            beat instead of blowing past it. */}
+        <div className="interp-snap-anchor" aria-hidden="true" />
+
         {/* Steps — sticky pin (no section-level fade). Section starts
             immediately after the freeze-scene so the sticky pin activates
-            during the tail of interp's fade-out. Section-label is wrapped
-            in FadeWrapper so it stays invisible during the pre-pin rise
-            AND during interp's fade-out — first appears together with
-            Step 1 at 4.1vh. Steps 2 and 3 use ViewTriggeredStep (viewport-
-            relative) so they fade in as the user scrolls past pin release. */}
+            during interp's fade-out. Section-label is wrapped in FadeWrapper
+            so it stays invisible during the pre-pin rise AND during interp's
+            fade-out — first appears together with Step 1 at 4.3vh (right
+            after interp's fade-out ends at 4.3vh). Steps 2 and 3 use
+            ViewTriggeredStep (viewport-relative) so they fade in as the
+            user scrolls past pin release. */}
         <StickyScene id="try" className="steps-section">
           <div className="editorial-wrap">
             <section className="editorial-section">
               <FadeWrapper
                 className="section-label"
-                fadeInStart={vh * 4.1}
-                fadeInEnd={vh * 4.26}
+                fadeInStart={vh * 4.3}
+                fadeInEnd={vh * 4.46}
               >
                 <span>{t.stepsLabel}</span>
               </FadeWrapper>
 
-              <StepItem fadeInStart={vh * 4.1} fadeInEnd={vh * 4.26}>
+              <StepItem fadeInStart={vh * 4.3} fadeInEnd={vh * 4.46}>
                 <div className="step-number">01</div>
                 <div>
                   <h3 className="step-title">{t.step1Title}</h3>
@@ -590,6 +604,7 @@ export default function EditorialHome() {
                   <h3 className="step-title">{t.step2Title}</h3>
                   <div className="step-body">
                     <p>{t.step2Body}</p>
+                    <p className="step-detail">{t.step2Detail}</p>
                   </div>
                 </div>
               </ViewTriggeredStep>
