@@ -37,6 +37,7 @@ const copy = {
     step3Title: "You will start your ritual.",
     step3Body: "We will monitor your progress, so we can schedule an optimization session to help you achieve progress faster.",
     step1Cta: "Schedule here",
+    step1Free: "This call is free of charge.",
     authorLabel: "Clinical advisor",
     authorIntro: "The Samwise program has been designed with the close advice of",
     authorName: "Dr. Ana María Reyes Tirado",
@@ -78,6 +79,7 @@ const copy = {
     step3Title: "Comenzarás tu ritual.",
     step3Body: "Monitorearemos tu progreso, para poder agendar una sesión de optimización que te ayude a avanzar más rápido.",
     step1Cta: "Agenda aquí",
+    step1Free: "Esta llamada es gratuita.",
     authorLabel: "Asesoría clínica",
     authorIntro: "El programa Samwise ha sido diseñado con la asesoría cercana de",
     authorName: "Dra. Ana María Reyes Tirado",
@@ -565,7 +567,10 @@ export default function EditorialHome() {
                       <li>{t.step1ListIfFit}</li>
                       <li>{t.step1ListIfNot}</li>
                     </ul>
-                    <p style={{ marginTop: 28 }}>
+                    <p style={{ marginTop: 24, fontStyle: "italic" }}>
+                      {t.step1Free}
+                    </p>
+                    <p style={{ marginTop: 16 }}>
                       <a
                         className="cta cta--primary"
                         href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
