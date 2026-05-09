@@ -53,6 +53,8 @@
 }
 
 .editorial-nav .brand {
+  position: relative;
+  display: inline-block;
   font-family: 'Fraunces', Georgia, serif;
   font-weight: 400;
   font-style: italic;
@@ -61,6 +63,16 @@
   text-decoration: none;
   letter-spacing: -0.01em;
   font-variation-settings: "opsz" 36, "SOFT" 80;
+}
+
+/* Tiny "distant star" above the brand wordmark — small (8px) and
+   positioned just past the final 'e', slightly above cap-height. */
+.editorial-nav .brand-star {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  color: #D4A85A;
+  line-height: 0;
 }
 
 .editorial-nav .nav-right {
@@ -1074,7 +1086,7 @@ header.hero {
   background: transparent;
   border: 0;
   padding: 8px;
-  color: var(--ink);
+  color: #D4A85A;
   cursor: pointer;
   opacity: 1;
   pointer-events: auto;
@@ -1284,11 +1296,14 @@ html { scroll-snap-type: y proximity; }
   will-change: opacity, transform;
 }
 
-/* Primary CTA used in Step 1. Hairline-bordered, restrained, color-swap
-   on hover. No gradient, no shadow, no animation — fits the editorial
-   restraint of the rest of the page. */
+/* Primary CTA — text bracketed by two hairline gold dashes
+   (– SCHEDULE THE CALL –). On hover the dashes collapse inward to zero
+   width while a gold underline expands from center to full width
+   beneath the text. Color is constant in both states. */
 .cta--primary {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
   font-family: 'Manrope', sans-serif;
   font-weight: 600;
   font-size: 13px;
@@ -1296,15 +1311,45 @@ html { scroll-snap-type: y proximity; }
   text-transform: uppercase;
   color: var(--ink);
   background: transparent;
-  border: 1px solid var(--ink);
-  padding: 14px 24px;
+  border: none;
+  padding: 14px 0;
   text-decoration: none;
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
-.cta--primary:hover {
-  color: var(--bg);
-  background: var(--ink);
-  border-color: var(--ink);
+
+.cta--primary::before,
+.cta--primary::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: #D4A85A;
+  transition: width 0.35s ease;
+}
+
+.cta--primary:hover::before,
+.cta--primary:hover::after {
+  width: 0;
+}
+
+.cta--primary .cta-text {
+  position: relative;
+  display: inline-block;
+}
+
+.cta--primary .cta-text::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: #D4A85A;
+  transform: translateX(-50%);
+  transition: width 0.35s ease;
+}
+
+.cta--primary:hover .cta-text::after {
+  width: 100%;
 }
 
 /* ─── Signatures (used inside .interpretation's letter-signature) ─── */

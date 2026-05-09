@@ -21,7 +21,7 @@ The parent project (`arbor`) is Samwise: a system that helps users overcome beha
 - `samuel-2026/` — sandbox / personal scratch space.
 
 ## Module Overview — samwise-landing
-Public landing page for Samwise. The canonical page (`app/page.tsx`) uses a multi-scene scroll choreography with a SINGLE-CTA structure (promoted from the former `/tease` variant): collapse-to-star navbar, fixed hero, sticky lede pin-fade, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned single CTA block (Fit Assessment), then a teaser block in natural flow with a manifesto-style headline ("We watch what works. We adapt. You stop fighting alone.") + supporting italic lines describing the 90-min Problem Clarification session and the optimization consultation. The earlier 3-step variant is preserved at `/three-step`; the original minimal/styleless canonical is at `/previous`.
+Public landing page for Samwise. The canonical page (`app/page.tsx`) uses a multi-scene scroll choreography with a SINGLE-CTA structure (promoted from the former `/tease` then `/vingilot` variants): collapse-to-star navbar, fixed hero, sticky lede pin-fade, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned single CTA block (Fit Assessment), then a teaser block in natural flow with a manifesto-style headline ("We watch what works. We adapt. You stop fighting alone.") + supporting italic lines describing the 90-min Problem Clarification session and the optimization consultation. **Canonical carries two warm-gold (`#D4A85A`) accents**: the four-point star ✦ in the collapsed navbar (and a tiny 8px star above the brand wordmark), and the primary CTA — text bracketed by hairline gold dashes that collapse inward on hover while a gold underline expands from center beneath the text. The pre-vingilot austere version (no gold accents, ink-bordered CTA box) is preserved at `/austere`. The earlier 3-step variant is preserved at `/three-step`; the original minimal/styleless canonical is at `/previous`.
 
 The app uses Next.js 16 (app router), React 19, Tailwind v4, motion 12 (formerly framer-motion). Canonical styling lives in `app/styles.css` with the scenes overrides scoped under `.letter-root` (used by `/` and `/three-step`) and the single-CTA + teaser overrides scoped under `.tease-root` (used only by `/`). The root element uses both classes: `<div class="editorial-root letter-root tease-root">`. shadcn/ui-style components in `components/ui/` are available but mostly unused.
 
@@ -54,6 +54,13 @@ samwise-landing/
 │   │                                # + interp + steps + schedule + advisors. No
 │   │                                # scroll choreography — natural flow with
 │   │                                # IntersectionObserver `.reveal` only.
+│   ├── austere/            # Pre-vingilot canonical snapshot. No warm-gold
+│   │   │                                # accents — ink-black star + ink-bordered
+│   │   │                                # CTA box with hover-fill. Preserved as a
+│   │   │                                # rollback point of the canonical state
+│   │   │                                # before warm-gold was promoted.
+│   │   ├── page.tsx
+│   │   └── austere.css
 │   ├── three-step/         # Multi-step variant (former canonical, before the
 │   │   │                                # single-CTA promotion). Same scenes-style
 │   │   │                                # scroll choreography but the steps section

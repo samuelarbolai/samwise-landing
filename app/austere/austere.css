@@ -1,0 +1,27 @@
+/* Austere — pre-vingilot canonical snapshot.
+   Restores ink-black star + ink-bordered CTA box with hover-fill (the
+   state of canonical before the warm-gold accents were promoted).
+   Targets the .austere-root scope only. */
+
+.austere-root .nav-star {
+  color: var(--ink);
+}
+
+.austere-root .cta--primary {
+  display: inline-block;
+  border: 1px solid var(--ink);
+  padding: 14px 24px;
+  gap: 0;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.austere-root .cta--primary::before,
+.austere-root .cta--primary::after {
+  display: none;
+}
+
+.austere-root .cta--primary:hover {
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
+}

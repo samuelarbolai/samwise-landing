@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
-import "./styles.css"
+import "../styles.css"
+import "./austere.css"
 
 type Lang = "en" | "es"
 
@@ -182,9 +183,6 @@ function StickyScene({
   )
 }
 
-/* CtaBlockReveal — generic motion.div with scrollY-tied opacity + rise.
-   No .step className — the canonical's CTA block doesn't use the step
-   grid layout, so this stays a plain container. */
 function CtaBlockReveal({
   children, fadeInStart, fadeInEnd,
 }: {
@@ -198,11 +196,6 @@ function CtaBlockReveal({
   )
 }
 
-/* TeaserHeadline — manifesto-style stacked headline. 3 short clauses,
-   each on its own line, big Fraunces Roman with the SOFT axis (matches
-   the page hero's display register). Fades in as a single block via
-   viewport-relative scrollY when the section scrolls into the upper
-   reading area. */
 function TeaserHeadline({ lines }: { lines: readonly string[] }) {
   const ref = useRef<HTMLHeadingElement>(null)
   const { scrollYProgress } = useScroll({
@@ -218,9 +211,6 @@ function TeaserHeadline({ lines }: { lines: readonly string[] }) {
   )
 }
 
-/* TeaserLine — italic preview line that fades in via viewport-relative
-   scrollY (offset start 80% → start 30%), so each line transitions in
-   as the user scrolls past pin release. */
 function TeaserLine({
   children, className = "teaser-line",
 }: {
@@ -310,7 +300,7 @@ export default function EditorialHome() {
 
 
   return (
-    <div className="editorial-root letter-root tease-root">
+    <div className="editorial-root letter-root tease-root austere-root">
       <nav
         className={`editorial-nav editorial-nav--fixed editorial-nav--star ${navOpen ? "is-open" : "is-closed"}`}
         onMouseEnter={() => setNavOpen(true)}
@@ -326,12 +316,7 @@ export default function EditorialHome() {
         </button>
 
         <div className="nav-content" aria-hidden={!navOpen}>
-          <a href="/" className="brand">
-            Samwise
-            <span className="brand-star" aria-hidden="true">
-              <FourPointStar size={8} />
-            </span>
-          </a>
+          <a href="/austere" className="brand">Samwise</a>
           <div className="nav-right">
             <a href="#us" className="nav-link">{t.navUs}</a>
             <a href="#try" className="nav-link">{t.navTry}</a>
@@ -399,11 +384,6 @@ export default function EditorialHome() {
       <main className="letter-main">
         <div id="us" className="hero-spacer" aria-hidden="true" />
 
-        {/* Lede snap anchor — invisible 1px element at hero-spacer's bottom
-            (doc Y = 1.0vh on any viewport). With scroll-snap-stop:always
-            and scroll-margin-top:-30vh, the browser snaps scroll to
-            1.0vh − (-30vh) = 1.3vh, exactly when the lede's fade-in
-            completes. Mirrors the interp-snap-anchor below the freeze. */}
         <PinFadeScene
           id="voice"
           className="voice-section"
@@ -442,9 +422,6 @@ export default function EditorialHome() {
 
         <div className="interp-snap-anchor" aria-hidden="true" />
 
-        {/* CTA — single block, pinned and faded in. The teaser block
-            below sits in natural flow as a separate "what awaits"
-            preview in lesser hierarchy. */}
         <StickyScene id="try" className="steps-section">
           <div className="editorial-wrap">
             <section className="editorial-section">
@@ -458,7 +435,7 @@ export default function EditorialHome() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <span className="cta-text">{t.ctaButton}</span>
+                    {t.ctaButton}
                   </a>
                 </p>
               </CtaBlockReveal>
@@ -466,11 +443,6 @@ export default function EditorialHome() {
           </div>
         </StickyScene>
 
-        {/* Teaser — what comes after, in a smaller editorial register.
-            Sits in natural flow after the CTA's pin releases, so the
-            user only acts on one thing (the Fit Assessment) but glimpses
-            the journey. The manifesto headline carries the section's
-            main message. */}
         <div className="editorial-wrap">
           <section className="editorial-section teaser-section">
             <TeaserLine className="teaser-label">{t.teaserLabel}</TeaserLine>
