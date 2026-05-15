@@ -1127,6 +1127,19 @@ header.hero {
 .editorial-nav--star.is-closed .nav-star { pointer-events: auto; }
 .editorial-nav--star.is-open { pointer-events: auto; }
 
+/* Invisible bottom extension of the nav's hit area. Keeps the nav from
+   collapsing on slight downward mouse drift while the user is travelling
+   toward a link. Inherits pointer-events from the parent, so it only
+   captures events when the nav is open. No visual — transparent. */
+.editorial-nav--star::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 64px;
+}
+
 /* ─── Anchor scenes (fixed always) ─── */
 .fixed-scene {
   position: fixed;
