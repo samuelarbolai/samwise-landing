@@ -1510,3 +1510,97 @@ html { scroll-snap-type: y proximity; }
   .tease-root .teaser-label { margin-bottom: 40px; }
   .tease-root .teaser-line { margin-top: 28px; }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Hero corner CTA — promoted from the former /quiet-cta variant.
+   A near-invisible "Schedule a fit assessment →" link in the bottom
+   right of the hero. At rest only the arrow is visible at low opacity;
+   the full label fades in on hover (desktop). On mobile only the arrow
+   shows (tap routes to cal.com; aria-label exposes the full text to
+   assistive tech). The link lives inside the hero FixedScene, so it
+   inherits the same scroll-tied opacity as the headline and fades out
+   with it between 0.5vh and 0.85vh.
+   ════════════════════════════════════════════════════════════════════ */
+
+.hero-quiet-cta {
+  position: absolute;
+  bottom: 48px;
+  right: 48px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink-mute);
+  font-family: var(--font-sans, "Manrope", ui-sans-serif, system-ui, sans-serif);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: auto;
+}
+
+.hero-quiet-cta::before {
+  content: "";
+  position: absolute;
+  inset: -20px -20px -20px -240px;
+}
+
+.hero-quiet-cta .quiet-cta-text {
+  opacity: 0;
+  transform: translateX(8px);
+  transition:
+    opacity 360ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hero-quiet-cta .quiet-cta-arrow {
+  opacity: 0.35;
+  transition: opacity 360ms ease;
+}
+
+.hero-quiet-cta:hover .quiet-cta-text,
+.hero-quiet-cta:focus-visible .quiet-cta-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hero-quiet-cta:hover .quiet-cta-arrow,
+.hero-quiet-cta:focus-visible .quiet-cta-arrow {
+  opacity: 1;
+}
+
+@media (max-width: 800px) {
+  .hero-quiet-cta {
+    bottom: 32px;
+    right: 24px;
+    font-size: 11px;
+  }
+  .hero-quiet-cta::before {
+    inset: -16px;
+  }
+  .hero-quiet-cta .quiet-cta-text {
+    display: none;
+  }
+  .hero-quiet-cta .quiet-cta-arrow {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-quiet-cta .quiet-cta-text,
+  .hero-quiet-cta .quiet-cta-arrow {
+    transition: none;
+  }
+}
+
+/* Override #try scroll-margin-top for the canonical single-CTA layout.
+   The default .letter-root .pin-fade-scene[id] rule lands the user at
+   sectionTop − 88px (~4.13vh-multiples), which catches the interp scene
+   mid fade-out (4.0→4.3vh) AND the CTA still invisible (fade-in starts
+   at 4.3vh). Land past the CTA's fade-in end (4.46vh) instead.
+   Specificity: (1,2,0) vs the existing (0,3,0), so this wins without
+   needing a mobile media-query override. Scoped under .tease-root so it
+   only applies to canonical, not /three-step. */
+.tease-root .pin-fade-scene#try {
+  scroll-margin-top: -26vh;
+}
+

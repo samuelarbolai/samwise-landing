@@ -44,6 +44,7 @@ const copy = {
     navAdvisors: "Advisors",
     navValidation: "Scientific Evidence",
     footer: "Last updated · May 2026",
+    quietCtaLabel: "Schedule a fit assessment",
   },
   es: {
     eyebrow: "Samwise",
@@ -82,6 +83,7 @@ const copy = {
     navAdvisors: "Asesores",
     navValidation: "Evidencia Científica",
     footer: "Última actualización · Mayo 2026",
+    quietCtaLabel: "Agenda una evaluación",
   },
 }
 
@@ -359,6 +361,16 @@ export default function EditorialHome() {
             <h1 className="editorial-hero-statement">{t.heroH1}</h1>
           </header>
         </div>
+        <a
+          className="hero-quiet-cta"
+          href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t.quietCtaLabel}
+        >
+          <span className="quiet-cta-text" aria-hidden="true">{t.quietCtaLabel}</span>
+          <span className="quiet-cta-arrow" aria-hidden="true">→</span>
+        </a>
       </FixedScene>
 
       <FixedScene

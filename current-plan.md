@@ -1,129 +1,221 @@
-# current-plan.md — `/vingilot` variant: warm-gold star (antique gold ✦)
+# current-plan.md — `/quiet-cta` variant: hidden hero CTA in the bottom-right corner
 
-> Previous plan superseded.
+> Previous plan (`/vingilot`) superseded.
 
 ## Plan Summary
 
-Create a new variant `app/vingilot/` that forks the canonical landing page and adds a single chromatic note: the four-point star ✦ in the navbar (collapsed state) is rendered in **antique gold `#9B6B2E`** instead of pure ink-black. Everything else on the page is identical to canonical.
+Create a new variant `app/quiet-cta/` that forks the canonical landing page and adds a single new element: a quiet "Schedule a fit assessment →" link in the bottom-right corner of the hero. At rest the link is **almost entirely hidden** — only a faint hairline arrow `→` is visible (no initially visible text). On hover, the full label fades in to the left of the arrow and the arrow reaches full ink-mute.
 
-The star is the page's only persistent visual mark when nav is collapsed (~14–18px tall, top-center). Tinting it a muted brown-undertone gold reads as a tiny lit candle / illuminated-manuscript gold leaf, fitting Samwise's "torch through the dark" framing without breaking the editorial restraint of the rest of the page.
+The link target is `#try` (the existing schedule anchor on the canonical page, which the variant keeps).
 
-Decisions:
-- **Tone:** `#9B6B2E` (antique gold). Brown-undertone, not modern brand orange or marketing yellow.
-- **Scope:** color-only, on the `.nav-star` element. SVG geometry unchanged.
-- **States:** color applies in both collapsed and expanded states (rule simpler; star is invisible when expanded anyway via `opacity: 0`).
-- **Hover:** no color shift on hover — flat tone.
-- **Variant pattern:** fully self-contained `app/vingilot/` folder; canonical untouched.
+Decisions (locked in via the question round):
+- **Reveal trigger:** hover hot-zone (recommended). A non-visible rectangle in the bottom-right of the hero wakes the CTA when the cursor enters it. The visible affordance is one hairline `→` glyph at low opacity, so users who scan the corner know something lives there — but no readable text shows until they intend to engage. This is the most intent-driven mechanism that still gives the CTA a chance to be discovered. Idle-delay was rejected (popup-y); always-faint was rejected (the user explicitly asked: "this won't include any initially visible text right?"); scroll-fade-in misses the requirement to appear on the *very first* screen.
+- **Copy:** `Schedule a fit assessment →`
+- **Variant folder name:** `/quiet-cta`
+- **Mobile fallback:** the hover idiom doesn't translate to touch. On mobile the link renders as just the arrow at full opacity (no label, no reveal animation). Tapping the arrow goes straight to `#try`. The `aria-label` carries the full text for screen readers.
 
 ## Plan Architecture (Flow)
 
-User scroll experience is unchanged from canonical. Only the navbar's collapsed state visually differs:
-- Page load → only `✦` star visible at top-center, **antique gold** (was ink-black on canonical).
-- Hover/tap → nav expands as on canonical; star fades out; expanded nav (brand + 4 links + EN/ES) remains in ink-black on white.
-- Collapse-back → star fades back in, antique gold.
-
-No scroll choreography changes. No copy changes. No layout changes.
+The hero behaviour is otherwise identical to canonical. The new element:
+- Lives inside the first `FixedScene` (the hero), as a sibling of `.editorial-wrap`, positioned `absolute` to the bottom-right of the viewport (the FixedScene is `position: fixed; height: 100vh`, so absolute children are relative to the full viewport box).
+- Because it's inside the hero `FixedScene`, its opacity is already gated by the hero's scroll-tied `useTransform` — it fades out alongside the headline between scroll 0.5vh → 0.85vh. No new scroll choreography to wire up.
+- Inherits `pointer-events: auto` via the existing `.fixed-scene a, .fixed-scene button { pointer-events: auto; }` rule.
 
 ## Plan Structure (Directories and files)
 
 Files to create:
-- `app/vingilot/page.tsx` — fork of `app/page.tsx`. Two changes only:
-  1. Root element class: `vingilot-root` added to `editorial-root letter-root tease-root`.
-  2. Brand link `href="/"` → `href="/vingilot"` (variant-scoped internal link per the variant pattern).
-- `app/vingilot/vingilot.css` — single CSS rule scoped to `.vingilot-root` overriding the star color.
+- `app/quiet-cta/page.tsx` — fork of `app/page.tsx`. Three diffs (CSS import path, root class, the new anchor markup inside the hero FixedScene). Brand link `href="/"` becomes `href="/quiet-cta"` per the variant pattern.
+- `app/quiet-cta/quiet-cta.css` — only the new rules scoped to `.quiet-cta-root`.
 
-Files NOT to touch:
-- `app/page.tsx` (canonical) — never modified for variant work.
-- `app/styles.css` — base canonical styles untouched.
-- Any other canonical page or variant.
+Files NOT touched:
+- `app/page.tsx`, `app/styles.css` — canonical untouched.
+- Any other variant.
 
 ## Modifications (in phases and steps)
 
-### Phase 1 — Create the variant folder and CSS override
+### Phase 1 — Create the variant folder + CSS
 
-#### Step 1.1 — Create `app/vingilot/vingilot.css`
+#### Step 1.1 — Create `app/quiet-cta/quiet-cta.css`
 
-**File:** `app/vingilot/vingilot.css` (new)
-
-**Code:**
 ```css
-/* Vingilot variant — single chromatic note: the four-point star ✦ in
-   the collapsed navbar is rendered in antique gold instead of ink-black.
-   Everything else inherits canonical styles. The page's "two colors max"
-   restraint is preserved by treating warm-gold as a flame accent on a
-   single iconic element rather than a third semantic color. */
-.vingilot-root .nav-star {
-  color: #9B6B2E;
+/* Quiet-CTA variant — adds a hidden "Schedule a fit assessment →" link
+   to the bottom-right of the hero. At rest only the arrow is visible at
+   low opacity; full label appears on hover. Scoped to .quiet-cta-root so
+   nothing leaks into other variants. */
+
+.quiet-cta-root .hero-quiet-cta {
+  position: absolute;
+  bottom: 48px;
+  right: 48px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink-mute);
+  font-family: var(--font-sans, "Manrope", ui-sans-serif, system-ui, sans-serif);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: auto;
+  /* Expand the interactive hot-zone leftward so the cursor doesn't have
+     to land exactly on the 12px arrow glyph. Invisible — purely hit-area. */
+}
+
+.quiet-cta-root .hero-quiet-cta::before {
+  content: "";
+  position: absolute;
+  inset: -20px -20px -20px -240px;
+}
+
+.quiet-cta-root .hero-quiet-cta .quiet-cta-text {
+  opacity: 0;
+  transform: translateX(8px);
+  transition:
+    opacity 360ms ease,
+    transform 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.quiet-cta-root .hero-quiet-cta .quiet-cta-arrow {
+  opacity: 0.35;
+  transition: opacity 360ms ease;
+}
+
+.quiet-cta-root .hero-quiet-cta:hover .quiet-cta-text,
+.quiet-cta-root .hero-quiet-cta:focus-visible .quiet-cta-text {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.quiet-cta-root .hero-quiet-cta:hover .quiet-cta-arrow,
+.quiet-cta-root .hero-quiet-cta:focus-visible .quiet-cta-arrow {
+  opacity: 1;
+}
+
+/* Mobile: no hover, so just render the arrow at full opacity. Tap goes
+   straight to #try. The label stays hidden visually; aria-label carries
+   it for screen readers. */
+@media (max-width: 800px) {
+  .quiet-cta-root .hero-quiet-cta {
+    bottom: 32px;
+    right: 24px;
+    font-size: 11px;
+  }
+  .quiet-cta-root .hero-quiet-cta::before {
+    inset: -16px -16px -16px -16px;
+  }
+  .quiet-cta-root .hero-quiet-cta .quiet-cta-text {
+    display: none;
+  }
+  .quiet-cta-root .hero-quiet-cta .quiet-cta-arrow {
+    opacity: 1;
+  }
+}
+
+/* Respect reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .quiet-cta-root .hero-quiet-cta .quiet-cta-text,
+  .quiet-cta-root .hero-quiet-cta .quiet-cta-arrow {
+    transition: none;
+  }
 }
 ```
 
-**Explanation:** The canonical `.nav-star` rule sets `color: var(--ink)` (ink-black). The SVG inside uses `fill="currentColor"`, so changing `color` on the parent `<button>` flows to the SVG fill. Scoped under `.vingilot-root` so it only applies inside the variant. No other selectors needed.
+#### Step 1.2 — Create `app/quiet-cta/page.tsx`
 
-#### Step 1.2 — Create `app/vingilot/page.tsx`
+Verbatim fork of `app/page.tsx` with these modifications:
 
-**File:** `app/vingilot/page.tsx` (new)
-
-**Code:** Verbatim fork of `app/page.tsx` with TWO modifications:
-
-1. Add the variant CSS import alongside canonical styles. Replace:
+1. Replace
    ```tsx
    import "./styles.css"
    ```
-   With:
+   with
    ```tsx
    import "../styles.css"
-   import "./vingilot.css"
+   import "./quiet-cta.css"
    ```
 
-2. Add `vingilot-root` to the root element classes. Replace:
+2. Replace
    ```tsx
    <div className="editorial-root letter-root tease-root">
    ```
-   With:
+   with
    ```tsx
-   <div className="editorial-root letter-root tease-root vingilot-root">
+   <div className="editorial-root letter-root tease-root quiet-cta-root">
    ```
 
-3. Update the brand link `href` to point at the variant route (per variant pattern: internal links inside a variant point at variant routes). Replace:
+3. Replace the brand link `href`:
    ```tsx
-   <a href="/" className="brand">Samwise</a>
+   <a href="/" className="brand">
    ```
-   With:
+   with
    ```tsx
-   <a href="/vingilot" className="brand">Samwise</a>
+   <a href="/quiet-cta" className="brand">
    ```
 
-   (All other links remain as-is: `#us`, `#try`, `#advisors` are anchors that work on any page; `/scientific-evidence` is allowed to point at the canonical page per the variant rule.)
+4. Inside the first `FixedScene` (the hero), add the corner link as a sibling of `.editorial-wrap`:
+   ```tsx
+   <FixedScene
+     isFirst
+     fadeInStart={0}
+     fadeInEnd={1}
+     fadeOutStart={vh * 0.5}
+     fadeOutEnd={vh * 0.85}
+   >
+     <div className="editorial-wrap">
+       <header className="editorial-landing-hero">
+         <div className="eyebrow">{t.eyebrow}</div>
+         <h1 className="editorial-hero-statement">{t.heroH1}</h1>
+       </header>
+     </div>
+     <a
+       className="hero-quiet-cta"
+       href="#try"
+       aria-label="Schedule a fit assessment"
+     >
+       <span className="quiet-cta-text" aria-hidden="true">Schedule a fit assessment</span>
+       <span className="quiet-cta-arrow" aria-hidden="true">→</span>
+     </a>
+   </FixedScene>
+   ```
 
-**Explanation:** A clean fork of the canonical with three minimal edits. The CSS path changes from `./styles.css` to `../styles.css` because the variant lives one level deeper than canonical. The added `./vingilot.css` import layers the gold color override on top.
+   The label is `aria-hidden` because the anchor's `aria-label` already exposes the full text to assistive tech; otherwise screen readers would read the label twice.
 
 ### Testing phase
 
 #### Local test
-1. `pnpm dev` from `samwise-landing/`.
-2. Open `http://localhost:3000/vingilot`.
-3. Verify with `preview_screenshot` and `preview_inspect`:
-   - On page load (scroll 0): only `✦` star visible at top-center; computed `color` of `.nav-star` is `rgb(155, 107, 46)` (= `#9B6B2E`); SVG fill resolves to the same.
-   - Hover the star (or tap on mobile): nav expands; star fades to opacity 0; brand + links + EN/ES toggle render in ink-black on white-with-blur backdrop (unchanged from canonical).
-   - Move cursor away: nav collapses; antique-gold star fades back in.
-   - Click brand "Samwise": navigates to `/vingilot` (stays in variant), not `/`.
-   - Click "Scientific Evidence →": navigates to `/scientific-evidence` (canonical page).
-4. Compare side-by-side with `/` (canonical) — only the star color should differ.
-5. `preview_console_logs level: error` — no NaN warnings, no missing CSS imports.
+1. `pnpm dev` from `samwise-landing/` (or reuse the running preview).
+2. Open `http://localhost:3000/quiet-cta`.
+3. Verify with `preview_inspect` + `preview_eval`:
+   - On page load, scroll 0:
+     - `.hero-quiet-cta .quiet-cta-arrow` computed `opacity` is `0.35`.
+     - `.hero-quiet-cta .quiet-cta-text` computed `opacity` is `0`.
+     - The anchor's bounding rect is roughly `bottom: 48px, right: 48px` from the viewport.
+   - Hover the corner (simulate via `dispatchEvent('mouseenter')` on `.hero-quiet-cta`):
+     - Text opacity transitions to 1, arrow opacity to 1.
+     - `transform` on `.quiet-cta-text` returns to `none` / `translateX(0)`.
+   - Click the link: scrolls to `#try` (the schedule section).
+   - Keyboard: tab to the link → `:focus-visible` triggers the same reveal.
+4. Scroll to ~0.6vh and confirm the CTA is fading out with the hero (it inherits the FixedScene's scroll-tied opacity from its motion-div parent).
+5. `preview_console_logs level: error` — no warnings.
+6. Mobile via `preview_resize` to 375px:
+   - `.quiet-cta-text` has `display: none`.
+   - Arrow opacity is `1`.
+   - Tap the arrow → navigates to `#try`.
 
 #### Integration test
-- Mobile (`preview_resize` to 375px): star still antique gold; tap-to-expand works.
-- Scroll the full page in `/vingilot`: all canonical scroll choreography (hero fade, voice/lede pin, challenges freeze, interp+sigs, CTA pin, teaser, advisors, footer) works identically to `/`.
+- Compare side-by-side with `/` (canonical): everything identical except the new corner mark.
+- Confirm the corner link doesn't intercept clicks on the hero headline (it shouldn't — it lives in the bottom-right; the headline is centered).
 
-#### Update README
-- Not required (samwise-landing has no README; variant pattern conventions handled via `context-for-code-agent.md`).
+#### Update docs
+- After approval + implementation, update `samwise-landing/context-for-code-agent.md`:
+  - Add `quiet-cta/` to the `app/` tree, with one-line note: "Adds a hover-revealed corner CTA in the hero (`Schedule a fit assessment →`). At rest: only a faint `→` glyph in the bottom-right. Mobile: arrow-only, tap routes to `#try`."
 
 ### After implementation
-- Update `samwise-landing/context-for-code-agent.md`:
-  - Add `vingilot/` to the `app/` tree, with one-line note: "Antique-gold star variant (`#9B6B2E` on `.nav-star`); otherwise identical to canonical."
 - Manual user step: mark task DONE in master Vibe doc Projects tab.
 
 ## Notes for the next session
 
-- The canonical `app/page.tsx` was NOT modified. To promote this variant: copy the gold rule into `app/styles.css` (drop the `.vingilot-root` scope), then delete `app/vingilot/`.
-- If user wants to nudge the tone later: only `app/vingilot/vingilot.css` needs editing. `#B8860B` (dark goldenrod, slightly more saturated) and `#7A5424` (deeper, more bronze) are sensible neighbors.
+- The canonical `app/page.tsx` was NOT modified.
+- To promote this variant: copy the `.hero-quiet-cta` markup into canonical, drop the `.quiet-cta-root` scope from `quiet-cta.css` and merge it into `app/styles.css`, then delete `app/quiet-cta/`.
+- If the user wants the CTA more discoverable: bump the at-rest arrow opacity from `0.35` → `0.5`, or shorten the reveal transition.
+- If the user wants it more hidden: drop arrow opacity to `0.18`, or remove the visible arrow entirely and rely purely on the hot-zone (zero affordance — only the most curious users will find it).
