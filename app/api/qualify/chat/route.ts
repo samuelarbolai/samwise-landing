@@ -25,12 +25,14 @@ const SUBMIT_QUALIFICATION_URL = process.env.SUBMIT_QUALIFICATION_URL!
 export const maxDuration = 60
 
 export async function POST(req: Request) {
-  const { messages, language, name } = (await req.json()) as {
+  const { messages, language, name, email } = (await req.json()) as {
     messages: UIMessage[]
     language: "es" | "en"
     name: string
+    email: string
   }
   const prospectName = (name ?? "").trim() || "friend"
+  const prospectEmail = (email ?? "").trim()
 
   const intake = buildIntakePrompt(language, prospectName)
   const capture = buildCapturePrompt(language, null)
@@ -70,8 +72,15 @@ En modo texto NO hay handoff. Cuando la conversación esté completa (puertas fa
         inputSchema: QualificationPayloadSchema,
         execute: async (raw) => {
           // Merge in identifiers from the request body — the LLM does not
-          // supply prospect_name / language through the tool.
-          const payload = { ...raw, prospect_name: prospectName, language }
+          // supply prospect_name / contact_email / language through the
+          // tool. contact_email is what makes the qualification doc
+          // findable by /copilot's email search.
+          const payload = {
+            ...raw,
+            prospect_name: prospectName,
+            language,
+            ...(prospectEmail ? { contact_email: prospectEmail } : {}),
+          }
           const resp = await fetch(SUBMIT_QUALIFICATION_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

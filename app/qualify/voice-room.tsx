@@ -26,10 +26,12 @@ const OUTCOME_MAX_WAIT_MS = 12000
 export function VoiceRoom({
   lang,
   name,
+  email,
   onOutcome,
 }: {
   lang: Lang
   name: string
+  email: string
   onOutcome: (outcome: Outcome) => void
 }) {
   const s = STRINGS[lang]
@@ -151,7 +153,7 @@ export function VoiceRoom({
         const resp = await fetch("/api/qualify/voice-init", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ language: lang, name }),
+          body: JSON.stringify({ language: lang, name, email }),
         })
         if (!resp.ok) throw new Error(`voice-init failed: ${resp.status}`)
         const { token, url } = (await resp.json()) as { token: string; url: string }
@@ -179,7 +181,7 @@ export function VoiceRoom({
       if (maxWaitTimerRef.current) clearTimeout(maxWaitTimerRef.current)
       room.disconnect().catch(() => {})
     }
-  }, [lang, name, s.error_generic])
+  }, [lang, name, email, s.error_generic])
 
   // ---- Mic on/off helper ----
   const setMicEnabled = useCallback(async (enabled: boolean) => {

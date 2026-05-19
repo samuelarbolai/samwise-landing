@@ -10,24 +10,26 @@ import type { Outcome } from "./components/final-screen"
 export function QualifyChat({
   lang,
   name,
+  email,
   onOutcome,
 }: {
   lang: Lang
   name: string
+  email: string
   onOutcome: (outcome: Outcome) => void
 }) {
   const s = STRINGS[lang]
 
-  // Pass `language` and `name` in the request body so the API route can
-  // pick the right prompt + thread the prospect's name. AI SDK 6 uses a
-  // transport for outbound shaping.
+  // Pass `language`, `name`, and `email` in the request body so the
+  // API route can pick the right prompt + thread the prospect's identity.
+  // AI SDK 6 uses a transport for outbound shaping.
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/qualify/chat",
-        body: () => ({ language: lang, name }),
+        body: () => ({ language: lang, name, email }),
       }),
-    [lang, name],
+    [lang, name, email],
   )
 
   const { messages, sendMessage, status } = useChat({ transport })

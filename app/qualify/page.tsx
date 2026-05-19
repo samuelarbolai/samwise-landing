@@ -11,6 +11,7 @@ export default function QualifyPage() {
   const [lang, setLang] = useState<Lang | null>(null)
   const [mode, setMode] = useState<QualifyMode | null>(null)
   const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
   // When arriving via the gold-star transition from /dual-cta, /qualify
@@ -75,10 +76,11 @@ export default function QualifyPage() {
     }
   }, [])
 
-  const onProceed = (l: Lang, m: QualifyMode, n: string) => {
+  const onProceed = (l: Lang, m: QualifyMode, n: string, em: string) => {
     setLang(l)
     setMode(m)
     setName(n)
+    setEmail(em)
   }
 
   return (
@@ -96,9 +98,9 @@ export default function QualifyPage() {
         ) : !lang || !mode ? (
           <LanguagePicker onProceed={onProceed} />
         ) : mode === "voice" ? (
-          <VoiceRoom lang={lang} name={name} onOutcome={setOutcome} />
+          <VoiceRoom lang={lang} name={name} email={email} onOutcome={setOutcome} />
         ) : (
-          <QualifyChat lang={lang} name={name} onOutcome={setOutcome} />
+          <QualifyChat lang={lang} name={name} email={email} onOutcome={setOutcome} />
         )}
       </section>
     </main>

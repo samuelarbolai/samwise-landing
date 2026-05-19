@@ -23,16 +23,21 @@ function randomId(prefix: string): string {
 }
 
 export async function POST(req: Request) {
-  const { language, name } = (await req.json()) as {
+  const { language, name, email } = (await req.json()) as {
     language: "es" | "en"
     name: string
+    email: string
   }
   if (language !== "es" && language !== "en") {
     return Response.json({ error: "invalid language" }, { status: 400 })
   }
   const prospect_name = (name ?? "").trim()
+  const prospect_email = (email ?? "").trim()
   if (!prospect_name) {
     return Response.json({ error: "name required" }, { status: 400 })
+  }
+  if (!prospect_email) {
+    return Response.json({ error: "email required" }, { status: 400 })
   }
 
   const roomName = randomId("qualify")
@@ -64,6 +69,7 @@ export async function POST(req: Request) {
       language,
       persona: "nova",
       prospect_name,
+      prospect_email,
     }),
   })
 
