@@ -1,0 +1,627 @@
+/* /qualify — editorial brand system, mirrored from canonical landing.
+   Self-contained: qualify is a first-class route, not a variant, so it
+   carries its own copy of the brand tokens + font stack rather than
+   importing canonical's app/styles.css (which would also pull in
+   unrelated scroll choreography). Fonts (Fraunces, Manrope, Caveat)
+   are loaded globally in app/layout.tsx. */
+
+.qualify-root {
+  /* Fade-in transition for arrivals from the gold-star transition.
+     The page starts at opacity 0 (via .is-arriving) and transitions to 1
+     once isArriving is cleared in page.tsx — sequenced AFTER the hero
+     page has finished its fade-out, per the canonical cross-fade rule
+     (one scene fully gone before the next starts). */
+  transition: opacity 700ms ease-out;
+  opacity: 1;
+
+  /* === Brand tokens, identical to canonical's .editorial-root === */
+  --bg:          #FFFFFF;
+  --ink:         #000000;
+  --ink-soft:    #1A1A1A;
+  --ink-mute:    #555555;
+  --rule:        #E0E0E0;
+  --accent:      #1F3023;  /* deep forest — unused here, kept for parity */
+  --gold:        #D4A85A;  /* the one chromatic note */
+
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  display: flex;
+  flex-direction: column;
+}
+
+.qualify-root.is-arriving {
+  opacity: 0;
+}
+
+/* ── Header — editorial wordmark, same DNA as canonical .editorial-nav .brand ── */
+
+.qualify-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.qualify-brand {
+  position: relative;
+  display: inline-block;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  font-variation-settings: 'opsz' 36, 'SOFT' 80;
+}
+
+.qualify-brand-star {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  color: var(--gold);
+  font-size: 8px;
+  line-height: 0;
+}
+
+/* ── Stage — generous vertical space, narrow column ── */
+
+.qualify-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rem 1.5rem 6rem;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .qualify-stage {
+    padding: 4rem 1.5rem 4rem;
+  }
+}
+
+/* ===================================================================
+   Language picker
+   =================================================================== */
+
+.qualify-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  text-align: center;
+  width: 100%;
+}
+
+.qualify-picker-heading {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0;
+  max-width: 32ch;
+  font-variation-settings: 'opsz' 96, 'SOFT' 80;
+}
+
+/* Language buttons — small-caps Manrope, hairline border at rest,
+   subtle ink-fill on selection (no jarring inversion). */
+
+.qualify-picker-langs {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.qualify-picker-lang {
+  position: relative;
+  padding: 0.625rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: var(--ink-mute);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.qualify-picker-lang::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--ink);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.qualify-picker-lang:hover,
+.qualify-picker-lang.is-selected {
+  color: var(--ink);
+}
+
+.qualify-picker-lang.is-selected::after {
+  width: 24px;
+  background: var(--gold);
+}
+
+/* Name input — hairline underline, no rectangle. Like writing on paper. */
+
+.qualify-picker-name {
+  width: 100%;
+  max-width: 360px;
+  padding: 0.5rem 0;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.25rem;
+  text-align: center;
+  letter-spacing: -0.005em;
+  outline: none;
+}
+
+.qualify-picker-name::placeholder {
+  color: var(--ink-mute);
+  font-style: italic;
+  letter-spacing: 0;
+  font-size: 0.95rem;
+}
+
+.qualify-picker-name:focus::placeholder {
+  color: transparent;
+}
+
+/* Proceed button — mirror of canonical .cta--primary.
+   Gold hairline dashes flanking the text; on hover the dashes collapse
+   inward to width 0 while a gold underline expands from center beneath
+   the text. Same animation language as the canonical hero. */
+
+.qualify-picker-proceed {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  padding: 14px 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.qualify-picker-proceed::before,
+.qualify-picker-proceed::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.35s ease;
+}
+
+.qualify-picker-proceed:hover:not(:disabled)::before,
+.qualify-picker-proceed:hover:not(:disabled)::after {
+  width: 0;
+}
+
+.qualify-picker-proceed .qualify-cta-text {
+  position: relative;
+  display: inline-block;
+}
+
+.qualify-picker-proceed .qualify-cta-text::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.35s ease;
+}
+
+.qualify-picker-proceed:hover:not(:disabled) .qualify-cta-text::after {
+  width: 100%;
+}
+
+.qualify-picker-proceed:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Text fallback — true footnote treatment */
+
+.qualify-picker-text-fallback {
+  background: none;
+  border: none;
+  color: var(--ink-mute);
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.5rem;
+  text-decoration: none;
+  position: relative;
+}
+
+.qualify-picker-text-fallback::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.25s ease;
+}
+
+.qualify-picker-text-fallback:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.qualify-picker-text-fallback:hover:not(:disabled)::after {
+  width: 80%;
+}
+
+.qualify-picker-text-fallback:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ===================================================================
+   Voice room — editorial mic button
+   =================================================================== */
+
+.qualify-voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  width: 100%;
+}
+
+.qualify-voice-status {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.qualify-voice-error {
+  color: var(--ink);
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Mic button shares the proceed CTA's visual grammar.
+   - Gold dashes flank the state label.
+   - When listening (hold OR toggle), the gold underline is at full width
+     (sustained signal that the agent is hearing the user).
+   - When idle, both dashes are at full width, underline at 0.
+   - When armed (held <200ms), a brief in-between state. */
+
+.qualify-voice-mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 280px;
+  justify-content: center;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  padding: 14px 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.qualify-voice-mic::before,
+.qualify-voice-mic::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.35s ease;
+}
+
+.qualify-voice-mic-armed::before,
+.qualify-voice-mic-armed::after {
+  width: 9px;
+}
+
+.qualify-voice-mic-speaking-hold::before,
+.qualify-voice-mic-speaking-hold::after,
+.qualify-voice-mic-speaking-toggle::before,
+.qualify-voice-mic-speaking-toggle::after {
+  width: 0;
+}
+
+.qualify-voice-mic .qualify-mic-text {
+  position: relative;
+  display: inline-block;
+}
+
+.qualify-voice-mic .qualify-mic-text::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.35s ease;
+}
+
+.qualify-voice-mic-speaking-hold .qualify-mic-text::after,
+.qualify-voice-mic-speaking-toggle .qualify-mic-text::after {
+  width: 100%;
+}
+
+/* ===================================================================
+   Text chat — letter / script transcript
+   =================================================================== */
+
+.qualify-chat {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: clamp(420px, 70vh, 720px);
+  gap: 1rem;
+}
+
+.qualify-chat-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0.25rem;
+}
+
+/* Each turn is one editorial line. No bubble. No background. The
+   speaker is encoded by a hairline left rule (agent) or right-alignment
+   (user), and by typeface. */
+
+.qualify-chat-msg {
+  max-width: 90%;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  letter-spacing: -0.005em;
+}
+
+.qualify-chat-msg-assistant {
+  align-self: flex-start;
+  padding-left: 14px;
+  border-left: 1px solid var(--rule);
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 1.0625rem;
+  color: var(--ink);
+}
+
+.qualify-chat-msg-user {
+  align-self: flex-end;
+  padding-right: 14px;
+  border-right: 1px solid var(--rule);
+  text-align: right;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 0.9375rem;
+  color: var(--ink-mute);
+}
+
+.qualify-chat-msg-pending {
+  opacity: 0.45;
+}
+
+.qualify-chat-input {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+
+.qualify-chat-input textarea {
+  flex: 1;
+  resize: none;
+  padding: 0.5rem 0;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  background: transparent;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ink);
+  max-height: 132px;
+  outline: none;
+}
+
+.qualify-chat-input textarea::placeholder {
+  color: var(--ink-mute);
+  font-style: italic;
+}
+
+.qualify-chat-input button {
+  height: 38px;
+  width: 38px;
+  border: none;
+  background: transparent;
+  color: var(--gold);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.qualify-chat-input button:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.qualify-chat-input button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.qualify-chat-error {
+  color: var(--ink-mute);
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
+/* ===================================================================
+   Final screen
+   =================================================================== */
+
+.qualify-final {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2rem;
+  width: 100%;
+  max-width: 540px;
+}
+
+.qualify-final h2 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--ink);
+  font-variation-settings: 'opsz' 144, 'SOFT' 80;
+}
+
+.qualify-final-note {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--ink-mute);
+  line-height: 1.65;
+  font-size: 1rem;
+  max-width: 36em;
+}
+
+/* The demo-call CTA — same .cta--primary visual language as proceed. */
+
+.qualify-final-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  padding: 14px 0;
+  text-decoration: none;
+  margin-top: 0.5rem;
+}
+
+.qualify-final-cta::before,
+.qualify-final-cta::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.35s ease;
+}
+
+.qualify-final-cta:hover::before,
+.qualify-final-cta:hover::after {
+  width: 0;
+}
+
+.qualify-final-cta .qualify-cta-text {
+  position: relative;
+  display: inline-block;
+}
+
+.qualify-final-cta .qualify-cta-text::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.35s ease;
+}
+
+.qualify-final-cta:hover .qualify-cta-text::after {
+  width: 100%;
+}
+
+.qualify-final-safety p {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  color: var(--ink-mute);
+  line-height: 1.65;
+  font-size: 1rem;
+  max-width: 36em;
+}
+
+/* ── Mobile ── */
+
+@media (max-width: 540px) {
+  .qualify-picker-langs {
+    flex-direction: column;
+    width: 100%;
+  }
+  .qualify-picker-lang {
+    width: 100%;
+  }
+  .qualify-voice-mic {
+    min-width: 0;
+    width: 100%;
+  }
+}

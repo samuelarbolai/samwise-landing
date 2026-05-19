@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
+import { useRouter } from "next/navigation"
 import "./styles.css"
 
 type Lang = "en" | "es"
@@ -29,7 +30,7 @@ const copy = {
     sig2Title: "Clinical Director",
     ctaTitle: "Find out if Samwise can break the loop.",
     ctaBody: "30 minutes. Free. We'll tell you if you're ready — and if you're not, we'll point you to someone that can get you ready.",
-    ctaButton: "Schedule the call",
+    ctaButton: "Start the call",
     teaserLabel: "What awaits, if we're a fit",
     teaserHeadline: ["We watch what works.", "We adapt.", "You stop fighting alone."],
     teaserStep2: "A 90-minute session maps exactly how the loop runs in you — and ends with an AI that calls you, every day, to make it easy for you to keep yourself out of it.",
@@ -44,7 +45,10 @@ const copy = {
     navAdvisors: "Advisors",
     navValidation: "Scientific Evidence",
     footer: "Last updated · May 2026",
-    quietCtaLabel: "Schedule a fit assessment",
+    quietCtaLabel: "Start your fit assessment",
+    dualCtaStart: "Start now",
+    dualCtaDiscover: "Discover Samwise",
+    navStartNow: "Start now",
   },
   es: {
     eyebrow: "Samwise",
@@ -68,7 +72,7 @@ const copy = {
     sig2Title: "Directora Clínica",
     ctaTitle: "Descubre si Samwise puede romper el ciclo.",
     ctaBody: "30 minutos. Gratis. Te diremos si estás listo — y si no, te indicaremos a alguien que pueda ayudarte a estarlo.",
-    ctaButton: "Agenda la llamada",
+    ctaButton: "Empieza la llamada",
     teaserLabel: "Lo que viene después, si encajamos",
     teaserHeadline: ["Observamos qué funciona.", "Adaptamos.", "Dejas de luchar solo."],
     teaserStep2: "Una sesión de 90 minutos traza cómo se ejecuta el ciclo en ti — y termina con una IA que te llama, cada día, para que te sea fácil mantenerte fuera de él.",
@@ -83,7 +87,10 @@ const copy = {
     navAdvisors: "Asesores",
     navValidation: "Evidencia Científica",
     footer: "Última actualización · Mayo 2026",
-    quietCtaLabel: "Agenda una evaluación",
+    quietCtaLabel: "Empieza tu evaluación",
+    dualCtaStart: "Empieza ahora",
+    dualCtaDiscover: "Descubre Samwise",
+    navStartNow: "Empieza ahora",
   },
 }
 
@@ -289,6 +296,115 @@ function ChallengesFreezeScene({
 export default function EditorialHome() {
   const [lang, setLang] = useState<Lang>("en")
   const [navOpen, setNavOpen] = useState(false)
+  const [isLeaving, setIsLeaving] = useState(false)
+  const router = useRouter()
+
+  // Discover-glow runs as a pure CSS animation. We manipulate the class
+  // via ref + a forced reflow so successive clicks re-trigger cleanly
+  // without React state churn (which had a re-render race against the
+  // animation's lifecycle in dev).
+  const discoverGlowRef = useRef<HTMLDivElement>(null)
+
+  // Start-now click: a diffuse gold glow emanates from the navbar star.
+  // The dual-cta page fades out at the same time. The glow holds at
+  // peak coverage while navigation fires and /qualify mounts. /qualify
+  // is fade-gated by a sessionStorage flag: it stays at opacity 0 until
+  // the glow has covered the screen, then fades in as the glow contracts.
+  //
+  // The overlay element is appended to document.body so it survives the
+  // client-side route change (Next.js swaps route segments but leaves
+  // body intact).
+  const handleStartClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+
+    // Respect reduced motion — skip the flourish.
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      router.push("/qualify")
+      return
+    }
+
+    const starEl = document.querySelector(".nav-star") as HTMLElement | null
+    if (!starEl) {
+      router.push("/qualify")
+      return
+    }
+
+    const rect = starEl.getBoundingClientRect()
+    const cx = rect.left + rect.width / 2
+    const cy = rect.top + rect.height / 2
+
+    // Tell /qualify it's arriving via this transition, so it starts at
+    // opacity 0 and fades in after the gold has covered the screen.
+    try {
+      sessionStorage.setItem("samwise:qualify-transition", "1")
+    } catch {
+      // sessionStorage may be unavailable (private mode, iframe).
+      // No-op: /qualify will just appear without fading.
+    }
+
+    // Hero fade-out + glow expansion run in parallel. The /qualify
+    // fade-in, however, is strictly gated on the glow's FULL cycle
+    // completion (poll for overlay removal in /qualify's useEffect).
+    setIsLeaving(true)
+
+    const GLOW_DURATION_MS = 1500
+
+    const overlay = document.createElement("div")
+    overlay.setAttribute("data-qualify-transition-overlay", "")
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: "0",
+      pointerEvents: "none",
+      zIndex: "9999",
+      // Ultra-diffuse radial gradient — tiny solid core, long graded
+      // falloff with multiple soft stops, transparent well before the
+      // element's edges. Paired with a generous blur to dissolve any
+      // hint of a bounding shape.
+      background: `radial-gradient(circle at ${cx}px ${cy}px, #D4A85A 0%, rgba(212, 168, 90, 0.85) 14%, rgba(212, 168, 90, 0.55) 32%, rgba(212, 168, 90, 0.25) 55%, rgba(212, 168, 90, 0) 80%)`,
+      transformOrigin: `${cx}px ${cy}px`,
+      filter: "blur(80px)",
+      willChange: "transform, opacity, filter",
+      opacity: "0",
+      transform: "scale(0.05)",
+    } as Partial<CSSStyleDeclaration>)
+    document.body.appendChild(overlay)
+
+    const animation = overlay.animate(
+      [
+        { transform: "scale(0.05)", opacity: 0, offset: 0 },
+        { transform: "scale(1.4)", opacity: 1, offset: 0.35 },
+        { transform: "scale(1.4)", opacity: 1, offset: 0.55 },
+        { transform: "scale(0.05)", opacity: 0, offset: 1 },
+      ],
+      { duration: GLOW_DURATION_MS, easing: "ease-in-out", fill: "forwards" },
+    )
+
+    // Navigate at the glow's peak so /qualify mounts behind full gold.
+    // /qualify polls for the overlay's removal and only fades itself in
+    // after the glow's full cycle completes.
+    setTimeout(() => router.push("/qualify"), GLOW_DURATION_MS * 0.35)
+
+    animation.finished
+      .then(() => overlay.remove())
+      .catch(() => overlay.remove())
+  }
+
+  const handleDiscoverClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    if (typeof window !== "undefined") {
+      window.scrollBy({ top: window.innerHeight, behavior: "smooth" })
+    }
+    const el = discoverGlowRef.current
+    if (el) {
+      el.classList.remove("is-active")
+      // Force reflow so a subsequent re-add of the class restarts the animation.
+      void el.offsetWidth
+      el.classList.add("is-active")
+    }
+  }
   const t = copy[lang]
 
   useEffect(() => {
@@ -312,7 +428,8 @@ export default function EditorialHome() {
 
 
   return (
-    <div className="editorial-root letter-root tease-root">
+    <div className={`editorial-root letter-root tease-root${isLeaving ? " is-leaving" : ""}`}>
+      <div ref={discoverGlowRef} className="discover-glow" aria-hidden="true" />
       <nav
         className={`editorial-nav editorial-nav--fixed editorial-nav--star ${navOpen ? "is-open" : "is-closed"}`}
         onMouseEnter={() => setNavOpen(true)}
@@ -335,9 +452,9 @@ export default function EditorialHome() {
             </span>
           </a>
           <div className="nav-right">
+            <a href="/qualify" className="nav-link" onClick={handleStartClick}>{t.navStartNow}</a>
             <a href="#us" className="nav-link">{t.navUs}</a>
             <a href="#try" className="nav-link">{t.navTry}</a>
-            <a href="#advisors" className="nav-link">{t.navAdvisors}</a>
             <a href="/scientific-evidence" className="nav-link">{t.navValidation} →</a>
             <div className="lang-toggle" role="group" aria-label="Language">
               <button onClick={() => setLang("en")} aria-pressed={lang === "en"}>EN</button>
@@ -359,18 +476,20 @@ export default function EditorialHome() {
           <header className="editorial-landing-hero">
             <div className="eyebrow">{t.eyebrow}</div>
             <h1 className="editorial-hero-statement">{t.heroH1}</h1>
+            <div className="dual-cta-row">
+              <a className="cta cta--primary" href="/qualify" onClick={handleStartClick}>
+                <span className="cta-text">{t.dualCtaStart}</span>
+              </a>
+              <a
+                className="cta cta--primary"
+                href="#voice"
+                onClick={handleDiscoverClick}
+              >
+                <span className="cta-text">{t.dualCtaDiscover}</span>
+              </a>
+            </div>
           </header>
         </div>
-        <a
-          className="hero-quiet-cta"
-          href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={t.quietCtaLabel}
-        >
-          <span className="quiet-cta-text" aria-hidden="true">{t.quietCtaLabel}</span>
-          <span className="quiet-cta-arrow" aria-hidden="true">→</span>
-        </a>
       </FixedScene>
 
       <FixedScene
@@ -466,9 +585,7 @@ export default function EditorialHome() {
                 <p className="cta-action">
                   <a
                     className="cta cta--primary"
-                    href="https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/qualify"
                   >
                     <span className="cta-text">{t.ctaButton}</span>
                   </a>

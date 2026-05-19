@@ -1,0 +1,95 @@
+"use client"
+import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { STRINGS, type Lang } from "@/lib/qualify/strings"
+import { MessageList } from "./components/message-list"
+import { MessageInput } from "./components/message-input"
+import type { Outcome } from "./components/final-screen"
+
+export function QualifyChat({
+  lang,
+  name,
+  onOutcome,
+}: {
+  lang: Lang
+  name: string
+  onOutcome: (outcome: Outcome) => void
+}) {
+  const s = STRINGS[lang]
+
+  // Pass `language` and `name` in the request body so the API route can
+  // pick the right prompt + thread the prospect's name. AI SDK 6 uses a
+  // transport for outbound shaping.
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/qualify/chat",
+        body: () => ({ language: lang, name }),
+      }),
+    [lang, name],
+  )
+
+  const { messages, sendMessage, status } = useChat({ transport })
+
+  const [draft, setDraft] = useState("")
+
+  // Sniff tool results for the outcome — but defer the screen swap until
+  // the assistant's closing message has fully streamed. Without the defer,
+  // the FinalScreen replaces the chat mid-sentence and the user never sees
+  // the agent's goodbye.
+  const pendingOutcomeRef = useRef<Outcome | null>(null)
+
+  useEffect(() => {
+    for (const m of messages) {
+      for (const part of m.parts) {
+        if (
+          part.type === "tool-submitQualification" &&
+          part.state === "output-available" &&
+          part.output &&
+          typeof part.output === "object"
+        ) {
+          const out = (part.output as { outcome?: unknown }).outcome
+          if (
+            (out === "qualified" || out === "disqualified" || out === "safety_flagged") &&
+            !pendingOutcomeRef.current
+          ) {
+            pendingOutcomeRef.current = out
+          }
+        }
+      }
+    }
+  }, [messages])
+
+  // When the stream finishes and we have a pending outcome, swap screens.
+  useEffect(() => {
+    if (pendingOutcomeRef.current && status === "ready") {
+      const out = pendingOutcomeRef.current
+      pendingOutcomeRef.current = null
+      onOutcome(out)
+    }
+  }, [status, onOutcome])
+
+  const handleSend = () => {
+    const text = draft.trim()
+    if (!text || status === "submitted" || status === "streaming") return
+    setDraft("")
+    sendMessage({ text })
+  }
+
+  return (
+    <div className="qualify-chat">
+      <MessageList messages={messages} status={status} />
+      <MessageInput
+        value={draft}
+        onChange={setDraft}
+        onSend={handleSend}
+        disabled={status === "submitted" || status === "streaming"}
+        placeholder={lang === "es" ? "Escribe…" : "Type…"}
+      />
+      {status === "error" && (
+        <div className="qualify-chat-error">{s.error_generic}</div>
+      )}
+    </div>
+  )
+}

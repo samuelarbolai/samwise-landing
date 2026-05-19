@@ -1604,3 +1604,98 @@ html { scroll-snap-type: y proximity; }
   scroll-margin-top: -26vh;
 }
 
+/* ───────────────────────────────────────────────────────────────────────
+   Canonical (promoted from /dual-cta variant on 2026-05-19):
+     - Two CTAs ("Start now" / "Discover Samwise") stacked + left-aligned
+       under the hero h1, sized to match the .eyebrow above it.
+     - Hero fades out via .is-leaving when Start-now is clicked.
+     - "Discover Samwise" triggers a soft scroll-down + bottom-edge gold
+       pulse via the .discover-glow element rendered next to the root.
+     - Smooth-scroll for in-page anchor jumps to #voice.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.editorial-root.letter-root {
+  scroll-behavior: smooth;
+  transition: opacity 525ms ease-in-out;
+}
+
+.editorial-root.letter-root.is-leaving {
+  opacity: 0;
+}
+
+/* Hero — two CTAs stacked, left-aligned with the h1. Sized to match the
+   .eyebrow above (Manrope 11px / weight 600 / 0.22em). The .cta--primary
+   base is 13px / 0.12em — we override so the CTAs read in the same
+   small-caps register as the SAMWISE eyebrow. */
+.dual-cta-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 20px;
+  margin-top: 56px;
+}
+
+.dual-cta-row .cta--primary {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  font-weight: 600;
+}
+
+@media (max-width: 540px) {
+  .dual-cta-row {
+    gap: 16px;
+    margin-top: 40px;
+  }
+}
+
+/* Scroll-down glow hint — clicking "Discover Samwise" softly scrolls
+   down by ~1 viewport AND pulses a gold gradient at the bottom of the
+   screen as a hint that the journey continues below. */
+.discover-glow {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(212, 168, 90, 0.55) 0%,
+    rgba(212, 168, 90, 0.18) 40%,
+    rgba(212, 168, 90, 0) 100%
+  );
+  opacity: 0;
+  z-index: 50;
+}
+
+.discover-glow.is-active {
+  animation: discover-glow-pulse 1.4s ease-out forwards;
+}
+
+@keyframes discover-glow-pulse {
+  0%   { opacity: 0; }
+  18%  { opacity: 1; }
+  55%  { opacity: 0.7; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discover-glow.is-active {
+    animation: discover-glow-pulse-reduced 0.6s ease-out forwards;
+  }
+  @keyframes discover-glow-pulse-reduced {
+    0%   { opacity: 0; }
+    50%  { opacity: 0.5; }
+    100% { opacity: 0; }
+  }
+}
+
+/* Anchor jump landing for #voice. The canonical .tease-root already sets
+   scroll-margin-top on #try; we add a sibling override for #voice so the
+   smooth-scroll from "Discover Samwise" lands at the right moment in
+   the choreography (just past the hero fade-out, around 0.9vh). */
+.tease-root .voice-section#voice {
+  scroll-margin-top: -10vh;
+}
+

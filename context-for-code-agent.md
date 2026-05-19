@@ -21,7 +21,15 @@ The parent project (`arbor`) is Samwise: a system that helps users overcome beha
 - `samuel-2026/` — sandbox / personal scratch space.
 
 ## Module Overview — samwise-landing
-Public landing page for Samwise. The canonical page (`app/page.tsx`) uses a multi-scene scroll choreography with a SINGLE-CTA structure (promoted from the former `/tease` then `/vingilot` then `/quiet-cta` variants): collapse-to-star navbar, fixed hero (with a quiet "Schedule a fit assessment →" corner CTA — see below), sticky lede pin-fade, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned single CTA block (Fit Assessment), then a teaser block in natural flow with a manifesto-style headline ("We watch what works. We adapt. You stop fighting alone.") + supporting italic lines describing the 90-min Problem Clarification session and the optimization consultation. **Canonical carries two warm-gold (`#D4A85A`) accents**: the four-point star ✦ in the collapsed navbar (and a tiny 8px star above the brand wordmark), and the primary CTA — text bracketed by hairline gold dashes that collapse inward on hover while a gold underline expands from center beneath the text. **Hero corner CTA** (`.hero-quiet-cta`): a near-invisible link in the bottom-right of the first FixedScene. At rest only the `→` glyph is visible at 0.35 opacity; on hover, the full label "Schedule a fit assessment" fades in to the left and both reach opacity 1. Links directly to the cal.com booking URL in a new tab. Mobile (max-width 800px): arrow-only at full opacity; tap routes to cal.com; aria-label exposes the full text to screen readers. Because the link is inside the hero FixedScene, it fades out alongside the headline (0.5vh → 0.85vh). A `.tease-root .pin-fade-scene#try { scroll-margin-top: -26vh }` override is also in place so anchor jumps to `#try` (e.g. from the nav "Try" link) land **past** the CTA's fade-in end (4.46vh) instead of inside the interp scene's fade-out (4.0→4.3vh). The pre-vingilot austere version (no gold accents, ink-bordered CTA box) is preserved at `/austere`. The earlier 3-step variant is preserved at `/three-step`; the original minimal/styleless canonical is at `/previous`.
+Public landing page for Samwise. The canonical page (`app/page.tsx`) uses a multi-scene scroll choreography. Structure (promoted through `/tease` → `/vingilot` → `/quiet-cta` → `/dual-cta`):
+
+- **Collapse-to-star navbar.** 4 links in this order: `Start now` (→ `/qualify`, neutral color — emphasis from position not color) / `Us` (#us) / `Try` (#try) / `Scientific Evidence` (→ `/scientific-evidence`). Plus EN/ES toggle. `Advisors` was removed in the dual-cta promotion.
+- **Hero (FixedScene).** Eyebrow `SAMWISE` + h1 + a stacked, left-aligned `.dual-cta-row` directly below the h1 with two `.cta--primary` anchors: `Start now` (→ `/qualify`, fires the gold-star transition — see below) and `Discover Samwise` (`href="#voice"`, intercepted with `handleDiscoverClick` to soft-scroll one viewport + pulse the bottom-edge `.discover-glow`). Both CTAs are sized to match the eyebrow above (Manrope 11px / weight 600 / 0.22em letter-spacing).
+- **Sticky lede pin-fade**, sticky-pinned challenges freeze with one-by-one reveals, sticky-pinned `#try` block (Fit Assessment CTA — secondary touchpoint), then a teaser block in natural flow with the manifesto headline ("We watch what works. We adapt. You stop fighting alone.").
+
+**Warm-gold (`#D4A85A`) accents (used sparingly):** the 8px star ✦ above the brand wordmark and inside the collapsed navbar; the `.cta--primary` hairline dashes that collapse inward on hover while a gold underline expands from center; the `.discover-glow` bottom-edge pulse; the gold-star transition overlay between `/` and `/qualify`.
+
+**Start-now → /qualify transition.** `handleStartClick` (also wired to the nav Start-now link) does three things in parallel: (a) sets `isLeaving` on the root so the page opacity transitions 1→0 over 525ms; (b) sets `sessionStorage["samwise:qualify-transition"]=1` so `/qualify` knows it's arriving via the transition; (c) appends a `<div data-qualify-transition-overlay>` to `document.body` (survives the SPA route change) with an ultra-diffuse radial gradient + `filter: blur(80px)`, animated via Web Animations API through a 1500ms keyframe sequence: scale 0.05→1.4 + opacity 0→1 at 35%, hold at peak, contract scale 1.4→0.05 + opacity 1→0 by 100%. Navigation fires at 35% (peak), so `/qualify` mounts behind the gold. `/qualify`'s `useEffect` polls for the overlay's removal via rAF and only sets `isArriving=false` once the overlay is gone — strictly serial: hero+glow run together → glow contracts fully → `/qualify` fades in. Honors `prefers-reduced-motion`. Mobile (max-width 800px): arrow-only at full opacity; tap routes to cal.com; aria-label exposes the full text to screen readers. Because the link is inside the hero FixedScene, it fades out alongside the headline (0.5vh → 0.85vh). A `.tease-root .pin-fade-scene#try { scroll-margin-top: -26vh }` override is also in place so anchor jumps to `#try` (e.g. from the nav "Try" link) land **past** the CTA's fade-in end (4.46vh) instead of inside the interp scene's fade-out (4.0→4.3vh). The pre-vingilot austere version (no gold accents, ink-bordered CTA box) is preserved at `/austere`. The earlier 3-step variant is preserved at `/three-step`; the original minimal/styleless canonical is at `/previous`.
 
 The app uses Next.js 16 (app router), React 19, Tailwind v4, motion 12 (formerly framer-motion). Canonical styling lives in `app/styles.css` with the scenes overrides scoped under `.letter-root` (used by `/` and `/three-step`) and the single-CTA + teaser overrides scoped under `.tease-root` (used only by `/`). The root element uses both classes: `<div class="editorial-root letter-root tease-root">`. shadcn/ui-style components in `components/ui/` are available but mostly unused.
 
@@ -80,22 +88,42 @@ samwise-landing/
 │   │   ├── page.tsx
 │   │   ├── motion-section.tsx     # tone-driven (rise|lift|settle|offered|stillness)
 │   │   └── video-placeholder.tsx
-│   └── frodo-scene/        # Sacred-journey scene variant (mid-fi sketch)
-│       ├── page.tsx                 # asymmetric copy-left / scene-right (sticky desktop, fixed mobile)
-│       ├── scene.tsx                # silhouette stage: mountain, figure, hand, star, ring
-│       ├── aperture.tsx             # static placeholder for case-study videos and Dr. Ana photo
-│       └── tokens.ts                # OKLCH colour tokens + easings
+│   ├── frodo-scene/        # Sacred-journey scene variant (mid-fi sketch)
+│   │   ├── page.tsx                 # asymmetric copy-left / scene-right (sticky desktop, fixed mobile)
+│   │   ├── scene.tsx                # silhouette stage: mountain, figure, hand, star, ring
+│   │   ├── aperture.tsx             # static placeholder for case-study videos and Dr. Ana photo
+│   │   └── tokens.ts                # OKLCH colour tokens + easings
+│   ├── qualify/            # FIRST-CLASS ROUTE (not a variant) — Qualification Agent landing surface
+│   │   ├── page.tsx                 # client-state orchestrator: picker → voice|text → final
+│   │   ├── language-picker.tsx      # explicit English / Español picker + "I'd rather type" fallback
+│   │   ├── voice-room.tsx           # livekit-client Room, hybrid PTT (tap-toggle <200ms / hold-to-speak >200ms / spacebar shortcut)
+│   │   ├── chat.tsx                 # AI SDK 6 useChat fallback (text mode)
+│   │   ├── qualify.css              # scoped high-contrast monochrome styles
+│   │   └── components/
+│   │       ├── message-list.tsx
+│   │       ├── message-input.tsx
+│   │       └── final-screen.tsx     # qualified / disqualified / safety_flagged renderings
+│   └── api/
+│       └── qualify/
+│           ├── voice-init/route.ts  # mints LiveKit token + dispatches ritual-agent with metadata { flow:"qualification", language, persona:"nova" }
+│           └── chat/route.ts        # AI SDK streamText with submitQualification tool (text-mode fallback)
 ├── components/
 │   ├── theme-provider.tsx  # next-themes wrapper (not currently used on page.tsx)
 │   └── ui/                 # shadcn/ui components (button, card, etc.) — available but mostly unused
 ├── hooks/                  # shadcn/ui hooks
 ├── lib/
-│   └── utils.ts            # `cn` helper (clsx + tailwind-merge)
+│   ├── utils.ts            # `cn` helper (clsx + tailwind-merge)
+│   └── qualify/            # source-of-truth for the qualification agent (worker COPIES these)
+│       ├── persona.ts                 # Nova characterization, bilingual
+│       ├── intake-prompt.ts           # Intake stage prompt builder (P1 + safety)
+│       ├── capture-prompt.ts          # Capture stage prompt builder (P2 verbatim)
+│       ├── schema.ts                  # GateDecisionSchema + QualificationPayloadSchema (zod)
+│       └── strings.ts                 # bilingual UI copy (picker / voice / chat / final screens)
 ├── public/                 # Icons and placeholder assets
 ├── styles/                 # Additional stylesheet (if any)
 ├── components.json         # shadcn config
 ├── next.config.mjs
-├── package.json            # next 16, react 19, tailwind 4, motion 12, radix, lucide
+├── package.json            # next 16, react 19, tailwind 4, motion 12, radix, lucide, ai 6, @ai-sdk/google, @ai-sdk/react, livekit-client, livekit-server-sdk, zod
 ├── postcss.config.mjs
 └── tsconfig.json
 ```
@@ -107,3 +135,14 @@ samwise-landing/
 - **Variant pattern:** experimental designs live as sibling folders under `app/` (e.g. `app/frodo-literal/`, `app/frodo-abstract/`, `app/frodo-scene/`). Each variant is fully self-contained — no shared components across variants — so any losing variant can be deleted as a single folder. The canonical page (`app/page.tsx`) is never modified by variant work.
 - **Motion:** when a variant needs animation, use the `motion` package (formerly `framer-motion`) with `whileInView` + `viewport={{ once: true, amount: 0.3 }}`, and always honor `prefers-reduced-motion` via `useReducedMotion()` (degrade to a single short opacity fade and skip decorative glyphs).
 - **Mobile-first:** all variants must render without horizontal overflow at 375px viewport, video placeholders use `aspectRatio: "16 / 9"`, no `100vh` (use `dvh` units if needed).
+
+## `/qualify` (first-class route, not a variant)
+
+The qualification agent surface. Bilingual (English / Español), voice-first with a text fallback. Architecture:
+- **Picker first.** No auto-detection — the user picks language explicitly and chooses voice (default) or text.
+- **Voice mode** dispatches a LiveKit Room. The browser hits `app/api/qualify/voice-init/route.ts` which mints a token and **dispatches the existing `ritual-agent` worker** with metadata `{ flow: "qualification", language, persona: "nova" }`. The worker's qualification flow lives at `samwise-backend/ritual-agent/src/flows/qualification/` (NOT in a separate `qualification-agent` module — the multi-flow-router pattern is canonical, see `samwise-livekit-agents` skill). Push-to-talk is hybrid: tap-and-release within 200ms = toggle on/off; press-and-hold beyond 200ms = release ends the turn. Spacebar mirrors on desktop.
+- **Text mode** streams Gemini 2.5 Flash via AI SDK 6 `useChat`. One combined Intake+Capture prompt, one tool (`submitQualification`).
+- **Both modalities** call `submitQualification` (cloud function in `samwise-backend/cloud-functions/`) once at the end. The cloud function evaluates the rubric server-side (qualified vs disqualified vs safety_flagged) and writes a doc to Firestore `qualifications` collection.
+- **Final screen** shows the same `https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment` link for qualified AND disqualified outcomes (DQ gets an assertive note). Safety_flagged shows a professional-referral message without the link.
+- **Source-of-truth files** in `lib/qualify/` are copied into the worker at `ritual-agent/src/flows/qualification/`. Keep both in sync until they're hoisted to a shared package (out of scope for v1).
+- **Env vars on Vercel for `/qualify`:** `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_LIVEKIT_URL`, `RITUAL_AGENT_NAME` (defaults to `ritual-agent`), `GOOGLE_GENERATIVE_AI_API_KEY` (text mode), `SUBMIT_QUALIFICATION_URL`.
