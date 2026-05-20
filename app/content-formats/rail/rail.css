@@ -1,0 +1,170 @@
+/* ─── /content-formats/rail — sticky index rail ─── */
+
+.content-formats-root .format-rail {
+  position: fixed;
+  top: 50%;
+  right: 28px;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
+  padding: 0;
+  font-family: 'Manrope', sans-serif;
+}
+
+.content-formats-root .format-rail::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  right: 11px;
+  width: 1px;
+  background: var(--rule);
+  z-index: 0;
+}
+
+.content-formats-root .rail-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 7px 0;
+  background: var(--bg);
+  color: var(--ink-mute);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  z-index: 1;
+  transition: color 0.2s ease;
+}
+
+.content-formats-root .rail-item .rail-name {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  font-variation-settings: "opsz" 36, "SOFT" 100;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.content-formats-root .rail-item .rail-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--bg);
+  position: relative;
+}
+
+.content-formats-root .rail-item .rail-num::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  background: var(--rule);
+  transition: background 0.2s ease, inset 0.2s ease;
+}
+
+.content-formats-root .rail-item .rail-num-label {
+  position: relative;
+  z-index: 1;
+  font-feature-settings: 'tnum';
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.content-formats-root .rail-item:hover {
+  color: var(--ink);
+}
+
+.content-formats-root .rail-item:hover .rail-name {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.content-formats-root .rail-item:hover .rail-num::after {
+  background: var(--ink-mute);
+  inset: 5px;
+}
+
+.content-formats-root .rail-item.is-active {
+  color: var(--ink);
+}
+
+.content-formats-root .rail-item.is-active .rail-num::after {
+  background: #D4A85A;
+  inset: 3px;
+}
+
+.content-formats-root .rail-item.is-active .rail-num-label {
+  opacity: 1;
+  color: var(--ink);
+  font-size: 9px;
+}
+
+.content-formats-root .rail-item.is-active .rail-name {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 1180px) {
+  .content-formats-root .format-rail {
+    display: none;
+  }
+  .content-formats-root .format-rail-mobile {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 24px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .content-formats-root .format-rail-mobile::-webkit-scrollbar {
+    display: none;
+  }
+  .content-formats-root .format-rail-mobile .rail-chip {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    background: var(--bg);
+    text-decoration: none;
+    transition: border-color 0.2s ease, color 0.2s ease;
+  }
+  .content-formats-root .format-rail-mobile .rail-chip.is-active {
+    color: var(--ink);
+    border-color: #D4A85A;
+  }
+}
+
+@media (min-width: 1181px) {
+  .content-formats-root .format-rail-mobile {
+    display: none;
+  }
+}

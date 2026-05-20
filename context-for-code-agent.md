@@ -93,6 +93,30 @@ samwise-landing/
 │   │   ├── scene.tsx                # silhouette stage: mountain, figure, hand, star, ring
 │   │   ├── aperture.tsx             # static placeholder for case-study videos and Dr. Ana photo
 │   │   └── tokens.ts                # OKLCH colour tokens + easings
+│   ├── content-formats/    # INTERNAL DOC — Content Format Bible v1 (founder's content strategy).
+│   │   │                                # Canonical at `/content-formats` is the constellation grid
+│   │   │                                # with focus mode: 3×3 tiles of the nine formats;
+│   │   │                                # clicking a tile morphs (motion `layoutId`) into a
+│   │   │                                # full-screen detail card with prev/next + ESC + arrow-key
+│   │   │                                # navigation; backdrop click or ✕ Close returns to the grid.
+│   │   │                                # Two preserved alternative views as sub-variants.
+│   │   ├── page.tsx                 # CANONICAL — constellation grid + focus mode (motion 12).
+│   │   ├── content-formats.css      # scoped under `.content-formats-root`. Covers brief grid,
+│   │   │                                # notes grid, scroll-view format cards, AND the canonical
+│   │   │                                # grid tiles + focus overlay (merged in on promotion).
+│   │   ├── data.ts                  # source of truth: `brief` (6 items) + `formats` (9 items
+│   │   │                                # with num/name/tag/desc/components/tones). All three
+│   │   │                                # pages read from here so copy stays in sync.
+│   │   ├── rail/                    # sub-variant: long-scroll cards + sticky vertical index rail
+│   │   │   │                                # on the right (collapses to a sticky chip strip
+│   │   │   │                                # below 1180px). Active rail item tracks scroll via
+│   │   │   │                                # IntersectionObserver; click to smooth-scroll.
+│   │   │   ├── page.tsx
+│   │   │   └── rail.css
+│   │   └── scroll/                  # sub-variant: original long-scroll, one format per card,
+│   │       │                                # preserved from pre-grid promotion as a rollback /
+│   │       │                                # comparison view.
+│   │       └── page.tsx
 │   ├── qualify/            # FIRST-CLASS ROUTE (not a variant) — Qualification Agent landing surface
 │   │   ├── page.tsx                 # client-state orchestrator: picker → voice|text → final
 │   │   ├── language-picker.tsx      # explicit English / Español picker + "I'd rather type" fallback
