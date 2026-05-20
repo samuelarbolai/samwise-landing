@@ -274,7 +274,7 @@ export default function RelentlesslyResourcefulEs() {
               por ejemplo. En ese tipo de trabajo la receta es más bien ser activamente curioso.{" "}
               <em>Recursivo</em> implica que los obstáculos son externos, como suelen serlo en las{" "}
               <em>startups</em>. Pero en la escritura y la pintura son sobre todo internos; el
-              obstáculo es tu propia torpeza. <FootRef n={2} />
+              obstáculo es tu propia obtusidad. <FootRef n={2} />
             </>,
           )}
 

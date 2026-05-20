@@ -32,7 +32,7 @@ export const SEQUENCE: Chunk[] = [
   { id: "pull", text: "Sé implacablemente recursivo." },
   {
     id: "p8",
-    text: "Eso suena bien, pero ¿no será simplemente una descripción de cómo tener éxito en general? Creo que no. Esta no es la receta para el éxito en la escritura o la pintura, por ejemplo. En ese tipo de trabajo la receta es más bien ser activamente curioso. Recursivo implica que los obstáculos son externos, como suelen serlo en las startups. Pero en la escritura y la pintura son sobre todo internos; el obstáculo es tu propia torpeza.",
+    text: "Eso suena bien, pero ¿no será simplemente una descripción de cómo tener éxito en general? Creo que no. Esta no es la receta para el éxito en la escritura o la pintura, por ejemplo. En ese tipo de trabajo la receta es más bien ser activamente curioso. Recursivo implica que los obstáculos son externos, como suelen serlo en las startups. Pero en la escritura y la pintura son sobre todo internos; el obstáculo es tu propia obtusidad.",
   },
   {
     id: "p9",
