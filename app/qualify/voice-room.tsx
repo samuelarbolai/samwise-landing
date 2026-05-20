@@ -55,6 +55,16 @@ export function VoiceRoom({
   const [error, setError] = useState<string | null>(null)
   const [micState, setMicStateUI] = useState<MicState>("idle")
 
+  // Minimum welcome-card display time. Even on fast connects, hold the
+  // welcome long enough for the user to read it and settle. The mic UI
+  // appears only when BOTH the room is connected AND this floor has elapsed.
+  const [welcomeFloorElapsed, setWelcomeFloorElapsed] = useState(false)
+  useEffect(() => {
+    const t = setTimeout(() => setWelcomeFloorElapsed(true), 3000)
+    return () => clearTimeout(t)
+  }, [])
+  const showWelcome = connecting || !welcomeFloorElapsed
+
   // Mirror state into a ref so async handlers see the current value.
   const setMicState = useCallback((next: MicState) => {
     micStateRef.current = next
@@ -273,15 +283,18 @@ export function VoiceRoom({
           on iOS Safari — the element must exist BEFORE startAudio(). */}
       <audio ref={audioSinkRef} autoPlay playsInline style={{ display: "none" }} />
 
-      {connecting && (
-        <div className="qualify-voice-status">{s.voice_starting}</div>
+      {showWelcome && !error && (
+        <div className="qualify-voice-welcome">
+          <p className="qualify-voice-welcome-lead">{s.voice_welcome_lead}</p>
+          <p className="qualify-voice-welcome-sub">{s.voice_welcome_sub}</p>
+        </div>
       )}
 
       {error && (
         <div className="qualify-voice-status qualify-voice-error">{error}</div>
       )}
 
-      {!connecting && !error && (
+      {!showWelcome && !error && (
         <button
           type="button"
           className={`qualify-voice-mic qualify-voice-mic-${micState}`}

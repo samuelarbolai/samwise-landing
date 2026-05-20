@@ -18,6 +18,8 @@ export const STRINGS = {
     picker_pick_one_hint: "↑ elige uno",
 
     voice_starting: "Conectando…",
+    voice_welcome_lead: "Sin guión. Sin juicio. Solo habla.",
+    voice_welcome_sub: "Nova te va a saludar primero.",
     voice_mic_blocked: "Necesitamos acceso al micrófono para empezar.",
     voice_mic_idle_label: "Hablar",
     voice_mic_armed_label: "·",
@@ -50,6 +52,8 @@ export const STRINGS = {
     picker_pick_one_hint: "↑ pick one",
 
     voice_starting: "Connecting…",
+    voice_welcome_lead: "No script. No judgment. Just talk.",
+    voice_welcome_sub: "Nova will say hello first.",
     voice_mic_blocked: "We need microphone access to start.",
     voice_mic_idle_label: "Speak",
     voice_mic_armed_label: "·",
