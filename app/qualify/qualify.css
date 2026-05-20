@@ -596,7 +596,23 @@
   max-width: 36em;
 }
 
-/* The demo-call CTA — same .cta--primary visual language as proceed. */
+/* Qualified body — Fraunces italic lede register, slightly muted but readable.
+   Smaller than the headline, bigger than the note. Sets expectation for the
+   Breakthrough Call without shouting. */
+
+.qualify-final-body {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  line-height: 1.7;
+  color: var(--ink-mute);
+  max-width: 34em;
+  margin: 0;
+  font-variation-settings: 'opsz' 72, 'SOFT' 50;
+}
+
+/* The Breakthrough Call CTA — same .cta--primary visual language as proceed. */
 
 .qualify-final-cta {
   display: inline-flex;

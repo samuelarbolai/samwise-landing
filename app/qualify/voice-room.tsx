@@ -97,8 +97,7 @@ export function VoiceRoom({
         if (
           msg.type === "qualification:outcome" &&
           (msg.outcome === "qualified" ||
-            msg.outcome === "disqualified" ||
-            msg.outcome === "safety_flagged")
+            msg.outcome === "disqualified")
         ) {
           deliberateDisconnectRef.current = true
           pendingOutcomeRef.current = msg.outcome

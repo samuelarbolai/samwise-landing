@@ -2,11 +2,10 @@ import { z } from "zod"
 
 // Schema for the Intake Agent's `gateDecision` tool.
 // Captures identifiers + P1 gates + safety gates.
-// Once these five gate fields are known, the Intake Agent calls
+// Once these three gate fields are known, the Intake Agent calls
 // gateDecision, which routes the conversation:
-//   qualified + safe  → handoff to Capture
-//   disqualified      → submit immediately, end the call
-//   safety_flagged    → submit immediately, end the call (no demo link)
+//   qualified   → handoff to Capture
+//   otherwise   → submit immediately, end the call
 export const GateDecisionSchema = z.object({
   // Identifiers. prospect_name and language are collected on the
   // landing's picker (before the conversation) and arrive via dispatch
@@ -22,10 +21,6 @@ export const GateDecisionSchema = z.object({
   decision_taken: z.enum(["Y", "N"]),
   behaviour_clarity: z.enum(["clear", "vague"]),
   motivation_clarity: z.enum(["clear", "vague"]),
-
-  // Safety gates
-  acute_risk_flag: z.enum(["Y", "N"]),
-  ownership_self_reported: z.enum(["self", "external"]),
 })
 
 export type GateDecisionPayload = z.infer<typeof GateDecisionSchema>

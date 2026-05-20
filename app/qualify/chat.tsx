@@ -53,7 +53,7 @@ export function QualifyChat({
         ) {
           const out = (part.output as { outcome?: unknown }).outcome
           if (
-            (out === "qualified" || out === "disqualified" || out === "safety_flagged") &&
+            (out === "qualified" || out === "disqualified") &&
             !pendingOutcomeRef.current
           ) {
             pendingOutcomeRef.current = out

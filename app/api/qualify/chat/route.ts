@@ -16,7 +16,7 @@ import { QualificationPayloadSchema } from "@/lib/qualify/schema"
 // Text mode does NOT replicate the voice path's handoff workflow.
 // Both Intake and Capture concerns are stitched into ONE prompt with
 // one tool (`submitQualification`) taking the full payload. The cloud
-// function evaluates qualified vs DQ vs safety_flagged server-side.
+// function evaluates qualified vs disqualified server-side.
 // Rationale: handoffs in the AI SDK would require statefulness this
 // route doesn't need for the fallback path.
 
@@ -89,7 +89,7 @@ En modo texto NO hay handoff. Cuando la conversación esté completa (puertas fa
           return (await resp.json()) as {
             ok: boolean
             docId: string
-            outcome: "qualified" | "disqualified" | "safety_flagged"
+            outcome: "qualified" | "disqualified"
             prospectKey: string
           }
         },

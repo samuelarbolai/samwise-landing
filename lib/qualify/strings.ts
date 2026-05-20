@@ -25,17 +25,15 @@ export const STRINGS = {
     voice_mic_speaking_toggle_label: "Escuchando",
     voice_end_button: "Terminar",
 
-    final_qualified_headline: "Hablemos.",
-    final_qualified_cta: "Agendar la demo →",
+    final_qualified_headline: "Estás dentro.",
+    final_qualified_body:
+      "Tu Breakthrough Call es el siguiente paso. 45 minutos con un guía de Samwise que ya sabe lo que compartiste — vamos a mapear el camino desde aquí.",
+    final_qualified_cta: "Reservar la Breakthrough Call →",
 
     final_disqualified_headline: "Te damos el link.",
     final_disqualified_note:
       "Antes de agendar: vas a necesitar trabajar en definir mejor qué quieres cambiar para que esta sesión te dé valor real. Te damos el link igual, pero entra con esto en mente.",
-    final_disqualified_cta: "Agendar la demo →",
-
-    final_safety_headline: "Esto no es el lugar adecuado por ahora.",
-    final_safety_body:
-      "Lo que describes necesita atención profesional inmediata. No te dejamos solo — aquí hay recursos.",
+    final_disqualified_cta: "Reservar tu sesión →",
 
     error_generic: "Algo salió mal. Recarga para intentar otra vez.",
   },
@@ -59,17 +57,15 @@ export const STRINGS = {
     voice_mic_speaking_toggle_label: "Listening",
     voice_end_button: "End",
 
-    final_qualified_headline: "Let's talk.",
-    final_qualified_cta: "Schedule the demo →",
+    final_qualified_headline: "You're in.",
+    final_qualified_body:
+      "Your Breakthrough Call is the next step. 45 minutes with a Samwise guide who already knows what you shared — we'll map the path from here.",
+    final_qualified_cta: "Book the Breakthrough Call →",
 
     final_disqualified_headline: "Here's the link.",
     final_disqualified_note:
       "Before you book: you'll need to work on defining what you want to change before this session can give you real value. We're still giving you the link — go in with that in mind.",
-    final_disqualified_cta: "Schedule the demo →",
-
-    final_safety_headline: "This isn't the right place right now.",
-    final_safety_body:
-      "What you're describing needs immediate professional attention. We're not leaving you alone — here are resources.",
+    final_disqualified_cta: "Book your session →",
 
     error_generic: "Something went wrong. Reload to try again.",
   },
