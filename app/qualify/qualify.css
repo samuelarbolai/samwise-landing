@@ -598,7 +598,7 @@
 
 /* Qualified body — Fraunces italic lede register, slightly muted but readable.
    Smaller than the headline, bigger than the note. Sets expectation for the
-   Breakthrough Call without shouting. */
+   next call without shouting. */
 
 .qualify-final-body {
   font-family: 'Fraunces', Georgia, serif;
@@ -612,7 +612,7 @@
   font-variation-settings: 'opsz' 72, 'SOFT' 50;
 }
 
-/* The Breakthrough Call CTA — same .cta--primary visual language as proceed. */
+/* The next-call CTA — same .cta--primary visual language as proceed. */
 
 .qualify-final-cta {
   display: inline-flex;

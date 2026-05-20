@@ -25,10 +25,10 @@ export const STRINGS = {
     voice_mic_speaking_toggle_label: "Escuchando",
     voice_end_button: "Terminar",
 
-    final_qualified_headline: "Estás dentro.",
+    final_qualified_headline: "Te escuchamos.",
     final_qualified_body:
-      "Tu Breakthrough Call es el siguiente paso. 45 minutos con un guía de Samwise que ya sabe lo que compartiste — vamos a mapear el camino desde aquí.",
-    final_qualified_cta: "Reservar la Breakthrough Call →",
+      "El siguiente paso es una llamada de 45 minutos con un guía de Samwise que ya sabe lo que compartiste. Vamos a mapear el camino desde aquí.",
+    final_qualified_cta: "Reservar la llamada →",
 
     final_disqualified_headline: "Te damos el link.",
     final_disqualified_note:
@@ -57,10 +57,10 @@ export const STRINGS = {
     voice_mic_speaking_toggle_label: "Listening",
     voice_end_button: "End",
 
-    final_qualified_headline: "You're in.",
+    final_qualified_headline: "We listened.",
     final_qualified_body:
-      "Your Breakthrough Call is the next step. 45 minutes with a Samwise guide who already knows what you shared — we'll map the path from here.",
-    final_qualified_cta: "Book the Breakthrough Call →",
+      "The next step is a 45-minute call with a Samwise guide who already knows what you shared. We'll map the path from here.",
+    final_qualified_cta: "Book the call →",
 
     final_disqualified_headline: "Here's the link.",
     final_disqualified_note:
