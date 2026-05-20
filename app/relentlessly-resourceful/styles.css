@@ -1,0 +1,315 @@
+/* Variant-scoped styles for /relentlessly-resourceful (Spanish translation of
+   Paul Graham's "Relentlessly Resourceful"). All rules are scoped under
+   .rr-root so they cannot leak into canonical pages. */
+
+.rr-root .rr-page {
+  padding-top: 88px;
+  padding-bottom: 160px;
+}
+
+/* ── Header ── */
+.rr-root .rr-header {
+  margin-bottom: 88px;
+}
+
+.rr-root .rr-eyebrow {
+  margin-bottom: 32px;
+}
+
+.rr-root .rr-title {
+  max-width: none;
+  font-size: clamp(44px, 7vw, 84px);
+  line-height: 1.02;
+  margin-top: 0;
+}
+
+.rr-root .rr-date {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-top: 28px;
+}
+
+/* ── Audio control ── */
+.rr-root .rr-listen {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+
+.rr-root .rr-listen-main {
+  cursor: pointer;
+  appearance: none;
+  flex-shrink: 0;
+}
+
+.rr-root .rr-listen-main[disabled] {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.rr-root .rr-listen-stop {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.rr-root .rr-listen-stop:hover { color: var(--ink); }
+
+.rr-root .rr-listen-error {
+  margin-top: 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: #8a3a2b;
+}
+
+/* ── Seek bar (hairline range styled with gold thumb) ── */
+.rr-root .rr-seek {
+  flex: 1 1 200px;
+  min-width: 140px;
+  max-width: 360px;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+.rr-root .rr-seek::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--rule);
+  border-radius: 0;
+}
+
+.rr-root .rr-seek::-moz-range-track {
+  height: 1px;
+  background: var(--rule);
+  border-radius: 0;
+}
+
+.rr-root .rr-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #D4A85A;
+  border: none;
+  margin-top: -4.5px;
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+.rr-root .rr-seek::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #D4A85A;
+  border: none;
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+.rr-root .rr-seek:hover::-webkit-slider-thumb,
+.rr-root .rr-seek:active::-webkit-slider-thumb { transform: scale(1.25); }
+.rr-root .rr-seek:hover::-moz-range-thumb,
+.rr-root .rr-seek:active::-moz-range-thumb { transform: scale(1.25); }
+
+.rr-root .rr-time {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--ink-mute);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.rr-root .rr-time-sep { color: var(--rule); }
+
+/* ── Currently-reading marker (gold hairline in left margin) ── */
+.rr-root [data-rr-id] {
+  position: relative;
+  transition: color 0.4s ease;
+}
+
+.rr-root [data-rr-id]::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 0.45em;
+  bottom: 0.45em;
+  width: 2px;
+  background: #D4A85A;
+  opacity: 0;
+  transform: scaleY(0.4);
+  transform-origin: center;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  pointer-events: none;
+}
+
+.rr-root [data-rr-id].rr-playing::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* ── Body prose ── */
+.rr-root .rr-body {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  font-variation-settings: "opsz" 36;
+}
+
+.rr-root .rr-body p {
+  margin: 0 0 24px;
+}
+
+.rr-root .rr-body em {
+  font-style: italic;
+  color: var(--ink);
+}
+
+/* ── Pull-quote ── */
+.rr-root .rr-pull {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(26px, 3.2vw, 36px);
+  line-height: 1.3;
+  text-align: center;
+  color: var(--ink);
+  margin: 72px 0;
+  padding: 0;
+  border: none;
+  font-variation-settings: "opsz" 144, "SOFT" 80;
+}
+
+/* ── Footnote refs in body ── */
+.rr-root .rr-fnref {
+  display: inline-block;
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #D4A85A;
+  text-decoration: none;
+  vertical-align: super;
+  margin-left: 2px;
+  transition: color 0.2s ease;
+}
+
+.rr-root .rr-fnref:hover { color: var(--ink); }
+
+/* ── Divider before notes ── */
+.rr-root .rr-divider {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 96px 0 56px;
+}
+
+/* ── Notes section ── */
+.rr-root .rr-notes-heading {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 32px;
+}
+
+.rr-root .rr-note {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin-bottom: 22px;
+}
+
+.rr-root .rr-note--cont {
+  margin-top: -10px;
+  padding-left: 32px;
+}
+
+.rr-root .rr-note-num {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: #D4A85A;
+  margin-right: 12px;
+  vertical-align: 2px;
+}
+
+.rr-root .rr-ack {
+  margin-top: 56px;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 15px;
+  color: var(--ink-mute);
+}
+
+/* ── Footer ── */
+.rr-root .rr-footer {
+  margin-top: 120px;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
+  text-align: center;
+}
+
+.rr-root .rr-source-link {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.rr-root .rr-source-link:hover { color: var(--ink); }
+
+/* ── Mobile ── */
+@media (max-width: 720px) {
+  .rr-root .rr-page { padding-top: 48px; padding-bottom: 96px; }
+  .rr-root .rr-header { margin-bottom: 64px; }
+  .rr-root .rr-title { font-size: clamp(36px, 9vw, 56px); }
+  .rr-root .rr-body { font-size: 17px; }
+  .rr-root .rr-pull { margin: 48px 0; }
+  .rr-root [data-rr-id]::before { left: -14px; }
+  .rr-root .rr-listen { gap: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rr-root [data-rr-id],
+  .rr-root [data-rr-id]::before { transition: none; }
+}
