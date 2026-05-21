@@ -29,7 +29,7 @@ export const STRINGS = {
 
     final_qualified_headline: "Te escuchamos.",
     final_qualified_body:
-      "El siguiente paso es una llamada de 45 minutos con un guía de Samwise que ya sabe lo que compartiste. Vamos a mapear el camino desde aquí.",
+      "El siguiente paso es una llamada de 50 minutos con un guía de Samwise que ya sabe lo que compartiste. Vamos a mapear el camino desde aquí.",
     final_qualified_cta: "Reservar la llamada →",
 
     final_disqualified_headline: "Te damos el link.",
@@ -63,7 +63,7 @@ export const STRINGS = {
 
     final_qualified_headline: "We listened.",
     final_qualified_body:
-      "The next step is a 45-minute call with a Samwise guide who already knows what you shared. We'll map the path from here.",
+      "The next step is a 50-minute call with a Samwise guide who already knows what you shared. We'll map the path from here.",
     final_qualified_cta: "Book the call →",
 
     final_disqualified_headline: "Here's the link.",
