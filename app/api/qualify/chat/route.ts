@@ -1,4 +1,3 @@
-import { google } from "@ai-sdk/google"
 import {
   convertToModelMessages,
   streamText,
@@ -62,7 +61,7 @@ En modo texto NO hay handoff. Cuando la conversación esté completa (puertas fa
 
   const modelMessages = await convertToModelMessages(messages)
   const result = streamText({
-    model: google("gemini-2.5-flash"),
+    model: "google/gemini-2.5-flash",
     system,
     messages: modelMessages,
     tools: {
