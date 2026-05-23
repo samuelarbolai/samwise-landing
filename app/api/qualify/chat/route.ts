@@ -48,7 +48,11 @@ If, AND ONLY IF, all three Priority-1 gates pass (decision_taken=Y, behaviour_cl
 
 ${capture}
 
-In text mode there is no handoff. When the conversation is complete (gates failed, safety flagged, OR P2 captured), call submitQualification EXACTLY ONCE with the full payload (P1+safety+P2 — P2 fields may be empty if the user disqualified or was safety-flagged).` :
+In text mode there is no handoff. Call submitQualification EXACTLY ONCE with the full payload (P1+safety+P2 — P2 fields may be empty if the user disqualified or was safety-flagged), and ONLY after one of these is true:
+  (a) all three Priority-1 gates have been ELICITED from the user (decision_taken Y/N, behaviour_clarity clear/vague, motivation_clarity clear/vague — vague counts; silence does NOT), and P2 capture has been attempted on the qualified path; OR
+  (b) safety has been clearly flagged (acute_risk_flag=Y OR ownership_self_reported=external).
+
+Hard rule: do NOT call submitQualification just because the user opened with "I'm just exploring" or sounded reluctant. That answers at most decision_taken — you still must surface behaviour_clarity and motivation_clarity with the user before submitting.` :
       `${intake}
 
 ---
@@ -57,13 +61,29 @@ Si — Y SOLO SI — las tres puertas de Prioridad 1 pasan (decision_taken=Y, be
 
 ${capture}
 
-En modo texto NO hay handoff. Cuando la conversación esté completa (puertas falladas, safety flaggeado, O P2 capturado), llama submitQualification UNA SOLA VEZ con el payload completo (P1+safety+P2 — los campos de P2 pueden estar vacíos si el usuario fue descalificado o flaggeado por safety).`
+En modo texto NO hay handoff. Llama submitQualification UNA SOLA VEZ con el payload completo (P1+safety+P2 — los campos de P2 pueden estar vacíos si el usuario fue descalificado o flaggeado por safety), y SOLO después de que sea cierto uno de estos:
+  (a) las tres puertas de Prioridad 1 han sido ELICITADAS del usuario (decision_taken Y/N, behaviour_clarity clear/vague, motivation_clarity clear/vague — vague cuenta; el silencio NO), y se ha intentado la captura de P2 en el camino calificado; O
+  (b) safety ha sido claramente flaggeado (acute_risk_flag=Y O ownership_self_reported=external).
+
+Regla dura: NO llames submitQualification solo porque el usuario abrió con "solo estoy explorando" o sonó reacio. Eso responde como mucho decision_taken — todavía debes surgir behaviour_clarity y motivation_clarity con el usuario antes de enviar.`
 
   const modelMessages = await convertToModelMessages(messages)
   const result = streamText({
     model: "google/gemini-2.5-flash",
     system,
     messages: modelMessages,
+    // Emit OTel spans for Langfuse (see instrumentation.ts). Each chat
+    // request becomes a trace; functionId groups them in the Langfuse UI;
+    // metadata is what lets us filter sessions by prospect later.
+    experimental_telemetry: {
+      isEnabled: true,
+      functionId: "qualify-chat",
+      metadata: {
+        language,
+        prospectEmail,
+        prospectName,
+      },
+    },
     tools: {
       submitQualification: tool({
         description:
