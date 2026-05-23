@@ -20,16 +20,24 @@ export function QualifyChat({
 }) {
   const s = STRINGS[lang]
 
-  // Pass `language`, `name`, and `email` in the request body so the
-  // API route can pick the right prompt + thread the prospect's identity.
+  // Stable session identifier for this whole chat — generated once when
+  // the component mounts. The server attaches it to every Langfuse span
+  // so the multi-turn conversation appears as ONE session in the
+  // Langfuse UI instead of N disconnected traces. crypto.randomUUID is
+  // available in every browser that runs this app.
+  const sessionId = useMemo(() => crypto.randomUUID(), [])
+
+  // Pass `language`, `name`, `email`, and `sessionId` in the request
+  // body so the API route can pick the right prompt + thread the
+  // prospect's identity + group turns under one Langfuse session.
   // AI SDK 6 uses a transport for outbound shaping.
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/qualify/chat",
-        body: () => ({ language: lang, name, email }),
+        body: () => ({ language: lang, name, email, sessionId }),
       }),
-    [lang, name, email],
+    [lang, name, email, sessionId],
   )
 
   const { messages, sendMessage, status } = useChat({ transport })

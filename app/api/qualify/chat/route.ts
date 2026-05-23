@@ -1,9 +1,12 @@
+import { after } from "next/server"
 import {
   convertToModelMessages,
   streamText,
   tool,
   type UIMessage,
 } from "ai"
+import { propagateAttributes } from "@langfuse/tracing"
+import { langfuseSpanProcessor } from "@/instrumentation"
 import { buildCapturePrompt } from "@/lib/qualify/capture-prompt"
 import { buildIntakePrompt } from "@/lib/qualify/intake-prompt"
 import { QualificationPayloadSchema } from "@/lib/qualify/schema"
@@ -24,14 +27,20 @@ const SUBMIT_QUALIFICATION_URL = process.env.SUBMIT_QUALIFICATION_URL!
 export const maxDuration = 60
 
 export async function POST(req: Request) {
-  const { messages, language, name, email } = (await req.json()) as {
-    messages: UIMessage[]
-    language: "es" | "en"
-    name: string
-    email: string
-  }
+  const { messages, language, name, email, sessionId } =
+    (await req.json()) as {
+      messages: UIMessage[]
+      language: "es" | "en"
+      name: string
+      email: string
+      sessionId?: string
+    }
   const prospectName = (name ?? "").trim() || "friend"
   const prospectEmail = (email ?? "").trim()
+  // userId in Langfuse — email is what /copilot also uses to find a
+  // prospect, so it keeps the two systems aligned. Falls back to the
+  // prospect name when email is empty.
+  const langfuseUserId = prospectEmail || prospectName
 
   const intake = buildIntakePrompt(language, prospectName)
   const capture = buildCapturePrompt(language, null)
@@ -68,23 +77,33 @@ En modo texto NO hay handoff. Llama submitQualification UNA SOLA VEZ con el payl
 Regla dura: NO llames submitQualification solo porque el usuario abrió con "solo estoy explorando" o sonó reacio. Eso responde como mucho decision_taken — todavía debes surgir behaviour_clarity y motivation_clarity con el usuario antes de enviar.`
 
   const modelMessages = await convertToModelMessages(messages)
-  const result = streamText({
-    model: "google/gemini-2.5-flash",
-    system,
-    messages: modelMessages,
-    // Emit OTel spans for Langfuse (see instrumentation.ts). Each chat
-    // request becomes a trace; functionId groups them in the Langfuse UI;
-    // metadata is what lets us filter sessions by prospect later.
-    experimental_telemetry: {
-      isEnabled: true,
-      functionId: "qualify-chat",
-      metadata: {
-        language,
-        prospectEmail,
-        prospectName,
-      },
+  // propagateAttributes injects sessionId + userId onto every OTel span
+  // created inside the callback. The Langfuse OTel processor reads these
+  // and groups all turns of this conversation into a single session in
+  // the Langfuse UI. Without this wrap, each POST is a disconnected trace.
+  const result = await propagateAttributes(
+    {
+      ...(sessionId ? { sessionId } : {}),
+      userId: langfuseUserId,
     },
-    tools: {
+    async () =>
+      streamText({
+        model: "google/gemini-2.5-flash",
+        system,
+        messages: modelMessages,
+        // experimental_telemetry turns on AI SDK's OTel emission.
+        // functionId groups all qualify-chat calls together in Langfuse;
+        // metadata gives per-trace context for filtering.
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: "qualify-chat",
+          metadata: {
+            language,
+            prospectEmail,
+            prospectName,
+          },
+        },
+        tools: {
       submitQualification: tool({
         description:
           "Submit the full qualification payload at the end of the conversation. Call exactly ONCE.",
@@ -114,6 +133,14 @@ Regla dura: NO llames submitQualification solo porque el usuario abrió con "sol
         },
       }),
     },
+  }),
+  )
+
+  // Serverless gotcha: the function can exit before Langfuse's batch
+  // processor flushes its spans, so traces silently disappear. `after()`
+  // runs once the response has been sent, then we force the flush.
+  after(async () => {
+    await langfuseSpanProcessor.forceFlush()
   })
 
   return result.toUIMessageStreamResponse()
