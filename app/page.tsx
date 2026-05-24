@@ -45,7 +45,7 @@ const copy = {
     navAdvisors: "Advisors",
     navValidation: "Scientific Evidence",
     footer: "Last updated · May 2026",
-    quietCtaLabel: "Start your fit assessment",
+    quietCtaLabel: "Book your Breakthrough Call",
     dualCtaStart: "Start now",
     dualCtaDiscover: "Discover Samwise",
     navStartNow: "Start now",
@@ -87,7 +87,7 @@ const copy = {
     navAdvisors: "Asesores",
     navValidation: "Evidencia Científica",
     footer: "Última actualización · Mayo 2026",
-    quietCtaLabel: "Empieza tu evaluación",
+    quietCtaLabel: "Reserva tu Llamada de Avance",
     dualCtaStart: "Empieza ahora",
     dualCtaDiscover: "Descubre Samwise",
     navStartNow: "Empieza ahora",
@@ -597,7 +597,7 @@ export default function EditorialHome() {
 
         {/* Teaser — what comes after, in a smaller editorial register.
             Sits in natural flow after the CTA's pin releases, so the
-            user only acts on one thing (the Fit Assessment) but glimpses
+            user only acts on one thing (the Breakthrough Call) but glimpses
             the journey. The manifesto headline carries the section's
             main message. */}
         <div className="editorial-wrap">

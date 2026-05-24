@@ -1,7 +1,7 @@
 "use client"
 import { STRINGS, type Lang } from "@/lib/qualify/strings"
 
-const DEMO_CALL_URL = "https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment"
+const DEMO_CALL_URL = "https://cal.com/samuel-giraldo-concha-yqvtot/breakthrough"
 
 export type Outcome = "qualified" | "disqualified"
 

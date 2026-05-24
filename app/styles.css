@@ -1513,7 +1513,7 @@ html { scroll-snap-type: y proximity; }
 
 /* ════════════════════════════════════════════════════════════════════
    Hero corner CTA — promoted from the former /quiet-cta variant.
-   A near-invisible "Schedule a fit assessment →" link in the bottom
+   A near-invisible "Book your Breakthrough Call →" link in the bottom
    right of the hero. At rest only the arrow is visible at low opacity;
    the full label fades in on hover (desktop). On mobile only the arrow
    shows (tap routes to cal.com; aria-label exposes the full text to
