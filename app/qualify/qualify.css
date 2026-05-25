@@ -424,9 +424,12 @@
   justify-content: center;
   padding: 32px 0 28px;
   z-index: 2;
-  /* No background, no border, no shadow — the fade scrim above does
-     all the visual work without painting a box. */
-  background: transparent;
+  /* Opaque page-bg so content scrolling under the dock is HIDDEN
+     (not visible behind the button). No border, no shadow — on a
+     white page this reads as no chrome, just the gold-dash button
+     floating on the same surface as the rest of the page. The fade
+     scrim above provides the soft transition into this hidden zone. */
+  background: var(--bg);
 }
 
 /* Fade scrim — a ::before pseudo-element extending UPWARD from the
@@ -649,9 +652,9 @@
 }
 
 .qualify-chat-layout:has(.qualify-notes) .qualify-chat-input-dock {
-  /* Fixed (not sticky) — same reasoning as the voice mic dock. The dock
-     is always pinned to viewport bottom while transcript scrolls under
-     it. */
+  /* Fixed (not sticky) — same reasoning as the voice mic dock. Opaque
+     page-bg so the transcript scrolling under is hidden, not visible
+     through the input chrome. Scrim above handles the soft transition. */
   position: fixed;
   bottom: 0;
   left: 0;
@@ -660,7 +663,7 @@
   justify-content: center;
   padding: 24px 0 28px;
   z-index: 2;
-  background: transparent;
+  background: var(--bg);
 }
 
 .qualify-chat-layout:has(.qualify-notes) .qualify-chat-input-dock::before {
