@@ -7,22 +7,37 @@ import {
 } from "ai"
 import { propagateAttributes } from "@langfuse/tracing"
 import { langfuseSpanProcessor } from "@/instrumentation"
-import { buildCapturePrompt } from "@/lib/qualify/capture-prompt"
-import { buildIntakePrompt } from "@/lib/qualify/intake-prompt"
-import { QualificationPayloadSchema } from "@/lib/qualify/schema"
+import { buildQualificationPrompt } from "@/lib/qualify/qualification-prompt"
+import {
+  EndCallArgsSchema,
+  SetVariablesArgsSchema,
+} from "@/lib/qualify/schema"
 
 // Text-mode fallback for /qualify. Voice mode is the primary path
-// (LiveKit room + samwise-backend/qualification-agent worker); this
-// route runs only when the user clicked "I'd rather type".
+// (LiveKit room + ritual-agent's flows/qualification worker); this route
+// runs only when the user clicked "I'd rather type".
 //
-// Text mode does NOT replicate the voice path's handoff workflow.
-// Both Intake and Capture concerns are stitched into ONE prompt with
-// one tool (`submitQualification`) taking the full payload. The cloud
-// function evaluates qualified vs disqualified server-side.
-// Rationale: handoffs in the AI SDK would require statefulness this
-// route doesn't need for the fallback path.
+// Mirrors the voice flow's tool surface:
+//   - setVariables: live notes — the chat client observes tool calls in
+//     the streamed parts and updates <VariablesPanel> in real time. The
+//     execute returns nothing useful, only acknowledgement; the UI keys
+//     off the tool's INPUT (which has the values the agent committed).
+//   - endCall: signals the user's conversation is done. Inside execute
+//     we build the transcript from the request's `messages`, POST it to
+//     the extractQualification cloud function (same path as voice mode's
+//     submitIfNotYet), and return the outcome so the chat client can swap
+//     to <FinalScreen>.
+//
+// Why fire extraction inside the tool execute (vs. from the client after
+// stream completion):
+//   - The tool runs server-side where the messages and env vars already
+//     live. Doing it from the client would require a second round-trip
+//     POST + auth + risk loss if the user closes the tab.
+//   - We DO lose the assistant's closing-line text from the transcript
+//     (it streams AFTER endCall fires). The extraction LLM doesn't need
+//     the goodbye line to produce structured fields; acceptable tradeoff.
 
-const SUBMIT_QUALIFICATION_URL = process.env.SUBMIT_QUALIFICATION_URL!
+const EXTRACT_QUALIFICATION_URL = process.env.EXTRACT_QUALIFICATION_URL
 
 export const maxDuration = 60
 
@@ -37,50 +52,11 @@ export async function POST(req: Request) {
     }
   const prospectName = (name ?? "").trim() || "friend"
   const prospectEmail = (email ?? "").trim()
-  // userId in Langfuse — email is what /copilot also uses to find a
-  // prospect, so it keeps the two systems aligned. Falls back to the
-  // prospect name when email is empty.
   const langfuseUserId = prospectEmail || prospectName
 
-  const intake = buildIntakePrompt(language, prospectName)
-  const capture = buildCapturePrompt(language, null)
-
-  // Combined prompt: Intake first, Capture as a "second stage" the
-  // model self-enters when the P1+safety gates pass.
-  const system =
-    language === "en" ?
-      `${intake}
-
----
-
-If, AND ONLY IF, all three Priority-1 gates pass (decision_taken=Y, behaviour_clarity=clear, motivation_clarity=clear) AND safety is clear, switch to the second stage:
-
-${capture}
-
-In text mode there is no handoff. Call submitQualification EXACTLY ONCE with the full payload (P1+safety+P2 — P2 fields may be empty if the user disqualified or was safety-flagged), and ONLY after one of these is true:
-  (a) all three Priority-1 gates have been ELICITED from the user (decision_taken Y/N, behaviour_clarity clear/vague, motivation_clarity clear/vague — vague counts; silence does NOT), and P2 capture has been attempted on the qualified path; OR
-  (b) safety has been clearly flagged (acute_risk_flag=Y OR ownership_self_reported=external).
-
-Hard rule: do NOT call submitQualification just because the user opened with "I'm just exploring" or sounded reluctant. That answers at most decision_taken — you still must surface behaviour_clarity and motivation_clarity with the user before submitting.` :
-      `${intake}
-
----
-
-Si — Y SOLO SI — las tres puertas de Prioridad 1 pasan (decision_taken=Y, behaviour_clarity=clear, motivation_clarity=clear) Y safety está limpio, cambia a la segunda etapa:
-
-${capture}
-
-En modo texto NO hay handoff. Llama submitQualification UNA SOLA VEZ con el payload completo (P1+safety+P2 — los campos de P2 pueden estar vacíos si el usuario fue descalificado o flaggeado por safety), y SOLO después de que sea cierto uno de estos:
-  (a) las tres puertas de Prioridad 1 han sido ELICITADAS del usuario (decision_taken Y/N, behaviour_clarity clear/vague, motivation_clarity clear/vague — vague cuenta; el silencio NO), y se ha intentado la captura de P2 en el camino calificado; O
-  (b) safety ha sido claramente flaggeado (acute_risk_flag=Y O ownership_self_reported=external).
-
-Regla dura: NO llames submitQualification solo porque el usuario abrió con "solo estoy explorando" o sonó reacio. Eso responde como mucho decision_taken — todavía debes surgir behaviour_clarity y motivation_clarity con el usuario antes de enviar.`
+  const system = buildQualificationPrompt(language, prospectName, "text")
 
   const modelMessages = await convertToModelMessages(messages)
-  // propagateAttributes injects sessionId + userId onto every OTel span
-  // created inside the callback. The Langfuse OTel processor reads these
-  // and groups all turns of this conversation into a single session in
-  // the Langfuse UI. Without this wrap, each POST is a disconnected trace.
   const result = await propagateAttributes(
     {
       ...(sessionId ? { sessionId } : {}),
@@ -91,9 +67,6 @@ Regla dura: NO llames submitQualification solo porque el usuario abrió con "sol
         model: "google/gemini-2.5-flash",
         system,
         messages: modelMessages,
-        // experimental_telemetry turns on AI SDK's OTel emission.
-        // functionId groups all qualify-chat calls together in Langfuse;
-        // metadata gives per-trace context for filtering.
         experimental_telemetry: {
           isEnabled: true,
           functionId: "qualify-chat",
@@ -104,44 +77,89 @@ Regla dura: NO llames submitQualification solo porque el usuario abrió con "sol
           },
         },
         tools: {
-      submitQualification: tool({
-        description:
-          "Submit the full qualification payload at the end of the conversation. Call exactly ONCE.",
-        inputSchema: QualificationPayloadSchema,
-        execute: async (raw) => {
-          // Merge in identifiers from the request body — the LLM does not
-          // supply prospect_name / contact_email / language through the
-          // tool. contact_email is what makes the qualification doc
-          // findable by /copilot's email search.
-          const payload = {
-            ...raw,
-            prospect_name: prospectName,
-            language,
-            ...(prospectEmail ? { contact_email: prospectEmail } : {}),
-          }
-          const resp = await fetch(SUBMIT_QUALIFICATION_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-          return (await resp.json()) as {
-            ok: boolean
-            docId: string
-            outcome: "qualified" | "disqualified"
-            prospectKey: string
-          }
+          setVariables: tool({
+            description:
+              "Write to your notes — the user sees these appear on screen as poster-style cards. Each parameter is a variable; supply only the ones you have a verbatim user quote for in this turn. Calls overwrite, so you can update a value later if the user clarifies. Multiple variables can be committed in a single call.",
+            inputSchema: SetVariablesArgsSchema,
+            execute: async (updates) => {
+              // The chat client renders the panel from the tool call's
+              // INPUT (observed in the stream), not from the output. We
+              // still return the committed names so it's visible in
+              // Langfuse traces what landed where.
+              const committed = Object.entries(updates)
+                .filter(([, v]) => typeof v === "string" && v.trim().length > 0)
+                .map(([k]) => k)
+              return { committed }
+            },
+          }),
+
+          endCall: tool({
+            description:
+              "Signal that the conversation is complete. You MUST write your closing line BEFORE calling this. Takes no arguments. After this returns, the conversation ends and the extraction system processes the transcript.",
+            inputSchema: EndCallArgsSchema,
+            execute: async () => {
+              if (!EXTRACT_QUALIFICATION_URL) {
+                console.warn("[qualify-chat] EXTRACT_QUALIFICATION_URL not set — skipping extraction")
+                return { ok: false, outcome: "disqualified" as const }
+              }
+              const transcript = messagesToTranscript(messages)
+              try {
+                const resp = await fetch(EXTRACT_QUALIFICATION_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    transcript,
+                    prospect_name: prospectName,
+                    prospect_email: prospectEmail || undefined,
+                    language,
+                  }),
+                })
+                if (!resp.ok) {
+                  console.error("[qualify-chat] extractQualification non-OK", resp.status)
+                  return { ok: false, outcome: "disqualified" as const }
+                }
+                const data = (await resp.json()) as {
+                  ok: boolean
+                  outcome: "qualified" | "disqualified"
+                  docId: string
+                  prospectKey: string
+                }
+                return { ok: true, outcome: data.outcome }
+              } catch (err) {
+                console.error("[qualify-chat] extractQualification failed", err)
+                return { ok: false, outcome: "disqualified" as const }
+              }
+            },
+          }),
         },
       }),
-    },
-  }),
   )
 
-  // Serverless gotcha: the function can exit before Langfuse's batch
-  // processor flushes its spans, so traces silently disappear. `after()`
-  // runs once the response has been sent, then we force the flush.
   after(async () => {
     await langfuseSpanProcessor.forceFlush()
   })
 
   return result.toUIMessageStreamResponse()
+}
+
+// Convert UIMessage[] into the transcript shape the extraction CF expects:
+// [{ role: 'user' | 'assistant', content: string }]. Concatenate all text
+// parts within each message; drop tool calls / tool results / non-text
+// parts (the extraction LLM works from the conversational content, not
+// the tool plumbing).
+function messagesToTranscript(
+  messages: UIMessage[],
+): Array<{ role: "user" | "assistant"; content: string }> {
+  const turns: Array<{ role: "user" | "assistant"; content: string }> = []
+  for (const m of messages) {
+    if (m.role !== "user" && m.role !== "assistant") continue
+    const text = m.parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text" && typeof (p as { text?: unknown }).text === "string")
+      .map((p) => p.text)
+      .join("")
+      .trim()
+    if (!text) continue
+    turns.push({ role: m.role, content: text })
+  }
+  return turns
 }

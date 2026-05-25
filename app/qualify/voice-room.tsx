@@ -10,6 +10,25 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { STRINGS, type Lang } from "@/lib/qualify/strings"
 import type { Outcome } from "./components/final-screen"
+import {
+  VariablesPanel,
+  type VariableKey,
+  type VariablesState,
+} from "./components/variables-panel"
+
+// Valid VariableKey values, as a Set for O(1) defensive filtering of
+// inbound variable-update events (in case the agent emits a name we
+// don't yet render — e.g. a future-added field shipped on the worker
+// side ahead of the landing).
+const VALID_VARIABLE_KEYS: Set<string> = new Set<VariableKey>([
+  "behaviour_to_change",
+  "core_motivation",
+  "problem_duration_self_reported",
+  "life_stage_context",
+  "symbolic_anchor_description",
+  "alternatives_tried",
+  "why_alternatives_failed",
+])
 
 type MicState = "idle" | "armed" | "speaking-hold" | "speaking-toggle"
 
@@ -55,6 +74,12 @@ export function VoiceRoom({
   const [error, setError] = useState<string | null>(null)
   const [micState, setMicStateUI] = useState<MicState>("idle")
 
+  // Live notes the agent has committed via setVariables. Updated when
+  // the worker publishes `qualification:variable_update` data events.
+  // Renders into <VariablesPanel> on the right (desktop) / below mic
+  // (mobile). Empty until the agent commits its first note.
+  const [variables, setVariables] = useState<VariablesState>({})
+
   // Minimum welcome-card display time. Even on fast connects, hold the
   // welcome long enough for the user to read it and settle. The mic UI
   // appears only when BOTH the room is connected AND this floor has elapsed.
@@ -98,11 +123,17 @@ export function VoiceRoom({
     }
 
     room.on(RoomEvent.DataReceived, (payload) => {
-      // Outcome events are published by the agent worker's tools.
+      // Two message types come through this channel:
+      //   - qualification:outcome — published once at end-of-call by the
+      //     worker after extractQualification returns.
+      //   - qualification:variable_update — published per-variable each
+      //     time the agent calls setVariables. Drives the live panel.
       try {
         const msg = JSON.parse(new TextDecoder().decode(payload)) as {
           type?: string
           outcome?: string
+          name?: string
+          value?: string
         }
         if (
           msg.type === "qualification:outcome" &&
@@ -111,11 +142,21 @@ export function VoiceRoom({
         ) {
           deliberateDisconnectRef.current = true
           pendingOutcomeRef.current = msg.outcome
-          // Permissive initial silence timer — ActiveSpeakersChanged
-          // resets it when the agent starts the goodbye line.
           scheduleSilenceTimer()
-          // Hard cap so we never hang if speaker events misbehave.
           maxWaitTimerRef.current = setTimeout(finalizeOutcome, OUTCOME_MAX_WAIT_MS)
+        } else if (
+          msg.type === "qualification:variable_update" &&
+          typeof msg.name === "string" &&
+          typeof msg.value === "string" &&
+          VALID_VARIABLE_KEYS.has(msg.name)
+        ) {
+          // Functional update so React batches multiple in-flight updates
+          // (the agent often commits 2+ variables in one setVariables call;
+          // each becomes its own data event).
+          setVariables((prev) => ({
+            ...prev,
+            [msg.name as VariableKey]: msg.value as string,
+          }))
         }
       } catch {
         // ignore non-JSON
@@ -283,34 +324,45 @@ export function VoiceRoom({
           on iOS Safari — the element must exist BEFORE startAudio(). */}
       <audio ref={audioSinkRef} autoPlay playsInline style={{ display: "none" }} />
 
-      {showWelcome && !error && (
-        <div className="qualify-voice-welcome">
-          <p className="qualify-voice-welcome-lead">{s.voice_welcome_lead}</p>
-          <p className="qualify-voice-welcome-sub">{s.voice_welcome_sub}</p>
-        </div>
-      )}
+      {/* Primary column: welcome card while connecting, then mic button.
+          When the VariablesPanel renders alongside (desktop, see CSS
+          :has() rule), this becomes the left column; on mobile and pre-
+          notes desktop, it centers as it always did. */}
+      <div className="qualify-voice-primary">
+        {showWelcome && !error && (
+          <div className="qualify-voice-welcome">
+            <p className="qualify-voice-welcome-lead">{s.voice_welcome_lead}</p>
+            <p className="qualify-voice-welcome-sub">{s.voice_welcome_sub}</p>
+          </div>
+        )}
 
-      {error && (
-        <div className="qualify-voice-status qualify-voice-error">{error}</div>
-      )}
+        {error && (
+          <div className="qualify-voice-status qualify-voice-error">{error}</div>
+        )}
 
-      {!showWelcome && !error && (
-        <button
-          type="button"
-          className={`qualify-voice-mic qualify-voice-mic-${micState}`}
-          onPointerDown={handlePressStart}
-          onPointerUp={handlePressEnd}
-          onPointerCancel={handlePressEnd}
-          onPointerLeave={(e) => {
-            // If the user holds and drags away, treat as end-of-turn.
-            if (e.buttons === 0) return
-            handlePressEnd()
-          }}
-          aria-pressed={micState === "speaking-hold" || micState === "speaking-toggle"}
-        >
-          <span className="qualify-mic-text">{micLabel}</span>
-        </button>
-      )}
+        {!showWelcome && !error && (
+          <button
+            type="button"
+            className={`qualify-voice-mic qualify-voice-mic-${micState}`}
+            onPointerDown={handlePressStart}
+            onPointerUp={handlePressEnd}
+            onPointerCancel={handlePressEnd}
+            onPointerLeave={(e) => {
+              // If the user holds and drags away, treat as end-of-turn.
+              if (e.buttons === 0) return
+              handlePressEnd()
+            }}
+            aria-pressed={micState === "speaking-hold" || micState === "speaking-toggle"}
+          >
+            <span className="qualify-mic-text">{micLabel}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Variables panel — fills live as the agent commits notes via
+          setVariables. Renders nothing while empty (the agent hasn't
+          committed yet); appears as soon as the first note lands. */}
+      <VariablesPanel lang={lang} variables={variables} />
     </div>
   )
 }

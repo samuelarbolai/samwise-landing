@@ -88,6 +88,17 @@
   }
 }
 
+/* Widen the stage when the live-notes panel is present so voice + text
+   mode have room for the side-by-side layout (mic|panel and chat|panel
+   respectively). Without this, .qualify-stage's 640px cap crushes the
+   primary column. Voice mode tolerates the squeeze (the mic is narrow)
+   but chat mode becomes unusable. Applies to both modes for parity. */
+@media (min-width: 720px) {
+  .qualify-stage:has(.qualify-notes) {
+    max-width: 1100px;
+  }
+}
+
 /* ===================================================================
    Language picker
    =================================================================== */
@@ -356,6 +367,39 @@
   width: 100%;
 }
 
+/* Primary column wraps the welcome card / mic button so VariablesPanel
+   can sit alongside on desktop without disturbing the centered layout
+   pre-notes. The primary column always behaves like the original
+   centered stack — it just shares horizontal space with the notes
+   panel when the panel has content (see :has() rule below). */
+.qualify-voice-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+}
+
+/* Desktop side-by-side: shift from column to row ONLY when the notes
+   panel has content. Pre-notes the layout is the existing centered
+   column — the moment the agent commits its first note, the layout
+   flexes to row, the mic moves leftward, and the notes panel grows
+   rightward. */
+@media (min-width: 720px) {
+  .qualify-voice:has(.qualify-notes) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4rem;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  .qualify-voice:has(.qualify-notes) .qualify-voice-primary {
+    /* Keep the mic top-aligned with the first note card in row mode. */
+    align-self: flex-start;
+    flex-shrink: 0;
+  }
+}
+
 .qualify-voice-status {
   font-family: 'Manrope', sans-serif;
   font-size: 13px;
@@ -493,6 +537,35 @@
 /* ===================================================================
    Text chat — letter / script transcript
    =================================================================== */
+
+/* Layout wrapper for text mode: chat on the left, VariablesPanel on the
+   right (desktop) or stacked below (mobile). Same :has() shift pattern
+   as voice mode — pre-notes, the chat is full-width; the moment the
+   panel has content, the layout flexes to row. */
+.qualify-chat-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+@media (min-width: 720px) {
+  .qualify-chat-layout:has(.qualify-notes) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .qualify-chat-layout:has(.qualify-notes) > .qualify-chat {
+    /* Chat keeps the existing width budget; panel shares the row. */
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 36em;
+  }
+}
 
 .qualify-chat {
   display: flex;
@@ -721,6 +794,68 @@
   max-width: 36em;
 }
 
+/* ── Variables panel — live note-taking surface ──
+   The agent commits notes during the conversation; each commit becomes a
+   card that fades up into the panel. Same editorial register as the
+   welcome card: Manrope small-caps label + Fraunces italic quote of the
+   user's own words. No icons, no progress bars, no field-validation
+   chrome — reads like the conversation is writing itself onto the wall.
+
+   Layout: this rule styles the panel internals only. The parent (voice-
+   room.tsx / chat.tsx in B2) decides desktop vs mobile placement via a
+   grid wrapper. Wired side-by-side with the mic on desktop, stacked
+   below on mobile. */
+
+.qualify-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-width: 24em;
+  /* Left-align text inside; parent grid centers the column itself. */
+  text-align: left;
+}
+
+.qualify-notes-card {
+  /* Each card animates in independently via the welcome keyframes —
+     'both' fill-mode keeps the final state, so cards don't reset on
+     panel re-render. */
+  animation: qualify-voice-welcome-in 0.6s ease-out both;
+}
+
+.qualify-notes-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 0.5rem 0;
+}
+
+.qualify-notes-quote {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin: 0;
+  font-variation-settings: 'opsz' 96, 'SOFT' 80;
+  /* When the agent overwrites a value, the quote span is re-keyed in
+     React (see VariablesPanel) — remount triggers the entry animation
+     so an update visually reads as the card rewriting itself. */
+  animation: qualify-voice-welcome-in 0.4s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qualify-notes-card,
+  .qualify-notes-quote {
+    animation: none;
+  }
+}
+
 /* ── Mobile ── */
 
 @media (max-width: 540px) {
@@ -734,5 +869,9 @@
   .qualify-voice-mic {
     min-width: 0;
     width: 100%;
+  }
+  .qualify-notes {
+    max-width: 100%;
+    gap: 1.5rem;
   }
 }

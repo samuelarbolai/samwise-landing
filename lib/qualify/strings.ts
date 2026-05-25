@@ -38,6 +38,14 @@ export const STRINGS = {
     final_disqualified_cta: "Reservar tu sesión →",
 
     error_generic: "Algo salió mal. Recarga para intentar otra vez.",
+
+    notes_label_behaviour_to_change: "El comportamiento",
+    notes_label_core_motivation: "Por qué importa",
+    notes_label_problem_duration_self_reported: "Cuánto lleva",
+    notes_label_life_stage_context: "Dónde estás",
+    notes_label_symbolic_anchor_description: "De dónde sacas fuerza",
+    notes_label_alternatives_tried: "Lo que has intentado",
+    notes_label_why_alternatives_failed: "Lo que faltó",
   },
   en: {
     picker_heading: "How would you like to talk?",
@@ -72,6 +80,14 @@ export const STRINGS = {
     final_disqualified_cta: "Book your session →",
 
     error_generic: "Something went wrong. Reload to try again.",
+
+    notes_label_behaviour_to_change: "The behaviour",
+    notes_label_core_motivation: "Why it matters",
+    notes_label_problem_duration_self_reported: "How long",
+    notes_label_life_stage_context: "Where you are",
+    notes_label_symbolic_anchor_description: "What you draw on",
+    notes_label_alternatives_tried: "What you've tried",
+    notes_label_why_alternatives_failed: "What was missing",
   },
 } as const
 

@@ -6,6 +6,21 @@ import { STRINGS, type Lang } from "@/lib/qualify/strings"
 import { MessageList } from "./components/message-list"
 import { MessageInput } from "./components/message-input"
 import type { Outcome } from "./components/final-screen"
+import {
+  VariablesPanel,
+  type VariableKey,
+  type VariablesState,
+} from "./components/variables-panel"
+
+const VALID_VARIABLE_KEYS: Set<string> = new Set<VariableKey>([
+  "behaviour_to_change",
+  "core_motivation",
+  "problem_duration_self_reported",
+  "life_stage_context",
+  "symbolic_anchor_description",
+  "alternatives_tried",
+  "why_alternatives_failed",
+])
 
 export function QualifyChat({
   lang,
@@ -23,14 +38,9 @@ export function QualifyChat({
   // Stable session identifier for this whole chat — generated once when
   // the component mounts. The server attaches it to every Langfuse span
   // so the multi-turn conversation appears as ONE session in the
-  // Langfuse UI instead of N disconnected traces. crypto.randomUUID is
-  // available in every browser that runs this app.
+  // Langfuse UI instead of N disconnected traces.
   const sessionId = useMemo(() => crypto.randomUUID(), [])
 
-  // Pass `language`, `name`, `email`, and `sessionId` in the request
-  // body so the API route can pick the right prompt + thread the
-  // prospect's identity + group turns under one Langfuse session.
-  // AI SDK 6 uses a transport for outbound shaping.
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
@@ -44,17 +54,41 @@ export function QualifyChat({
 
   const [draft, setDraft] = useState("")
 
-  // Sniff tool results for the outcome — but defer the screen swap until
-  // the assistant's closing message has fully streamed. Without the defer,
-  // the FinalScreen replaces the chat mid-sentence and the user never sees
-  // the agent's goodbye.
+  // Live notes — mirrors voice-room's variables state. Updated by sniffing
+  // setVariables tool-call INPUTs in the streamed message parts. Renders
+  // into <VariablesPanel> beside the chat.
+  const [variables, setVariables] = useState<VariablesState>({})
+
+  // Pending outcome — set when the agent's endCall tool returns. We defer
+  // the screen swap until the assistant's closing line has fully streamed,
+  // signalled by `status === 'ready'` (the stream is done).
   const pendingOutcomeRef = useRef<Outcome | null>(null)
 
+  // Sniff streamed message parts for tool activity:
+  //   - tool-setVariables (input-available | output-available) → merge the
+  //     INPUT values into variables state. We read from input so the panel
+  //     fills as the agent commits, not after a server round-trip.
+  //   - tool-endCall (output-available) → stash the outcome; the second
+  //     effect below swaps screens once the stream finishes.
   useEffect(() => {
+    let nextVariables: VariablesState | null = null
     for (const m of messages) {
       for (const part of m.parts) {
         if (
-          part.type === "tool-submitQualification" &&
+          part.type === "tool-setVariables" &&
+          (part.state === "input-available" || part.state === "output-available") &&
+          part.input &&
+          typeof part.input === "object"
+        ) {
+          const updates = part.input as Record<string, unknown>
+          for (const [k, v] of Object.entries(updates)) {
+            if (typeof v !== "string" || v.trim().length === 0) continue
+            if (!VALID_VARIABLE_KEYS.has(k)) continue
+            if (!nextVariables) nextVariables = { ...variables }
+            nextVariables[k as VariableKey] = v
+          }
+        } else if (
+          part.type === "tool-endCall" &&
           part.state === "output-available" &&
           part.output &&
           typeof part.output === "object"
@@ -69,6 +103,13 @@ export function QualifyChat({
         }
       }
     }
+    if (nextVariables) setVariables(nextVariables)
+    // `variables` intentionally not in deps: we read it inside the loop
+    // only to seed the nextVariables snapshot; React's setState will
+    // schedule a re-render with the merged result, which re-runs this
+    // effect against the same messages, producing a no-op the second
+    // time (no new tool inputs to merge).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages])
 
   // When the stream finishes and we have a pending outcome, swap screens.
@@ -88,18 +129,21 @@ export function QualifyChat({
   }
 
   return (
-    <div className="qualify-chat">
-      <MessageList messages={messages} status={status} />
-      <MessageInput
-        value={draft}
-        onChange={setDraft}
-        onSend={handleSend}
-        disabled={status === "submitted" || status === "streaming"}
-        placeholder={lang === "es" ? "Escribe…" : "Type…"}
-      />
-      {status === "error" && (
-        <div className="qualify-chat-error">{s.error_generic}</div>
-      )}
+    <div className="qualify-chat-layout">
+      <div className="qualify-chat">
+        <MessageList messages={messages} status={status} />
+        <MessageInput
+          value={draft}
+          onChange={setDraft}
+          onSend={handleSend}
+          disabled={status === "submitted" || status === "streaming"}
+          placeholder={lang === "es" ? "Escribe…" : "Type…"}
+        />
+        {status === "error" && (
+          <div className="qualify-chat-error">{s.error_generic}</div>
+        )}
+      </div>
+      <VariablesPanel lang={lang} variables={variables} />
     </div>
   )
 }
