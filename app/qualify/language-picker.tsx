@@ -4,6 +4,13 @@ import { STRINGS, type Lang } from "@/lib/qualify/strings"
 
 export type QualifyMode = "voice" | "text"
 
+// Feature flag for the text-mode fallback ("I'd rather type"). Voice is
+// the primary path; text mode is built and works end-to-end (see
+// app/api/qualify/chat/route.ts and chat.tsx) but currently disabled
+// from the UI. Flip back to `true` to re-expose the button — all wiring
+// downstream (route, prompt, panel) is still in place.
+const TEXT_MODE_ENABLED = false
+
 // Minimal RFC-flavoured email regex. Catches obvious typos without
 // being strict about full RFC compliance (browsers do extra validation
 // via the type="email" input).
@@ -87,14 +94,16 @@ export function LanguagePicker({
             <span className="qualify-cta-text">{STRINGS[lang].picker_proceed_voice}</span>
           </button>
 
-          <button
-            type="button"
-            className="qualify-picker-text-fallback"
-            disabled={!ready}
-            onClick={() => onProceed(lang, "text", trimmedName, trimmedEmail)}
-          >
-            {STRINGS[lang].picker_text_fallback}
-          </button>
+          {TEXT_MODE_ENABLED && (
+            <button
+              type="button"
+              className="qualify-picker-text-fallback"
+              disabled={!ready}
+              onClick={() => onProceed(lang, "text", trimmedName, trimmedEmail)}
+            >
+              {STRINGS[lang].picker_text_fallback}
+            </button>
+          )}
         </div>
       )}
     </div>
