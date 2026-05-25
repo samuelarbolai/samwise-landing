@@ -132,13 +132,15 @@ export function QualifyChat({
     <div className="qualify-chat-layout">
       <div className="qualify-chat">
         <MessageList messages={messages} status={status} />
-        <MessageInput
-          value={draft}
-          onChange={setDraft}
-          onSend={handleSend}
-          disabled={status === "submitted" || status === "streaming"}
-          placeholder={lang === "es" ? "Escribe…" : "Type…"}
-        />
+        <div className="qualify-chat-input-dock">
+          <MessageInput
+            value={draft}
+            onChange={setDraft}
+            onSend={handleSend}
+            disabled={status === "submitted" || status === "streaming"}
+            placeholder={lang === "es" ? "Escribe…" : "Type…"}
+          />
+        </div>
         {status === "error" && (
           <div className="qualify-chat-error">{s.error_generic}</div>
         )}

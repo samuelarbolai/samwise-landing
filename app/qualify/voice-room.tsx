@@ -341,21 +341,23 @@ export function VoiceRoom({
         )}
 
         {!showWelcome && !error && (
-          <button
-            type="button"
-            className={`qualify-voice-mic qualify-voice-mic-${micState}`}
-            onPointerDown={handlePressStart}
-            onPointerUp={handlePressEnd}
-            onPointerCancel={handlePressEnd}
-            onPointerLeave={(e) => {
-              // If the user holds and drags away, treat as end-of-turn.
-              if (e.buttons === 0) return
-              handlePressEnd()
-            }}
-            aria-pressed={micState === "speaking-hold" || micState === "speaking-toggle"}
-          >
-            <span className="qualify-mic-text">{micLabel}</span>
-          </button>
+          <div className="qualify-voice-mic-dock">
+            <button
+              type="button"
+              className={`qualify-voice-mic qualify-voice-mic-${micState}`}
+              onPointerDown={handlePressStart}
+              onPointerUp={handlePressEnd}
+              onPointerCancel={handlePressEnd}
+              onPointerLeave={(e) => {
+                // If the user holds and drags away, treat as end-of-turn.
+                if (e.buttons === 0) return
+                handlePressEnd()
+              }}
+              aria-pressed={micState === "speaking-hold" || micState === "speaking-toggle"}
+            >
+              <span className="qualify-mic-text">{micLabel}</span>
+            </button>
+          </div>
         )}
       </div>
 
