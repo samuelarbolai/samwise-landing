@@ -90,6 +90,17 @@ export function VoiceRoom({
   }, [])
   const showWelcome = connecting || !welcomeFloorElapsed
 
+  // Set when the worker publishes `qualification:finalizing` (the instant
+  // endCall fires). While true, the mic is replaced by the "Almost there…"
+  // indicator and PTT/spacebar are disabled. Cleared implicitly by the
+  // swap to <FinalScreen> on outcome.
+  const [finalizing, setFinalizing] = useState(false)
+  const finalizingRef = useRef(false)
+  const finalizingSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    finalizingRef.current = finalizing
+  }, [finalizing])
+
   // Mirror state into a ref so async handlers see the current value.
   const setMicState = useCallback((next: MicState) => {
     micStateRef.current = next
@@ -113,6 +124,10 @@ export function VoiceRoom({
       if (maxWaitTimerRef.current) {
         clearTimeout(maxWaitTimerRef.current)
         maxWaitTimerRef.current = null
+      }
+      if (finalizingSafetyTimerRef.current) {
+        clearTimeout(finalizingSafetyTimerRef.current)
+        finalizingSafetyTimerRef.current = null
       }
       onOutcomeRef.current(out)
     }
@@ -144,6 +159,27 @@ export function VoiceRoom({
           pendingOutcomeRef.current = msg.outcome
           scheduleSilenceTimer()
           maxWaitTimerRef.current = setTimeout(finalizeOutcome, OUTCOME_MAX_WAIT_MS)
+        } else if (msg.type === "qualification:finalizing") {
+          // Worker tells us extraction is in progress. Replace mic with
+          // the wait indicator; force mic off in case the user was
+          // holding when the agent called endCall; start 30s safety net.
+          setFinalizing(true)
+          void setMicEnabled(false)
+          setMicState("idle")
+          if (finalizingSafetyTimerRef.current) {
+            clearTimeout(finalizingSafetyTimerRef.current)
+          }
+          finalizingSafetyTimerRef.current = setTimeout(() => {
+            // No outcome arrived in 30s. Force a transition so the user
+            // is never stuck. Default to "qualified" — the booking link
+            // is the same; the worker / cloud function will still write
+            // Firestore when (or if) the extraction eventually completes.
+            console.error(
+              "[qualify] finalizing safety net fired — no outcome event in 30s",
+            )
+            deliberateDisconnectRef.current = true
+            onOutcomeRef.current("qualified")
+          }, 30000)
         } else if (
           msg.type === "qualification:variable_update" &&
           typeof msg.name === "string" &&
@@ -229,6 +265,7 @@ export function VoiceRoom({
       if (armedTimerRef.current) clearTimeout(armedTimerRef.current)
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       if (maxWaitTimerRef.current) clearTimeout(maxWaitTimerRef.current)
+      if (finalizingSafetyTimerRef.current) clearTimeout(finalizingSafetyTimerRef.current)
       room.disconnect().catch(() => {})
     }
   }, [lang, name, email, s.error_generic])
@@ -247,6 +284,7 @@ export function VoiceRoom({
 
   // ---- Hybrid PTT state machine ----
   const handlePressStart = useCallback(() => {
+    if (finalizingRef.current) return
     const cur = micStateRef.current
     // Tap-toggle currently on → second tap turns it off.
     if (cur === "speaking-toggle") {
@@ -268,6 +306,7 @@ export function VoiceRoom({
   }, [setMicEnabled, setMicState])
 
   const handlePressEnd = useCallback(() => {
+    if (finalizingRef.current) return
     const cur = micStateRef.current
     if (cur === "armed") {
       // Released before threshold → tap-toggle ON.
@@ -294,12 +333,14 @@ export function VoiceRoom({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code !== "Space" || e.repeat) return
       if (isTypingTarget(e.target)) return
+      if (finalizingRef.current) return
       e.preventDefault()
       handlePressStart()
     }
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.code !== "Space") return
       if (isTypingTarget(e.target)) return
+      if (finalizingRef.current) return
       e.preventDefault()
       handlePressEnd()
     }
@@ -340,7 +381,15 @@ export function VoiceRoom({
           <div className="qualify-voice-status qualify-voice-error">{error}</div>
         )}
 
-        {!showWelcome && !error && (
+        {!showWelcome && !error && finalizing && (
+          <div className="qualify-voice-mic-dock">
+            <p className="qualify-voice-finalizing" aria-live="polite">
+              {s.voice_finalizing_label}
+            </p>
+          </div>
+        )}
+
+        {!showWelcome && !error && !finalizing && (
           <div className="qualify-voice-mic-dock">
             <button
               type="button"

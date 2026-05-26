@@ -585,6 +585,38 @@
   width: 100%;
 }
 
+/* ─── End-of-call hold indicator ───────────────────────────────────────
+   Replaces the mic button while extraction runs (between endCall and
+   the qualification:outcome event). Editorial register — Fraunces
+   italic, ink color, no chrome — with a slow opacity pulse so the
+   user knows the page is alive and waiting. Sits inside the same
+   .qualify-voice-mic-dock parent so the dock geometry (sticky bottom,
+   fade scrim) is identical to the mic state. */
+.qualify-voice-finalizing {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--ink);
+  text-align: center;
+  letter-spacing: 0;
+  pointer-events: none;
+  animation: qualify-voice-finalizing-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes qualify-voice-finalizing-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qualify-voice-finalizing {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
 /* ===================================================================
    Text chat — letter / script transcript
    =================================================================== */

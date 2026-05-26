@@ -26,6 +26,7 @@ export const STRINGS = {
     voice_mic_speaking_hold_label: "Escuchando",
     voice_mic_speaking_toggle_label: "Escuchando",
     voice_end_button: "Terminar",
+    voice_finalizing_label: "Casi listo — preparando tu enlace.",
 
     final_qualified_headline: "Te escuchamos.",
     final_qualified_body:
@@ -68,6 +69,7 @@ export const STRINGS = {
     voice_mic_speaking_hold_label: "Listening",
     voice_mic_speaking_toggle_label: "Listening",
     voice_end_button: "End",
+    voice_finalizing_label: "Almost there — pulling up your link.",
 
     final_qualified_headline: "We listened.",
     final_qualified_body:

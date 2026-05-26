@@ -1,486 +1,467 @@
-# current-plan.md — Qualify notes: notes-first layout with sticky-bottom speaker dock
+# current-plan.md — Pre-warmed opener acknowledgment + end-of-call hold
 
-> Supersedes the Qualification Agent build plan (shipped — `/qualify`
-> is live with voice + text modes and the live-notes panel). This
-> plan reshapes the LAYOUT of the notes experience.
+> Supersedes the notes-as-main layout plan (shipped — `/qualify`'s
+> notes-as-main + fixed-bottom speaker dock is live).
+>
+> Two coordinated changes:
+>   1. **Pre-warmed opener acknowledgment.** When a user comes in from
+>      TikTok / Instagram / YouTube saying *"I've seen your videos, I
+>      want to schedule a call,"* Nova acknowledges gladly in one beat,
+>      then bridges back to the normal intake. Conversation from that
+>      point is **identical** to the default flow — same grounding bar,
+>      same variables, same end-of-call.
+>   2. **End-of-call hold.** Between `endCall` firing and the FinalScreen
+>      appearing there's a 3–10s extraction wait. Today the user sees
+>      Nova's closing line, then silence + the still-active mic, then
+>      suddenly the booking screen. Some users assume something broke
+>      and close the tab. Fix: (a) update Nova's closing line to
+>      explicitly tell the user to wait a moment; (b) the worker
+>      publishes a `qualification:finalizing` data event the instant
+>      `endCall` runs; (c) `voice-room` swaps the mic for a quiet
+>      *"Almost there — pulling up your link."* line that breathes via
+>      a slow opacity pulse, and disables PTT/spacebar; (d) a 30s safety
+>      net force-routes to the qualified FinalScreen if the outcome
+>      event never arrives, so the user is never stuck.
 
 ## Plan Summary
 
-The `/qualify` notes UI today flips to a desktop row layout the moment
-the first note arrives — mic on the left (~280px) and notes on the
-right capped at `max-width: 24em` (~384px). Long verbatim agent
-quotes (1–3 sentences each) wrap many lines inside that narrow column;
-with seven cards stacked at `gap: 2rem`, the notes overflow the
-viewport vertically and the user has to scroll past their own notes
-to find the mic.
+Three surfaces change:
 
-**Hierarchy inversion.** The notes are the *content* — what the user
-came to see. The mic is a *control*. We invert the layout so notes
-become the main column (centered, ~38em readable measure) and the
-"speaker" element (mic in voice mode, `MessageInput` in chat mode)
-docks at the bottom of the viewport — sticky, full-width, no painted
-chrome. A gradient fade scrim above the dock dissolves notes as they
-approach it, avoiding the "ugly box" appearance the user explicitly
-rejected.
+| Surface | What changes |
+|---|---|
+| `samwise-landing/lib/qualify/qualification-prompt.ts` (+ worker mirror at `samwise-backend/ritual-agent/src/flows/qualification/prompts/qualification-prompt.ts`) | New `<pre-warmed-opener>` section (EN + ES) between `<exploration-and-reluctance>` and `<continuous-evaluation>`. Updated `<end-of-call>` examples (EN + ES) so the closing line MUST include a "hold on a moment" cue before endCall fires. |
+| `samwise-backend/ritual-agent/src/flows/qualification/index.ts` | At the top of `submitIfNotYet`, when `reason === 'endCall'`, publish a `qualification:finalizing` data event BEFORE awaiting the cloud function. |
+| `samwise-landing/app/qualify/voice-room.tsx` + `qualify.css` + `lib/qualify/strings.ts` | New `finalizing` state. On `qualification:finalizing`: replace mic with `.qualify-voice-finalizing` text line, force-disable mic + spacebar PTT, start 30s safety net that force-routes to `qualified` if the outcome event never arrives. |
 
-The shift activates only when the first note exists (same
-`:has(.qualify-notes)` trigger as today). Pre-notes the layout stays
-exactly as it is: welcome card centered, mic centered in the stage.
-
-### Decisions locked
+### Decisions locked (from clarification)
 
 | Decision | Choice |
 |---|---|
-| Speaker anchoring | **Sticky bottom**, unreactive to scroll. Position: sticky; bottom: 0 within the viewport-scrolled stage. |
-| Speaker container | **Dock spans the full horizontal area**; chrome-less (no border, no background swatch). Mic button stays centered inside the dock with its existing short gold dashes intact — Interpretation A from the design pass. PTT collapse animations preserved exactly. |
-| Approaching content | **Gradient fade scrim** above the dock (~120px tall, transparent → page bg color). Notes scrolling toward the mic dissolve into the page surface before they would visually touch the button. |
-| Notes width as main | **`max-width: 38em`** (~600px), centered in the stage. Comfortable Fraunces italic reading measure; the page still reads as a column, not a dashboard. |
-| Trigger | First note arrives (`.qualify-voice:has(.qualify-notes)` / `.qualify-chat-layout:has(.qualify-notes)`). Pre-notes layout unchanged. |
-| Mode coverage | **Both modes.** Voice in Phase 1; text-mode chat in Phase 2 (same patterns, mirrored). |
-| Mobile | Same patterns apply on mobile — even more impactful since vertical real estate is tighter. The dock and fade scrim become sticky at viewport bottom; notes column relaxes to `max-width: 100%` minus side padding. |
-| Layout transition | **Instant CSS snap** at the moment of first note. The notes panel itself fades/animates in via its existing entry keyframes — that motion provides the visual anchor for the change; no separate dock-relocation animation. |
-| Stage cap | `.qualify-stage:has(.qualify-notes)` reverts from `max-width: 1100px` (chosen for the side-by-side row) to the standard `max-width` so the centered ~38em column reads as the page measure, not as a narrow column inside a wide frame. |
+| Wait UI feel | **Text-only, slow pulse.** Replace the whole mic+dashes with a single Fraunces italic line that breathes via slow opacity pulse. |
+| Safety net | **30s after `qualification:finalizing`** without an outcome event → force `onOutcome("qualified")`, log a console error. The booking link is reachable; Firestore still gets the record once the CF eventually completes. |
+| Pre-warmed flow | **Same conversation as default.** One beat of acknowledgment + bridge, then identical intake. No shorter call, no looser grounding bar. |
+| Closing-line wording | Editorial register, brief. EN: "Stay with me one second — your booking link is on the way." ES: "Quédate conmigo un momento — el link para reservar ya viene." (Two example variants each, per the prompt's existing pattern of giving examples and asking Nova to phrase in her own voice.) |
+| Wait-line wording | EN: "Almost there — pulling up your link." ES: "Casi listo — preparando tu enlace." Held register, names what's happening so the user knows what to wait for. |
+| Pulse cadence | 2.5s ease-in-out infinite, opacity 1 → 0.5 → 1. Slow enough to feel held, not anxious. |
+| Pre-warmed signals (the patterns Nova must recognize) | "I've seen your videos / TikToks / content" / "I want to schedule / book a call with Samuel / you / the team" / "I'm here from TikTok / Instagram / YouTube" / any opener that presupposes wanting the call without being prompted. |
 
 ### Out of scope
 
-- Animating the mic's relocation from "centered in flow" to "docked at bottom" (View Transitions API). Instant snap is the chosen behavior — the notes' own entry animation provides the moment of change.
-- Reworking the PTT mic button's internal geometry (Interpretation B). The dashes stay short; the dock provides the full-width feel.
-- Any prompt / agent / cloud-function changes. The data flow stays identical.
-- `/copilot` or any consumer of qualification data — purely a `/qualify` UI change.
+- The disconnect path (`participantDisconnected`) and `idle_timeout` path. Neither needs a finalizing event — the user is already gone.
+- Any FinalScreen copy change. The wait happens before FinalScreen mounts; FinalScreen itself is unchanged.
+- Text-mode (`chat.tsx`) finalize hold. Text mode is flag-gated off (`TEXT_MODE_ENABLED = false`). When/if it's re-enabled, an analogous treatment in `chat.tsx` will be a follow-up plan — not in this one.
+- Any prompt change that shortens the call for pre-warmed users (explicitly rejected by user).
+- Updating the `samwise-landing-page` skill file. The skill's `/qualify` section already documents the contract between the welcome card and the agent's opener; we'll add a one-line entry for the finalize-hold contract after the work lands.
 
 ## Plan Architecture (Flow)
 
 ```
-Before first note (unchanged):
-┌─────────────────────────────────────┐
-│           .qualify-stage            │
-│                                     │
-│        [ welcome card OR mic ]      │
-│         centered in column          │
-│                                     │
-└─────────────────────────────────────┘
+Normal flow today:
+  user → Nova converses → Nova says "Thanks, see you on the call." → endCall()
+                                                                       ↓
+                                                          worker POSTs transcript
+                                                                       ↓ 3–10s
+                                                       worker publishes outcome
+                                                                       ↓ ~1.5s silence delay
+                                                              FinalScreen mounts
 
-After first note (NEW):
-┌─────────────────────────────────────┐
-│           .qualify-stage            │
-│                                     │
-│        ┌─── ~38em column ───┐       │
-│        │  NOTES CARD #1     │       │
-│        │  NOTES CARD #2     │       │
-│        │  …                 │       │
-│        │  NOTES CARD #N     │       │
-│        └────────────────────┘       │
-│                                     │
-│  (page scrolls under the dock)      │
-│                                     │
-│  ░░░░░░░░░░░ fade scrim ░░░░░░░░░░  │ ← gradient transparent → white
-│ ─────────  TAP TO SPEAK  ────────── │ ← sticky bottom dock (full width)
-└─────────────────────────────────────┘
+New flow:
+  user → (pre-warmed opener? → 1 beat acknowledge + bridge) → Nova converses
+       → Nova says closing line WITH "stay with me a moment" cue → endCall()
+                                                                       ↓ (immediate)
+                                                worker publishes FINALIZING event
+                                                                       ↓
+                                                voice-room: mic → "Almost there…"
+                                                            PTT + spacebar disabled
+                                                            30s safety-net timer set
+                                                                       ↓
+                                                          worker POSTs transcript
+                                                                       ↓ 3–10s
+                                                       worker publishes outcome
+                                                                       ↓ ~1.5s silence delay
+                                                              FinalScreen mounts
+
+Failure mode:
+  After 30s in finalizing with no outcome → safety net fires → FinalScreen("qualified")
 ```
-
-DOM order stays mic-first → notes-second (matches current `voice-room.tsx`); CSS reorders visually via `order:` so the JSX doesn't change. This keeps the React tree stable across the layout change (no remounts, no state loss).
 
 ## Plan Structure (Directories and files)
 
 ```
-samwise-landing/app/qualify/
-├── voice-room.tsx              # MODIFIED Phase 1: wrap the mic in a
-│                               #   .qualify-voice-mic-dock element so
-│                               #   the dock can be sticky-positioned
-│                               #   independently of .qualify-voice-primary
-│                               #   (which still holds the welcome card
-│                               #   when needed).
-├── chat.tsx                    # MODIFIED Phase 2: same dock pattern for
-│                               #   MessageInput.
-└── qualify.css                 # MODIFIED Phases 1+2:
-                                #   - Remove the row-layout block under
-                                #     `.qualify-voice:has(.qualify-notes)`
-                                #     (and the analogous chat block)
-                                #   - Add notes-first column layout with
-                                #     ~38em readable-measure cap
-                                #   - Add .qualify-voice-mic-dock styling
-                                #     (sticky bottom, gradient scrim, no
-                                #     chrome) + .qualify-chat-input-dock
-                                #     analog
-                                #   - Update .qualify-stage:has(.qualify-notes)
-                                #     to not widen to 1100px (revert to
-                                #     standard cap so 38em reads centered)
+samwise-landing/
+├── app/qualify/
+│   ├── voice-room.tsx           # MODIFIED Phase 3:
+│   │                            #   - New `finalizing` state + ref
+│   │                            #   - Data-event handler reacts to
+│   │                            #     `qualification:finalizing`
+│   │                            #   - Render branch: mic OR finalize
+│   │                            #     indicator (mutually exclusive)
+│   │                            #   - PTT handlers early-return when
+│   │                            #     finalizing
+│   │                            #   - Spacebar listener early-returns
+│   │                            #   - 30s safety net timer set on
+│   │                            #     finalizing-event receipt
+│   └── qualify.css              # MODIFIED Phase 3:
+│                                #   - .qualify-voice-finalizing rules
+│                                #   - @keyframes pulse animation
+├── lib/qualify/
+│   ├── qualification-prompt.ts  # MODIFIED Phase 1:
+│   │                            #   - New <pre-warmed-opener> section
+│   │                            #     (EN + ES) between
+│   │                            #     <exploration-and-reluctance> and
+│   │                            #     <continuous-evaluation>
+│   │                            #   - <end-of-call> examples updated
+│   │                            #     (EN + ES) with hold-on cue
+│   └── strings.ts               # MODIFIED Phase 3:
+│                                #   - voice_finalizing_label (EN + ES)
+
+samwise-backend/ritual-agent/
+└── src/flows/qualification/
+    ├── prompts/qualification-prompt.ts   # MIRROR of landing prompt
+    │                                     # (Phase 2 — copy of Phase 1)
+    └── index.ts                          # MODIFIED Phase 2:
+                                          #   - submitIfNotYet('endCall')
+                                          #     publishes finalizing event
+                                          #     before awaiting CF fetch
 ```
 
-No new files. No DOM restructuring beyond adding one wrapper `<div>` around the mic in `voice-room.tsx` and one around the `MessageInput` in `chat.tsx`.
+No new files. No DOM restructuring.
 
 ## Modifications (in phases and steps)
 
-### Phase 1 — Voice mode: notes-as-main + sticky-bottom mic dock
+### Phase 1 — Landing prompt: pre-warmed opener + closing-line hold cue
 
-#### Step 1.1 — Wrap the mic in a dock element
+#### Step 1.1 — Add the `<pre-warmed-opener>` section (English)
 
-- **In-file location:** `samwise-landing/app/qualify/voice-room.tsx`, the JSX block that today renders the welcome card / error / mic button (around lines 331–360).
-- **Should not be modified:** the PTT state machine, the mic button's `onPointer*` handlers, the welcome card structure, the error block, the hidden `<audio>` sink, the variables-panel render call, the variables-state logic.
-- **Code (diff intent — full block shown for clarity):**
-  ```tsx
-  <div className="qualify-voice">
-    <audio ref={audioSinkRef} autoPlay playsInline style={{ display: "none" }} />
-
-    <div className="qualify-voice-primary">
-      {showWelcome && !error && (
-        <div className="qualify-voice-welcome">
-          <p className="qualify-voice-welcome-lead">{s.voice_welcome_lead}</p>
-          <p className="qualify-voice-welcome-sub">{s.voice_welcome_sub}</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="qualify-voice-status qualify-voice-error">{error}</div>
-      )}
-
-      {!showWelcome && !error && (
-        <div className="qualify-voice-mic-dock">
-          <button
-            type="button"
-            className={`qualify-voice-mic qualify-voice-mic-${micState}`}
-            onPointerDown={handlePressStart}
-            onPointerUp={handlePressEnd}
-            onPointerCancel={handlePressEnd}
-            onPointerLeave={(e) => {
-              if (e.buttons === 0) return
-              handlePressEnd()
-            }}
-            aria-pressed={micState === "speaking-hold" || micState === "speaking-toggle"}
-          >
-            <span className="qualify-mic-text">{micLabel}</span>
-          </button>
-        </div>
-      )}
-    </div>
-
-    <VariablesPanel lang={lang} variables={variables} />
-  </div>
+- **In-file location:** `samwise-landing/lib/qualify/qualification-prompt.ts`, English branch. Insert AFTER the `</exploration-and-reluctance>` closing tag (currently at line 153) and BEFORE the `<continuous-evaluation>` opening tag.
+- **Should not be modified:** the existing `<exploration-and-reluctance>` and `<continuous-evaluation>` blocks.
+- **Code (insert this block):**
   ```
-- **Explanation:** the dock wrapper is the element CSS sticky-positions. We keep it INSIDE `.qualify-voice-primary` so the welcome-card/error path is untouched. The dock's CSS rules below only kick in when notes exist (the parent `.qualify-voice` matches `:has(.qualify-notes)`), so pre-notes the dock is just a passive `<div>` and the mic centers exactly as it does today.
+  <pre-warmed-opener>
+  Some users come in already pre-warmed — they've seen Samwise's videos on TikTok, Instagram, or YouTube; they explicitly say they want to schedule a call, that they're here to book, or that they've been watching the founder's content. Recognize these signals when they appear in the user's first substantive turn:
+    • "I've seen your videos / your content / your TikToks / your channel"
+    • "I want to schedule / book a call with Samuel / with the team / with someone"
+    • "I'm here from TikTok / Instagram / YouTube"
+    • "I'm ready to talk to the team / to start"
+    • Any opener that already presupposes wanting the call without being prompted to want it
 
-#### Step 1.2 — Rewrite the voice layout CSS
+  When you detect any of these, do TWO things in ONE warm short turn, then continue normally:
+    1. Acknowledge gladly — one sentence, not a fuss. Examples (use your own phrasing): "Glad those landed — that already tells me you're showing up with intention." / "Means a lot you've been watching. Welcome." / "Good — you've already done part of the work."
+    2. Bridge briefly to the intake: "Before we get to the call, let's take a few minutes so it has something real to land on." / "Quick check-in first so the call is actually useful."
 
-- **In-file location:** `samwise-landing/app/qualify/qualify.css`, lines 362–401 (the `.qualify-voice` block + the `:has(.qualify-notes)` row-layout block).
-- **Should not be modified:** `.qualify-voice-status`, `.qualify-voice-welcome*`, `.qualify-voice-mic` (the button itself — colors, padding, dashes, PTT state transitions), the `@media (max-width: 540px) .qualify-voice-mic { ... }` mobile rule.
-- **Code (replace lines 362–401):**
-  ```css
-  /* Pre-notes: centered column, unchanged. The dock sits in normal flow
-     and looks identical to the bare button. */
-  .qualify-voice {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3rem;
-    width: 100%;
-  }
+  After that, the conversation is IDENTICAL to a default first-turn flow. Same behaviour grounding rules (<behaviour-grounding>). Same variables (<variables>). Same continuous evaluation (<continuous-evaluation>). Same end-of-call (<end-of-call>). Do NOT skip variables. Do NOT shorten the conversation. Pre-warmed users still need the same understanding to land on the call usefully.
 
-  .qualify-voice-primary {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3rem;
-  }
-
-  /* Post-notes: notes become the main column, dock pins to viewport
-     bottom, full width, chrome-less. CSS `order` flips visual order
-     so the DOM stays mic-first → notes-second (no React remounts). */
-  .qualify-voice:has(.qualify-notes) {
-    /* Notes column readable measure — match max-width on .qualify-notes
-       below. Container is full-width; notes self-center via margin auto. */
-    align-items: stretch;
-    gap: 0;
-    /* Reserve viewport bottom space for the dock so the last note card
-       isn't permanently hidden beneath it. The dock is ~96px tall plus
-       the fade scrim above (~120px); 200px is a safe combined buffer. */
-    padding-bottom: 200px;
-  }
-
-  .qualify-voice:has(.qualify-notes) .qualify-voice-primary {
-    /* The primary block now contains only the dock (welcome/error are
-       both gone by the time notes exist). Order 2 → renders below the
-       notes panel in the column. */
-    order: 2;
-    align-items: stretch;
-    /* The dock handles its own width; primary stops constraining it. */
-    width: 100%;
-  }
-
-  .qualify-voice:has(.qualify-notes) .qualify-notes {
-    /* Notes lead the column. ~38em readable measure, centered. */
-    order: 1;
-    margin: 0 auto;
-    max-width: 38em;
-    width: 100%;
-  }
-
-  /* ── Speaker dock ── pre-notes: passive; post-notes: sticky bottom. */
-  .qualify-voice-mic-dock {
-    /* Pre-notes default: a simple flex centerer, indistinguishable
-       from the bare button. */
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .qualify-voice:has(.qualify-notes) .qualify-voice-mic-dock {
-    /* Post-notes: lock to viewport bottom. Sticky (not fixed) keeps it
-       in document flow so it respects the stage's horizontal padding
-       and doesn't escape the page measure. Negative inset trick: the
-       dock's parent stage has horizontal padding; the dock matches
-       that surface. */
-    position: sticky;
-    bottom: 0;
-    /* Vertical breathing room above and below the mic inside the dock. */
-    padding: 32px 0 28px;
-    z-index: 2;
-    /* No background, no border, no shadow — the fade scrim above does
-       the visual work without painting a box. */
-    background: transparent;
-  }
-
-  /* Fade scrim above the dock. Sits as a ::before pseudo-element that
-     extends UPWARD from the dock's top edge into the scrollable area
-     so notes scrolling toward the mic dissolve into the page surface
-     before they would visually touch the button. Pointer-events none
-     so it doesn't intercept clicks/taps. */
-  .qualify-voice:has(.qualify-notes) .qualify-voice-mic-dock::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 120px;
-    background: linear-gradient(
-      to top,
-      var(--bg) 0%,
-      var(--bg) 28%,
-      transparent 100%
-    );
-    pointer-events: none;
-  }
+  CRITICAL: this is a 1–2 beat acknowledgment, not a separate phase. By turn 3 you're already deep in the regular intake.
+  </pre-warmed-opener>
   ```
-- **Explanation:**
-  - Pre-notes the layout is byte-for-byte equivalent to today (column, centered, dock collapses to a plain flex centerer).
-  - Post-notes:
-    - `order: 1` on notes, `order: 2` on primary → visual reordering without JSX change.
-    - Notes get `max-width: 38em`, self-centered.
-    - The dock becomes `position: sticky; bottom: 0` — full-width within the stage's horizontal padding, no chrome.
-    - `::before` extends the page background upward as a gradient mask, dissolving any content that scrolls under it.
-  - `padding-bottom: 200px` on `.qualify-voice` reserves space so the last note card is reachable above the dock (without this, the dock would visually overlap the final card when scrolled to the bottom of the page).
+- **Explanation:** placed between exploration-and-reluctance and continuous-evaluation because, like exploration-and-reluctance, it's a "specific opener handling" rule that runs once at the top of the conversation. Continuous-evaluation references the resulting state going forward, so this rule must come before it.
 
-#### Step 1.3 — Revert the stage's widened cap
+#### Step 1.2 — Add the `<pre-warmed-opener>` section (Spanish)
 
-- **In-file location:** `samwise-landing/app/qualify/qualify.css`, lines 96–100.
-- **Should not be modified:** the base `.qualify-stage` rules outside this `@media` block.
-- **Change:** REMOVE the `.qualify-stage:has(.qualify-notes) { max-width: 1100px }` rule entirely. With the new notes-as-main column layout, the stage doesn't need to widen — the ~38em notes column centers comfortably inside the standard 640px stage cap (since 38em ≈ 608px and `.qualify-stage` will widen via its own `max-width` if set; we want the standard editorial measure).
+- **In-file location:** same file, Spanish branch. Insert AFTER `</exploration-and-reluctance>` and before `<continuous-evaluation>`.
 - **Code:**
-  ```css
-  /* DELETE this entire block (lines 91–100):
-     The notes-as-main layout uses the standard .qualify-stage cap. The
-     38em readable measure for notes already fits the editorial column.
-  @media (min-width: 720px) {
-    .qualify-stage:has(.qualify-notes) {
-      max-width: 1100px;
+  ```
+  <pre-warmed-opener>
+  Algunos usuarios llegan ya pre-calentados — han visto los videos de Samwise en TikTok, Instagram o YouTube; dicen explícitamente que quieren agendar una llamada, que están aquí para reservar, o que han estado viendo el contenido del fundador. Reconoce estas señales cuando aparezcan en el primer turno sustancial del usuario:
+    • "He visto tus videos / tu contenido / tus TikToks / tu canal"
+    • "Quiero agendar / reservar una llamada con Samuel / con el equipo / con alguien"
+    • "Vengo de TikTok / Instagram / YouTube"
+    • "Estoy listo para hablar con el equipo / para empezar"
+    • Cualquier apertura que ya presupone querer la llamada sin haber sido invitado a quererla
+
+  Cuando detectes cualquiera de estas, haz DOS cosas en UN solo turno cálido y corto, después continúa normalmente:
+    1. Reconoce con gusto — una frase, sin aspavientos. Ejemplos (usa tu propio fraseo): "Qué bueno que aterrizó eso — ya me dice que vienes con intención." / "Significa mucho que hayas estado viéndonos. Bienvenido." / "Bien — ya hiciste parte del trabajo."
+    2. Puentea brevemente a la entrevista: "Antes de llegar a la llamada, démosle unos minutos a esto para que tenga algo real sobre lo cual aterrizar." / "Una pasada corta primero para que la llamada sea de verdad útil."
+
+  Después de eso, la conversación es IDÉNTICA al flujo por defecto del primer turno. Las mismas reglas de aterrizaje del comportamiento (<behaviour-grounding>). Las mismas variables (<variables>). La misma evaluación continua (<continuous-evaluation>). El mismo cierre (<end-of-call>). NO saltes variables. NO acortes la conversación. Los usuarios pre-calentados igual necesitan la misma comprensión para que la llamada aterrice bien.
+
+  CRÍTICO: esto es un reconocimiento de 1–2 beats, no una fase separada. Para el turno 3 ya estás de lleno en la entrevista regular.
+  </pre-warmed-opener>
+  ```
+
+#### Step 1.3 — Update the `<end-of-call>` block with the hold-on cue (English)
+
+- **In-file location:** `qualification-prompt.ts`, English branch, `<end-of-call>` block (lines 175–191).
+- **What changes:** the example closing lines. The structural rule ("you MUST speak ONE short closing line BEFORE endCall") stays. The examples are replaced so each one bridges the wait that follows endCall. We also add an explicit rule that the closing line MUST tell the user to wait/hold/stay so they don't think the call broke.
+- **Should not be modified:** the conditions for calling endCall (a/b/c), the "endCall takes no arguments" line, the "do not call endCall before behaviour_to_change is committed" rule, the "do not call endCall more than once" rule.
+- **Code (replace the body of the `<end-of-call>` block — keep the opening tag, the cases (a)(b)(c), and the closing rules; only the closing-line guidance changes):**
+  ```
+  Before calling endCall, you MUST speak ONE short closing line in your own voice. The closing line MUST do two things:
+    1. Acknowledge the conversation warmly (one beat — "Thanks for opening up about all of this." / "Appreciate you sharing.").
+    2. Tell the user to stay/hold/wait a moment, because the booking link will appear on their screen in a few seconds. Without this cue, the user sees silence after your last word and assumes something broke.
+
+  Examples (do not parrot — use your own phrasing):
+    "Thanks for opening up about all of this. Stay with me one second — your booking link is on the way."
+    "Appreciate you sharing. Hang on a moment — the link's about to appear on the screen."
+    "Good talk. Give me a beat — your link is coming up now."
+
+  Do NOT promise outcomes. Do NOT mention pricing, plans, or money. The link itself appears on the screen, not in your speech.
+
+  endCall takes no arguments. After it returns, the conversation is over — you cannot speak again. CRITICAL: speak your closing line BEFORE calling endCall, not after.
+  ```
+  *(In the actual edit, this replaces the existing lines from "Before calling endCall, you MUST speak ONE short closing line in your own voice." down through "CRITICAL: speak your closing line BEFORE calling endCall, not after." — i.e. the body of the block; preserve the conditions (a/b/c) above this body and the "Do NOT call endCall before…" / "Do NOT call endCall more than once" lines below it.)*
+
+#### Step 1.4 — Update the `<end-of-call>` block with the hold-on cue (Spanish)
+
+- **In-file location:** `qualification-prompt.ts`, Spanish branch, `<end-of-call>` block (lines 355–371).
+- **Code (replace the body analogously):**
+  ```
+  Antes de llamar endCall, DEBES decir UNA línea hablada corta de cierre con tus propias palabras. La línea de cierre DEBE hacer dos cosas:
+    1. Reconocer la conversación con calidez (un beat — "Gracias por abrirte." / "Aprecio que hayas compartido todo esto.").
+    2. Decirle al usuario que se quede/espere/aguante un momento, porque el link para reservar va a aparecer en su pantalla en unos segundos. Sin ese aviso, el usuario ve silencio después de tu última palabra y asume que algo se rompió.
+
+  Ejemplos (no los repitas literal — usa tu propio fraseo):
+    "Gracias por abrirte con todo esto. Quédate conmigo un momento — el link para reservar ya viene."
+    "Aprecio tu apertura. Espera un segundo — el link va a aparecer en la pantalla."
+    "Bien conversado. Aguanta un beat — tu link viene en camino."
+
+  NO prometas resultados. NO menciones precios, planes ni dinero. El link aparece en la pantalla, no en tu voz.
+
+  endCall no toma argumentos. Después de que retorne, la conversación termina — no puedes hablar de nuevo. CRÍTICO: di tu línea de cierre ANTES de llamar endCall, no después.
+  ```
+
+### Phase 2 — Worker: mirror the prompt + publish `qualification:finalizing`
+
+#### Step 2.1 — Mirror the prompt changes into the worker
+
+- **In-file location:** `samwise-backend/ritual-agent/src/flows/qualification/prompts/qualification-prompt.ts`.
+- **What changes:** copy Steps 1.1, 1.2, 1.3, 1.4 verbatim into the worker mirror. The two files are kept in sync per the existing convention documented in `context-for-code-agent.md`.
+- **Verification:** `diff samwise-landing/lib/qualify/qualification-prompt.ts samwise-backend/ritual-agent/src/flows/qualification/prompts/qualification-prompt.ts` should show only the documented copy-header difference (the worker file may have one comment block noting the copy origin, otherwise byte-identical).
+
+#### Step 2.2 — Publish `qualification:finalizing` from `submitIfNotYet` on the endCall path
+
+- **In-file location:** `samwise-backend/ritual-agent/src/flows/qualification/index.ts`, the `submitIfNotYet` function (currently ~lines 279–349). Insert the new publish BEFORE the `if (!EXTRACT_QUALIFICATION_URL)` guard and AFTER the `submitted = true` line / `buildTranscript` block.
+- **Should not be modified:** the existing `submitted` guard, the transcript build, the cloud function fetch, the existing `qualification:outcome` publish (which still fires after the CF returns).
+- **Code (add this block between the existing `console.log('[qualification] submitting', …)` line and the `if (!EXTRACT_QUALIFICATION_URL)` guard):**
+  ```ts
+  // Tell the frontend extraction is in progress — it swaps the mic for
+  // the "Almost there — pulling up your link." indicator and disables
+  // PTT so the user can't talk into a closing call. Only fired on the
+  // endCall path; on disconnect / idle_timeout the user is already gone.
+  if (reason === 'endCall') {
+    try {
+      await ctx.room.localParticipant?.publishData(
+        new TextEncoder().encode(
+          JSON.stringify({ type: 'qualification:finalizing' }),
+        ),
+        { reliable: true },
+      );
+    } catch (err) {
+      console.warn('[qualification] finalizing publishData failed', err);
     }
   }
-  */
   ```
-  *(In the actual edit, delete the lines; this comment block is for explanation only.)*
+- **Explanation:** `qualification:finalizing` is a fire-and-forget signal — the frontend swaps to the wait UI immediately so the user has visible feedback during the 3–10s extraction window. The publish runs BEFORE the `await fetch` so it reaches the client without waiting for Gemini. The disconnect path explicitly skips it (the frontend is gone; nothing to render).
 
-#### Step 1.4 — Mobile: verify the dock works without changes
+### Phase 3 — Voice-room: finalize state + wait UI + safety net
 
-- **In-file location:** check `.qualify-voice-mic` mobile rules in qualify.css (around lines 869–877).
-- **Verification:** the existing mobile rule `min-width: 0; width: 100%` for the mic at `max-width: 540px` already lets the button fill its parent. With the dock as parent and centered flex, this becomes a full-width button on mobile — exactly what we want for thumb reach.
-- **Possible adjustment:** if the gold dashes look too "floating" on a 320–375px viewport, add `padding: 0 1.5rem` to the dock on mobile to inset the button from the page edges. Decision deferred to browser verification (Step 3.1).
+#### Step 3.1 — Add `voice_finalizing_label` strings
 
-### Phase 2 — Chat mode parity
+- **In-file location:** `samwise-landing/lib/qualify/strings.ts`.
+- **Add to both `es` and `en` blocks** (alongside the other `voice_*` keys, ~line 28 / line 70):
+  ```ts
+  // es
+  voice_finalizing_label: "Casi listo — preparando tu enlace.",
+  // en
+  voice_finalizing_label: "Almost there — pulling up your link.",
+  ```
 
-#### Step 2.1 — Wrap MessageInput in a dock
+#### Step 3.2 — Add `finalizing` state + data-event branch + safety net in `voice-room.tsx`
 
-- **In-file location:** `samwise-landing/app/qualify/chat.tsx`, the JSX inside `.qualify-chat`.
-- **Should not be modified:** `useChat` wiring, the variables-sniffing effect, the outcome-finalize effect, `handleSend`, the `MessageList` props, the `MessageInput` props.
-- **Code (diff intent):**
+- **In-file location:** `samwise-landing/app/qualify/voice-room.tsx`.
+- **Should not be modified:** the `Outcome` type import, the `VALID_VARIABLE_KEYS` constant, the existing `MicState` machine, the existing outcome-finalize / silence-timer logic (the new finalizing state is upstream of the outcome event, NOT a replacement for the silence-handling).
+- **Changes:**
+
+  **3.2a — Add the finalizing state and a finalize-safety-net ref** (after the existing `welcomeFloorElapsed` state, ~line 86):
+  ```ts
+  // Set when the worker publishes `qualification:finalizing` (the
+  // instant endCall fires). While true, the mic is replaced by the
+  // "Almost there…" indicator and PTT/spacebar are disabled. Cleared
+  // implicitly by the swap to <FinalScreen> on outcome.
+  const [finalizing, setFinalizing] = useState(false)
+  const finalizingRef = useRef(false)
+  const finalizingSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Mirror finalizing into a ref for use in PTT handlers (which are
+  // memoized and don't re-bind when state changes).
+  useEffect(() => {
+    finalizingRef.current = finalizing
+  }, [finalizing])
+  ```
+
+  **3.2b — Add a handler in the `RoomEvent.DataReceived` switch** (inside the existing try block in the data handler, ~line 138). Add the new `qualification:finalizing` branch alongside the existing `qualification:outcome` and `qualification:variable_update` branches:
+  ```ts
+  } else if (msg.type === "qualification:finalizing") {
+    // Worker tells us extraction is in progress. Replace mic with
+    // the wait indicator; force mic off in case the user was holding;
+    // start the 30s safety net.
+    setFinalizing(true)
+    void setMicEnabled(false)
+    setMicState("idle")
+    if (finalizingSafetyTimerRef.current) {
+      clearTimeout(finalizingSafetyTimerRef.current)
+    }
+    finalizingSafetyTimerRef.current = setTimeout(() => {
+      // No outcome arrived in 30s. Force a transition so the user is
+      // never stuck. Default to "qualified" — the booking link is the
+      // same; the worker / cloud function will still write Firestore
+      // when (or if) the extraction eventually completes.
+      console.error("[qualify] finalizing safety net fired — no outcome event in 30s")
+      deliberateDisconnectRef.current = true
+      onOutcomeRef.current("qualified")
+    }, 30000)
+  }
+  ```
+
+  **3.2c — Clear the safety net on cleanup** (in the existing `return () =>` block of the LiveKit useEffect, ~line 226):
+  ```ts
+  if (finalizingSafetyTimerRef.current) clearTimeout(finalizingSafetyTimerRef.current)
+  ```
+
+  **3.2d — Also clear the safety net inside `finalizeOutcome`** (~line 105), so the safety net doesn't fire after the real outcome has been processed:
+  ```ts
+  if (finalizingSafetyTimerRef.current) {
+    clearTimeout(finalizingSafetyTimerRef.current)
+    finalizingSafetyTimerRef.current = null
+  }
+  ```
+  (Add this alongside the existing `silenceTimerRef` and `maxWaitTimerRef` clears.)
+
+  **3.2e — Make PTT handlers early-return when finalizing.** In `handlePressStart` (~line 249) and `handlePressEnd` (~line 270), add as the very first check:
+  ```ts
+  if (finalizingRef.current) return
+  ```
+
+  **3.2f — Make spacebar handlers early-return when finalizing.** In the `onKeyDown` / `onKeyUp` callbacks in the spacebar effect (~line 289), add after the `isTypingTarget` check:
+  ```ts
+  if (finalizingRef.current) return
+  ```
+
+  **3.2g — Change the render branch** to render the finalize indicator instead of the mic when `finalizing` is true. Replace the current `{!showWelcome && !error && (...)}` block (~lines 343–361) with:
   ```tsx
-  <div className="qualify-chat-layout">
-    <div className="qualify-chat">
-      <MessageList messages={messages} status={status} />
-      <div className="qualify-chat-input-dock">
-        <MessageInput
-          value={draft}
-          onChange={setDraft}
-          onSend={handleSend}
-          disabled={status === "submitted" || status === "streaming"}
-          placeholder={lang === "es" ? "Escribe…" : "Type…"}
-        />
-      </div>
-      {status === "error" && (
-        <div className="qualify-chat-error">{s.error_generic}</div>
-      )}
+  {!showWelcome && !error && finalizing && (
+    <div className="qualify-voice-mic-dock">
+      <p className="qualify-voice-finalizing" aria-live="polite">
+        {s.voice_finalizing_label}
+      </p>
     </div>
-    <VariablesPanel lang={lang} variables={variables} />
-  </div>
+  )}
+
+  {!showWelcome && !error && !finalizing && (
+    <div className="qualify-voice-mic-dock">
+      <button
+        type="button"
+        className={`qualify-voice-mic qualify-voice-mic-${micState}`}
+        onPointerDown={handlePressStart}
+        onPointerUp={handlePressEnd}
+        onPointerCancel={handlePressEnd}
+        onPointerLeave={(e) => {
+          if (e.buttons === 0) return
+          handlePressEnd()
+        }}
+        aria-pressed={micState === "speaking-hold" || micState === "speaking-toggle"}
+      >
+        <span className="qualify-mic-text">{micLabel}</span>
+      </button>
+    </div>
+  )}
   ```
+  Both blocks share the same `.qualify-voice-mic-dock` parent so the dock geometry (sticky bottom, fade scrim) is identical — only the content inside swaps.
 
-#### Step 2.2 — Rewrite the chat layout CSS
+#### Step 3.3 — Add `.qualify-voice-finalizing` CSS
 
-- **In-file location:** `samwise-landing/app/qualify/qualify.css`, lines 545–576 (the chat-layout flex block + the `:has(.qualify-notes)` row-layout block + the `.qualify-chat` height-clamp block).
-- **Should not be modified:** `.qualify-chat-list`, `.qualify-chat-error`, the bubble/transcript styles inside the chat.
+- **In-file location:** `samwise-landing/app/qualify/qualify.css`. Add after the existing `.qualify-voice-mic-*` rules, before any media queries that affect the voice dock.
 - **Code:**
   ```css
-  /* Pre-notes: column layout, chat container self-contained with its
-     own height clamp (unchanged). */
-  .qualify-chat-layout {
-    display: flex;
-    flex-direction: column;
-    gap: 3rem;
-    width: 100%;
-    align-items: stretch;
-  }
-
-  /* Post-notes (both desktop and mobile): notes become the main column,
-     chat container abandons its height clamp and flows in-page, input
-     docks at the viewport bottom. Mirrors the voice-mode pattern. */
-  .qualify-chat-layout:has(.qualify-notes) {
-    align-items: stretch;
-    gap: 0;
-    padding-bottom: 200px;
-  }
-
-  .qualify-chat-layout:has(.qualify-notes) .qualify-notes {
-    order: 1;
-    margin: 0 auto;
-    max-width: 38em;
-    width: 100%;
-  }
-
-  .qualify-chat-layout:has(.qualify-notes) > .qualify-chat {
-    order: 2;
-    /* Abandon the height clamp — transcript flows in-page above the
-       sticky input dock. */
-    height: auto;
-    max-width: 38em;
-    margin: 0 auto;
-    width: 100%;
-  }
-
-  .qualify-chat-layout:has(.qualify-notes) .qualify-chat-list {
-    /* In post-notes mode, the list is no longer the scrollable area
-       (the page is). Remove the flex:1 fill behavior so it sizes to
-       its content. */
-    flex: 0 0 auto;
-    overflow: visible;
-  }
-
-  /* Input dock — pre-notes: passive; post-notes: sticky bottom. */
-  .qualify-chat-input-dock {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .qualify-chat-layout:has(.qualify-notes) .qualify-chat-input-dock {
-    position: sticky;
-    bottom: 0;
-    padding: 24px 0 28px;
-    z-index: 2;
-    background: transparent;
-  }
-
-  .qualify-chat-layout:has(.qualify-notes) .qualify-chat-input-dock::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 120px;
-    background: linear-gradient(
-      to top,
-      var(--bg) 0%,
-      var(--bg) 28%,
-      transparent 100%
-    );
+  .qualify-voice-finalizing {
+    margin: 0;
+    font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-size: 20px;
+    line-height: 1.4;
+    color: var(--ink);
+    text-align: center;
+    letter-spacing: 0;
     pointer-events: none;
+    animation: qualify-voice-finalizing-pulse 2.5s ease-in-out infinite;
   }
 
-  /* .qualify-chat base — keep the gap, drop the unconditional height
-     clamp (it's now conditional on pre-notes; CSS-wise easier to keep
-     height clamp here and override it post-notes as we did above). */
-  .qualify-chat {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: clamp(420px, 70vh, 720px);
-    gap: 1rem;
+  @keyframes qualify-voice-finalizing-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qualify-voice-finalizing {
+      animation: none;
+      opacity: 0.85;
+    }
   }
   ```
-- **Explanation:**
-  - Pre-notes: chat container is the same self-contained card with internal scroll list and input pinned to its bottom (unchanged).
-  - Post-notes: container abandons the height clamp; `MessageList` becomes a natural flow element; the input dock sticky-positions to the viewport bottom with the same gradient scrim as voice mode.
-  - The chat container caps at 38em like the notes column so the two visual elements align.
-  - Removes the desktop row-layout block (`.qualify-chat-layout:has(.qualify-notes) { flex-direction: row; ... }`) and the inner `.qualify-chat-layout:has(.qualify-notes) > .qualify-chat { max-width: 36em; flex: 1 1 0 }` rule from the old layout.
+- **Explanation:** matches the editorial register (Fraunces italic, ink color, no chrome). The pulse cadence (2.5s) is slow enough to feel held, not anxious. `prefers-reduced-motion` degrades to a static slightly-muted line.
 
-### Phase 3 — Browser verification
+### Phase 4 — Browser verification
 
-Per the samwise-landing-page skill's "Verification primitives that actually catch bugs" section. Use `preview_*` tools — never claim the layout works without testing.
+Per the samwise-landing-page skill's verification primitives. Use `preview_*` tools.
 
-#### Step 3.1 — Voice mode dry run with simulated notes
+#### Step 4.1 — Pre-warmed opener acknowledgment (English)
 
-- Start preview: `preview_start` for samwise-landing.
-- Open `/qualify`, pick English, type a name + email, click Talk.
-- Wait through the welcome card (3s floor) and the LiveKit connect — verify pre-notes layout is unchanged (centered welcome → centered mic with gold dashes).
-- **Simulate the first note via DevTools** (faster than waiting for a real agent turn): `preview_eval` to dispatch a synthetic data event:
+- Start preview. Open `/qualify`, pick English, type name + email, click Talk.
+- Wait through welcome card + LiveKit connect.
+- When Nova greets, reply: *"Yes, that's right — I've seen your videos and I want to schedule a call with Samuel."*
+- Verify Nova's reply contains: (a) a warm acknowledgment beat (e.g. "Glad those landed", "Means a lot you've been watching"), AND (b) a bridge to the intake ("let's take a few minutes", "quick check-in first"), AND (c) does NOT skip variables — her next move is to ask about the behaviour they want to change. Continue the conversation through behaviour grounding and verify variables fill normally.
+- `preview_screenshot` of the transcript / notes panel to confirm normal flow.
+
+#### Step 4.2 — Pre-warmed opener acknowledgment (Spanish)
+
+- Repeat 4.1 with Spanish picker. Reply: *"Sí, así es — he visto tus videos en TikTok y quiero agendar una llamada con Samuel."*
+- Verify the same shape (warm acknowledgment + bridge + continues into normal intake).
+
+#### Step 4.3 — End-of-call hold (English)
+
+- Continue an end-to-end conversation through to natural close (or use an existing conversation from 4.1).
+- When Nova reaches the end, listen for the closing line. Verify it contains an explicit "stay with me a moment" / "hold on" cue, not just "see you on the call."
+- The moment Nova finishes the closing line, observe the mic dock — verify it swaps from the mic button to the *"Almost there — pulling up your link."* indicator with the slow opacity pulse.
+- `preview_inspect` `.qualify-voice-finalizing` → verify `font-style: italic`, animation running.
+- Try pressing the dock area: nothing should happen (no PTT engagement).
+- Try pressing spacebar: nothing should happen.
+- After 3–10s, FinalScreen appears with the booking link.
+- `preview_screenshot` at the three moments: closing line, wait indicator, FinalScreen.
+
+#### Step 4.4 — End-of-call hold (Spanish)
+
+- Repeat 4.3 in Spanish. Verify the closing line is bilingual-correct and the wait label reads "Casi listo — preparando tu enlace."
+
+#### Step 4.5 — Safety net
+
+- Hard to trigger naturally. Use `preview_eval` to manually inject a `qualification:finalizing` event without a subsequent outcome:
   ```js
-  // Inject a variable-update event the same shape the agent publishes.
-  const payload = JSON.stringify({
-    type: "qualification:variable_update",
-    name: "behaviour_to_change",
-    value: "stop scrolling my phone every time I feel anxious",
-  })
-  window.dispatchEvent(new CustomEvent('test-qualify-note', { detail: payload }))
+  // Find the LiveKit Room (exposed via React internals — easier path:
+  // dispatch into the data handler via the room reference if accessible.
+  // If not easily accessible from console, skip the manual injection and
+  // verify the safety net behavior by reading the code path.)
   ```
-  *(This requires temporarily wiring a `window.addEventListener('test-qualify-note', ...)` test hook into `voice-room.tsx`'s `RoomEvent.DataReceived` handler — gated behind `process.env.NODE_ENV !== 'production'`. Decide at implementation time: either add the test hook OR trigger via a real call.)*
-- Verify:
-  - Notes panel appears at the top with the new ~38em column width (`preview_inspect` `.qualify-notes` → `max-width: 38em`).
-  - Mic dock becomes sticky at viewport bottom (`preview_inspect` `.qualify-voice-mic-dock` → `position: sticky`, `bottom: 0px`).
-  - Fade scrim renders (`preview_inspect` `.qualify-voice-mic-dock::before` — check for non-zero height and the gradient background).
-  - Inject 6 more notes (one for each `VariableKey`); verify they stack vertically inside the 38em column and the page scrolls — the mic remains visible at the bottom throughout.
-  - `preview_screenshot` at three scroll positions: top of notes, middle of notes, bottom of notes. Verify the gradient fade dissolves notes gracefully into the page surface above the mic — no visible "edge" between content and dock.
-- `preview_console_logs` `{ level: 'error' }` — confirm no warnings.
+  Or, simpler: temporarily comment out the `qualification:outcome` publish in the worker locally, force `endCall`, and verify after 30s the FinalScreen appears with the qualified treatment. Re-enable the publish after the test.
+- Verify console logs `[qualify] finalizing safety net fired — no outcome event in 30s`.
 
-#### Step 3.2 — Pre-notes layout integrity
+#### Step 4.6 — Reduced-motion
 
-- Reload `/qualify`, repeat the connect flow without injecting notes.
-- Verify the welcome card centers, then the mic centers (NO sticky behavior, NO scrim).
-- `preview_inspect` `.qualify-voice-mic-dock` → `position: static` (the pre-notes default).
+- DevTools → Rendering → Emulate `prefers-reduced-motion: reduce`.
+- Trigger the finalize state. Verify the pulse animation is suppressed; the text appears static at ~0.85 opacity.
 
-#### Step 3.3 — Mobile
+#### Step 4.7 — Pre-notes path integrity (regression check)
 
-- `preview_resize` to 375×667 (iPhone SE-ish).
-- Repeat Step 3.1 with simulated notes.
-- Verify the dock is full-width on mobile, the gold dashes don't visually clip the page edges (if they do, add the `padding: 0 1.5rem` mobile override mentioned in Step 1.4).
-- `preview_screenshot` for visual confirmation.
-
-#### Step 3.4 — Text mode (Phase 2)
-
-- Repeat Steps 3.1–3.3 on the text-mode chat (click "I'd rather type" on the picker, then send a couple of messages that prompt the agent to commit variables — easier to verify with real conversation than to inject test events for chat mode since variables come from tool-call sniffing on the streamed message parts).
-
-#### Step 3.5 — PTT state animations intact
-
-- With the post-notes layout active, hold and release the mic button; tap and tap. Verify the gold-dash collapse-inward + center-expanding-underline animations still play exactly as before. (The button's geometry didn't change — only its parent's positioning did — so this should be a no-op verification, but worth a direct check.)
+- The mic-button render path is unchanged in the default case. Open `/qualify`, connect, but do NOT finalize the call — verify the welcome → mic flow is byte-identical to today, the PTT collapse animations still play, and the gold dashes still expand on hover. (Insurance against accidentally regressing the two-branch refactor of Step 3.2g.)
 
 ### Testing phase
 
-- **Local test:** Steps 3.1–3.5 above. Local browser only; no integration test needed (no API or backend touched).
-- **Integration test:** N/A — purely a CSS + DOM wrap change. No worker, no cloud function, no env var, no schema.
-- **Update README:** N/A — there's no public README documenting the `/qualify` layout. The `context-for-code-agent.md` update below covers internal documentation.
+- **Local test:** Steps 4.1–4.7 above. Local browser only.
+- **Worker integration:** the worker change (Step 2.2) requires the agent to be running in dev mode against the local landing page, OR deployed to LiveKit Cloud. Spin up via `pnpm dev` in `samwise-backend/ritual-agent/`. Confirm the `qualification:finalizing` event reaches the client via DevTools Network → LiveKit data channel inspection (or a temporary `console.log` in the voice-room's data handler).
+- **Prompt sync check:** before commit, `diff` the two prompt files to confirm they're in sync.
+- **Update README:** N/A.
 
 ### After implementation
 
-- Update `samwise-landing/context-for-code-agent.md`:
-  - In the `/qualify` section, replace the "side-by-side row layout when notes exist" description with the new "notes-as-main column + sticky-bottom speaker dock" description.
-  - Mention the gradient fade scrim and the 38em readable measure as a defining detail of the post-notes layout (so future variants don't accidentally re-introduce the row layout).
-- Update the **samwise-landing-page skill file** (`.claude/skills/samwise-landing-page/SKILL.md`) "/qualify — first-class route" section:
-  - Replace the line "Layout: this rule styles the panel internals only..." block-comment guidance to reflect the new column-first geometry.
-  - Add to the "What the user explicitly rejected" running list: "The row layout (mic-left + notes-right) for the post-first-note phase of /qualify — the notes get horizontally collapsed and overflow vertically. Notes-as-main + sticky-bottom dock is the landed pattern."
+- Add a one-line entry to `samwise-landing/context-for-code-agent.md` under the `/qualify` section about the finalize-hold contract (worker publishes `qualification:finalizing` on endCall; voice-room swaps mic → "Almost there…" indicator; 30s safety net).
+- Update the `samwise-landing-page` skill file's `/qualify` section: add the finalize-hold pattern to the "Conventions specific to /qualify" list and add the closing-line wait-cue rule to the "the welcome card and Nova's 'agent speaks first' config are linked" bullet (the same kind of contract). Also add a new running-list entry: "Closing line without a 'hold on a moment' cue — leaves the user staring at silence during the 3–10s extraction wait."
 - Mark task DONE in the master Vibe doc Projects tab (manual user step).

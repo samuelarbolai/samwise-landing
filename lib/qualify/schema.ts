@@ -87,6 +87,11 @@ export const QualificationPayloadSchema = z.object({
 
   // User-facing variables — same seven fields as SetVariablesArgsSchema.
   behaviour_to_change: z.string().optional(),
+  // Full grounded incident description (WHEN/WHERE/ACTIVITY/ACTION as a
+  // noun-phrase). Used as Phase 5b Step 1's moment-anchor in the Demo Call
+  // copilot. Produced post-call by extractQualification from the transcript
+  // — never live-committed by the agent during the conversation.
+  behaviour_example: z.string().optional(),
   core_motivation: z.string().optional(),
   problem_duration_self_reported: z.string().optional(),
   life_stage_context: z.string().optional(),

@@ -119,18 +119,19 @@ samwise-landing/
 │   │       └── page.tsx
 │   ├── qualify/            # FIRST-CLASS ROUTE (not a variant) — Qualification Agent landing surface
 │   │   ├── page.tsx                 # client-state orchestrator: picker → voice|text → final
-│   │   ├── language-picker.tsx      # explicit English / Español picker + "I'd rather type" fallback
-│   │   ├── voice-room.tsx           # livekit-client Room, hybrid PTT (tap-toggle <200ms / hold-to-speak >200ms / spacebar shortcut)
-│   │   ├── chat.tsx                 # AI SDK 6 useChat fallback (text mode)
-│   │   ├── qualify.css              # scoped high-contrast monochrome styles
+│   │   ├── language-picker.tsx      # English / Español picker + email-gated proceed. Text fallback button gated by TEXT_MODE_ENABLED feature flag (currently false — voice only)
+│   │   ├── voice-room.tsx           # livekit-client Room, hybrid PTT (tap-toggle <200ms / hold-to-speak >200ms / spacebar shortcut). Subscribes to qualification:variable_update + qualification:outcome data events.
+│   │   ├── chat.tsx                 # AI SDK 6 useChat — text mode (currently unreachable via UI; flag-gated)
+│   │   ├── qualify.css              # scoped editorial styles (brand tokens, picker, voice + chat layouts, variables panel)
 │   │   └── components/
 │   │       ├── message-list.tsx
 │   │       ├── message-input.tsx
-│   │       └── final-screen.tsx     # qualified / disqualified / safety_flagged renderings
+│   │       ├── final-screen.tsx     # qualified / disqualified renderings (same booking link, different copy)
+│   │       └── variables-panel.tsx  # live notes surface — 7 user-facing variable cards fading in as the agent commits via setVariables
 │   └── api/
 │       └── qualify/
-│           ├── voice-init/route.ts  # mints LiveKit token + dispatches ritual-agent with metadata { flow:"qualification", language, persona:"nova" }
-│           └── chat/route.ts        # AI SDK streamText with submitQualification tool (text-mode fallback)
+│           ├── voice-init/route.ts  # mints LiveKit token + dispatches ritual-agent with metadata { flow:"qualification", language, prospect_name, prospect_email }
+│           └── chat/route.ts        # AI SDK streamText with setVariables + endCall tools; endCall.execute POSTs the transcript to extractQualification cloud function
 ├── components/
 │   ├── theme-provider.tsx  # next-themes wrapper (not currently used on page.tsx)
 │   └── ui/                 # shadcn/ui components (button, card, etc.) — available but mostly unused
@@ -139,10 +140,9 @@ samwise-landing/
 │   ├── utils.ts            # `cn` helper (clsx + tailwind-merge)
 │   └── qualify/            # source-of-truth for the qualification agent (worker COPIES these)
 │       ├── persona.ts                 # Nova characterization, bilingual
-│       ├── intake-prompt.ts           # Intake stage prompt builder (P1 + safety)
-│       ├── capture-prompt.ts          # Capture stage prompt builder (P2 verbatim)
-│       ├── schema.ts                  # GateDecisionSchema + QualificationPayloadSchema (zod)
-│       └── strings.ts                 # bilingual UI copy (picker / voice / chat / final screens)
+│       ├── qualification-prompt.ts    # single prompt for the agent, mode: 'voice' | 'text'
+│       ├── schema.ts                  # SetVariablesArgsSchema + EndCallArgsSchema + QualificationPayloadSchema (zod)
+│       └── strings.ts                 # bilingual UI copy (picker / voice / chat / final screens + variable labels)
 ├── public/                 # Icons and placeholder assets
 ├── styles/                 # Additional stylesheet (if any)
 ├── components.json         # shadcn config
@@ -162,12 +162,15 @@ samwise-landing/
 
 ## `/qualify` (first-class route, not a variant)
 
-The qualification agent surface. Bilingual (English / Español), voice-first with a text fallback. Architecture:
-- **Picker first.** No auto-detection — the user picks language explicitly and chooses voice (default) or text.
-- **Voice mode** dispatches a LiveKit Room. The browser hits `app/api/qualify/voice-init/route.ts` which mints a token and **dispatches the existing `ritual-agent` worker** with metadata `{ flow: "qualification", language, persona: "nova" }`. The worker's qualification flow lives at `samwise-backend/ritual-agent/src/flows/qualification/` (NOT in a separate `qualification-agent` module — the multi-flow-router pattern is canonical, see `samwise-livekit-agents` skill). Push-to-talk is hybrid: tap-and-release within 200ms = toggle on/off; press-and-hold beyond 200ms = release ends the turn. Spacebar mirrors on desktop.
-- **Text mode** streams Gemini 2.5 Flash via AI SDK 6 `useChat`. One combined Intake+Capture prompt, one tool (`submitQualification`).
-- **Both modalities** call `submitQualification` (cloud function in `samwise-backend/cloud-functions/`) once at the end. The cloud function evaluates the rubric server-side (qualified vs disqualified vs safety_flagged) and writes a doc to Firestore `qualifications` collection.
-- **Final screen** shows the same `https://cal.com/samuel-giraldo-concha-yqvtot/fit-assessment` link for qualified AND disqualified outcomes (DQ gets an assertive note). Safety_flagged shows a professional-referral message without the link.
-- **Source-of-truth files** in `lib/qualify/` are copied into the worker at `ritual-agent/src/flows/qualification/`. Keep both in sync until they're hoisted to a shared package (out of scope for v1).
-- **Env vars on Vercel for `/qualify`:** `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_LIVEKIT_URL`, `RITUAL_AGENT_NAME` (defaults to `ritual-agent`), `GOOGLE_GENERATIVE_AI_API_KEY` (text mode), `SUBMIT_QUALIFICATION_URL`.
+The qualification agent surface. Bilingual (English / Español), voice-only in the current UI (text mode is built end-to-end but feature-flagged off via `TEXT_MODE_ENABLED = false` in `language-picker.tsx`). Architecture (post-redesign 2026-05-25 — see `current-plan.md`):
+
+- **Picker first.** No auto-detection — the user picks language explicitly. Name + valid email required to proceed.
+- **Voice mode** dispatches a LiveKit Room. The browser hits `app/api/qualify/voice-init/route.ts` which mints a token and **dispatches the existing `ritual-agent` worker** with metadata `{ flow: "qualification", language, prospect_name, prospect_email }`. The worker's qualification flow lives at `samwise-backend/ritual-agent/src/flows/qualification/` (NOT in a separate `qualification-agent` module — the multi-flow-router pattern is canonical, see `samwise-livekit-agents` skill). Push-to-talk is hybrid: tap-and-release within 200ms = toggle on/off; press-and-hold beyond 200ms = release ends the turn. Spacebar mirrors on desktop.
+- **Agent / scribe split.** The agent's job is conversation + taking live notes via `setVariables`. It does NOT produce structured gate verdicts during the call. Each `setVariables` tool call publishes one `qualification:variable_update` data event per committed variable; `voice-room.tsx` accumulates these into state and renders `<VariablesPanel>` on the right (desktop) / below the mic (mobile). At end-of-call — `endCall` tool OR `participantDisconnected` OR 10-min idle timeout — the worker POSTs the full transcript to `extractQualification` cloud function. The cloud function runs Gemini 2.5 Flash extraction over the transcript, produces the authoritative `QualificationPayload`, writes `qualifications/{prospectKey}-{ts}`, and dispatches a post-call confirmation email via the Firebase Trigger Email extension. The worker publishes a `qualification:outcome` data event on the CF's response; voice-room swaps to `<FinalScreen>`.
+- **Text mode (flag-gated).** When `TEXT_MODE_ENABLED` is `true`, the picker exposes "I'd rather type." It uses the same prompt (`qualification-prompt.ts` with `mode: 'text'`) and the same tools (`setVariables`, `endCall`). The chat client observes tool-call INPUTs in the streamed parts to fill `<VariablesPanel>` live. `endCall.execute` POSTs the transcript to `extractQualification` directly from the API route (no LiveKit data channel involved).
+- **Final screen** shows the same `https://cal.com/samuel-giraldo-concha-yqvtot/breakthrough` link for qualified AND disqualified outcomes (DQ gets an assertive note). The legacy `safety_flagged` outcome no longer exists.
+- **Source-of-truth files** in `lib/qualify/` are copied into the worker at `ritual-agent/src/flows/qualification/`. Keep both in sync. Worker mirrors: `schema.ts`, `prompts/qualification-prompt.ts`, `prompts/persona.ts`.
+- **Env vars on Vercel for `/qualify`:** `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `NEXT_PUBLIC_LIVEKIT_URL`, `RITUAL_AGENT_NAME` (defaults to `ritual-agent`), `AI_GATEWAY_API_KEY` (text mode via Vercel AI Gateway), `EXTRACT_QUALIFICATION_URL` (text mode; voice mode uses the worker's env var of the same name).
 - **Notes-as-main layout (both modes).** When the first agent-committed note arrives (`.qualify-voice:has(.qualify-notes)` / `.qualify-chat-layout:has(.qualify-notes)`), the layout flips from "centered mic / chat box" to "notes as main column (38em readable measure, centered) + speaker dock fixed at viewport bottom." The speaker dock is `position: fixed; bottom: 0; left: 0; right: 0` with no chrome — its only visible element is the centered mic button (voice mode) or `MessageInput` (chat mode). A `::before` pseudo-element above the dock paints a 120px gradient from `var(--bg)` to transparent so notes scrolling toward the dock dissolve into the page surface before they would visually touch it — the "fade out as objects approach" treatment the user explicitly asked for. `.qualify-voice` / `.qualify-chat-layout` get `padding-bottom: 248px` (dock ~108px + scrim 120px + ~20px breathing) so the last note clears the scrim. Pre-notes the dock is a passive flex wrapper and the layout is byte-identical to the original centered behavior. **Do not re-introduce the prior row layout (mic-left + notes-right) — it horizontally collapsed the notes and forced vertical overflow.**
+- **End-of-call finalize hold.** Between Nova's `endCall` tool firing and `<FinalScreen>` mounting there's a 3–10s extraction wait (Gemini reads the transcript via the `extractQualification` cloud function). Without bridging that wait, users see Nova's closing line, then silence + the still-active mic, then suddenly the booking screen — voice-skeptical users assume something broke and close the tab. Three-part contract: (a) the prompt's `<end-of-call>` block REQUIRES the closing line to include an explicit "stay with me / hold on a moment" cue plus naming the screen as where the link will appear; (b) the worker's `submitIfNotYet` publishes a `qualification:finalizing` data event BEFORE awaiting the extract-CF, only on the endCall path (disconnect / idle_timeout / hard_cap skip it since the user is already gone); (c) `voice-room.tsx` flips a `finalizing` state on receipt, swaps the mic for `<p class="qualify-voice-finalizing">` (Fraunces italic line, slow 2.5s opacity pulse 1→0.5→1, copy from `voice_finalizing_label` in `strings.ts` — *"Almost there — pulling up your link."* / *"Casi listo — preparando tu enlace."*), force-disables the mic, and the PTT + spacebar handlers early-return on `finalizingRef.current`. A 30s safety net force-routes to `onOutcome("qualified")` if the outcome event never arrives. The finalize indicator lives INSIDE `.qualify-voice-mic-dock` so the dock geometry (fixed bottom, fade scrim) is identical to the mic state.
+- **Pre-warmed opener (TikTok / Instagram / YouTube funnel).** The prompt's `<pre-warmed-opener>` block (EN + ES, placed between `<exploration-and-reluctance>` and `<continuous-evaluation>`) lists the recognition signals (*"I've seen your videos / I want to schedule a call with Samuel / I'm here from TikTok"*) and forces a 1–2-beat handling: warm acknowledgment + bridge to the intake. **The conversation from that point is identical to the default flow** — same behaviour grounding, same variables, same end-of-call. No lighter qualification, no shortened call — the fit gate is not a sales filter and pre-warmed users still need the same understanding for the breakthrough call to land.
