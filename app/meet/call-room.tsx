@@ -4,15 +4,15 @@ import { useCallback, useState } from "react"
 import {
   VideoCallExperience,
   type VideoCallInit,
-} from "@/app/demo-call/[bookingId]/video-call-experience"
+} from "@/components/call/video-call-experience"
 import {
   VariablesPanel,
   type VariablesState,
   type VariableKey,
 } from "@/app/qualify/components/variables-panel"
-// Reuse the demo-call in-call layout + video tile styles (`.demo-call-*`
-// and the minimum `.qualify-notes-*` declarations).
-import "@/app/demo-call/[bookingId]/demo-call.css"
+// Editorial in-call layout + video tile styles (.demo-call-* and the
+// minimum .qualify-notes-* declarations the reused panel needs).
+import "@/components/call/call.css"
 import type { MeetInitResponse } from "./lobby"
 
 // Mirrors the demo-call user-side call-room: video tile (main) +
