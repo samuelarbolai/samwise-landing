@@ -1,0 +1,257 @@
+/* ===================================================================
+   /meet — walk-in lobby + reuses /demo-call's in-call layout.
+
+   Aesthetic mirrors /qualify's language picker (per the
+   samwise-landing-page skill). Brand tokens local; literal Fraunces /
+   Manrope stacks (no var(--font-fraunces) per the rejected-list).
+
+   In-call styles (`.demo-call-*`, `.qualify-notes-*`) come from
+   demo-call.css imported by call-room.tsx — not duplicated here.
+   =================================================================== */
+
+:root {
+  --bg:          #FFFFFF;
+  --ink:         #000000;
+  --ink-soft:    #1A1A1A;
+  --ink-mute:    #555555;
+  --rule:        #E0E0E0;
+  --gold:        #D4A85A;
+}
+
+.meet-lobby {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+
+.meet-header {
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.meet-brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.meet-brand-star {
+  color: var(--gold);
+  font-size: 9px;
+  vertical-align: super;
+  padding-left: 3px;
+}
+
+.meet-lang-toggle {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.meet-lang-btn {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  padding: 6px 10px;
+  border-bottom: 1px solid transparent;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+.meet-lang-btn:hover {
+  color: var(--ink);
+}
+
+.meet-lang-btn.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
+}
+
+/* ── Center stack ─────────────────────────────────────────────── */
+
+.meet-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 48px 24px 120px;
+  text-align: center;
+}
+
+.meet-lead {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.3;
+  color: var(--ink);
+  max-width: 22em;
+}
+
+@media (max-width: 600px) {
+  .meet-lead {
+    font-size: 26px;
+  }
+}
+
+.meet-sub {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+/* ── Form ─────────────────────────────────────────────────────── */
+
+.meet-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  max-width: 380px;
+  margin-top: 16px;
+}
+
+.meet-input {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  padding: 8px 0 6px 0;
+  text-align: center;
+  color: var(--ink);
+  width: 100%;
+  outline: none;
+  transition: border-color 200ms ease;
+}
+
+.meet-input::placeholder {
+  color: var(--ink-mute);
+}
+
+.meet-input:focus {
+  border-bottom-color: var(--gold);
+}
+
+.meet-input-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+}
+
+.meet-input-email {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.meet-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── CTA (hairline gold-dash, mirrors /qualify .cta--primary) ─── */
+
+.meet-cta {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 10px 14px;
+  margin-top: 4px;
+  transition: opacity 200ms ease;
+}
+
+.meet-cta:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.meet-cta-dashes {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: -0.08em;
+  transition: transform 220ms ease;
+  display: inline-block;
+}
+
+.meet-cta:not(:disabled):hover .meet-cta-dashes {
+  transform: scaleX(0.7);
+}
+
+.meet-cta-text {
+  position: relative;
+}
+
+.meet-cta-text::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: -3px;
+  height: 1px;
+  background: var(--gold);
+  transition: left 220ms ease, right 220ms ease;
+}
+
+.meet-cta:not(:disabled):hover .meet-cta-text::after {
+  left: 0;
+  right: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meet-cta-dashes,
+  .meet-cta-text::after {
+    transition: none;
+  }
+}
+
+/* ── Error line ───────────────────────────────────────────────── */
+
+.meet-error {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #B23A48;
+}

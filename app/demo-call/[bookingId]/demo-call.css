@@ -1,0 +1,428 @@
+/* ===================================================================
+   /demo-call/[bookingId] — user-side surface.
+
+   Aesthetic register mirrors /qualify (see samwise-landing-page skill).
+   Brand tokens duplicated locally so this route is self-contained.
+   Literal 'Fraunces' / 'Manrope' stacks — NO var(--font-fraunces) per
+   the running rejected-list (that variable doesn't exist in qualify.css
+   and resolves to empty).
+   =================================================================== */
+
+:root {
+  --bg:          #FFFFFF;
+  --ink:         #000000;
+  --ink-soft:    #1A1A1A;
+  --ink-mute:    #555555;
+  --rule:        #E0E0E0;
+  --gold:        #D4A85A;
+}
+
+.demo-call-prejoin,
+.demo-call-room {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  min-height: 100dvh;
+}
+
+/* ── Pre-join lobby ────────────────────────────────────────────── */
+
+.demo-call-prejoin {
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-call-prejoin-header {
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+}
+
+.demo-call-prejoin-brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.demo-call-prejoin-brand-star {
+  color: var(--gold);
+  font-size: 9px;
+  vertical-align: super;
+  padding-left: 3px;
+}
+
+.demo-call-prejoin-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 48px 24px 96px;
+  text-align: center;
+}
+
+.demo-call-prejoin-lead {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.35;
+  color: var(--ink);
+  max-width: 28em;
+}
+
+.demo-call-prejoin-sub {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.demo-call-prejoin-loading {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.demo-call-prejoin-back {
+  margin-top: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 2px;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+.demo-call-prejoin-back:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.demo-call-prejoin-test {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  transition: color 200ms ease;
+}
+
+.demo-call-prejoin-test:hover {
+  color: var(--ink);
+}
+
+/* ── CTA — mirrors canonical .cta--primary (hairline gold dashes) ── */
+
+.demo-call-cta {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 8px 12px;
+}
+
+.demo-call-cta-dashes {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: -0.08em;
+  transition: transform 220ms ease;
+  display: inline-block;
+}
+
+.demo-call-cta:hover .demo-call-cta-dashes {
+  transform: scaleX(0.7);
+}
+
+.demo-call-cta-text {
+  position: relative;
+}
+
+.demo-call-cta-text::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: -3px;
+  height: 1px;
+  background: var(--gold);
+  transition: left 220ms ease, right 220ms ease;
+}
+
+.demo-call-cta:hover .demo-call-cta-text::after {
+  left: 0;
+  right: 0;
+}
+
+/* ── In-call layout ────────────────────────────────────────────── */
+/* Two regions: video tile (main) + variables panel (right rail).
+   On mobile, video stacks above notes. */
+
+.demo-call-room {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 60vh auto;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .demo-call-room {
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+    grid-template-rows: 1fr;
+  }
+}
+
+.demo-call-room-video {
+  position: relative;
+  background: var(--ink);
+  overflow: hidden;
+}
+
+.demo-call-room-notes {
+  background: var(--bg);
+  overflow: auto;
+  padding: 32px 28px 48px;
+  border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 900px) {
+  .demo-call-room-notes {
+    border-top: none;
+    border-left: 1px solid var(--rule);
+  }
+}
+
+/* The VariablesPanel ships its own .qualify-notes-* classes (this
+   panel is reused unchanged from /qualify/components/variables-panel
+   per the dedup-by-import principle in current-plan.md). The reused
+   styles are defined in qualify.css; we ensure that file is loaded
+   wherever the panel is used. For the demo-call route specifically,
+   qualify.css is NOT auto-imported — we import the panel from a
+   different folder. Solution: re-declare the minimum styles here so
+   the panel renders correctly without dragging in the entire
+   qualify.css. */
+
+.qualify-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 32em;
+  margin: 0 auto;
+}
+
+.qualify-notes-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: demo-notes-fade-in 420ms ease both;
+}
+
+.qualify-notes-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.qualify-notes-quote {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.45;
+  color: var(--ink);
+  animation: demo-notes-fade-in 420ms ease both;
+}
+
+@keyframes demo-notes-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qualify-notes-card,
+  .qualify-notes-quote {
+    animation: none;
+  }
+}
+
+/* ── Video tile internals (VideoCallExperience renders these) ───── */
+
+.demo-call-video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--ink);
+  color: #FFFFFF;
+}
+
+.demo-call-video-remote {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+.demo-call-video-remote video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.demo-call-video-remote audio {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.demo-call-video-self {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 168px;
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.demo-call-video-self-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.demo-call-video-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(0, 0, 0, 0.62);
+  pointer-events: none;
+  padding: 24px;
+  text-align: center;
+  z-index: 1;
+}
+
+.demo-call-overlay-lead {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.4;
+  color: #FFFFFF;
+  max-width: 24em;
+}
+
+.demo-call-overlay-sub {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.demo-call-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.92);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 3;
+}
+
+.demo-call-control-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #FFFFFF;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.demo-call-control-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.demo-call-control-btn[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+
+.demo-call-control-end {
+  border-color: rgba(220, 60, 60, 0.55);
+  color: #FF8A8A;
+}
+
+.demo-call-control-end:hover {
+  background: rgba(220, 60, 60, 0.18);
+  border-color: rgba(220, 60, 60, 0.85);
+  color: #FFFFFF;
+}

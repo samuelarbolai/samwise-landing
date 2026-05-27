@@ -1,0 +1,146 @@
+/* ===================================================================
+   /book — Samwise-branded booking page that opens the Cal embed modal.
+
+   Aesthetic mirrors /qualify's picker register (per samwise-landing-page
+   skill). Brand tokens local; literal Fraunces / Manrope stacks per the
+   rejected-list rule (no var(--font-fraunces)).
+   =================================================================== */
+
+:root {
+  --bg:          #FFFFFF;
+  --ink:         #000000;
+  --ink-soft:    #1A1A1A;
+  --ink-mute:    #555555;
+  --rule:        #E0E0E0;
+  --gold:        #D4A85A;
+}
+
+.book-root {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-header {
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+}
+
+.book-brand {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.book-brand-star {
+  color: var(--gold);
+  font-size: 9px;
+  vertical-align: super;
+  padding-left: 3px;
+}
+
+.book-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 48px 24px 120px;
+  text-align: center;
+}
+
+.book-lead {
+  margin: 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.3;
+  color: var(--ink);
+  max-width: 22em;
+}
+
+@media (max-width: 600px) {
+  .book-lead {
+    font-size: 26px;
+  }
+}
+
+.book-sub {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+/* CTA — same hairline gold-dash structure as /qualify's .cta--primary. */
+.book-cta {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+
+.book-cta-dashes {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: -0.08em;
+  transition: transform 220ms ease;
+  display: inline-block;
+}
+
+.book-cta:hover .book-cta-dashes {
+  transform: scaleX(0.7);
+}
+
+.book-cta-text {
+  position: relative;
+}
+
+.book-cta-text::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: -3px;
+  height: 1px;
+  background: var(--gold);
+  transition: left 220ms ease, right 220ms ease;
+}
+
+.book-cta:hover .book-cta-text::after {
+  left: 0;
+  right: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book-cta-dashes,
+  .book-cta-text::after {
+    transition: none;
+  }
+}
