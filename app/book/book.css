@@ -1,9 +1,9 @@
 /* ===================================================================
-   /book — Samwise-branded booking page that opens the Cal embed modal.
+   /book — Samwise-branded booking picker against Google Calendar.
 
-   Aesthetic mirrors /qualify's picker register (per samwise-landing-page
-   skill). Brand tokens local; literal Fraunces / Manrope stacks per the
-   rejected-list rule (no var(--font-fraunces)).
+   Aesthetic per samwise-landing-page skill: gallery white, literal
+   Fraunces / Manrope stacks (no var(--font-fraunces)), hairline gold
+   accents, generous vertical space, no marketing chrome.
    =================================================================== */
 
 :root {
@@ -49,36 +49,35 @@
   padding-left: 3px;
 }
 
-.book-center {
+.book-stage {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 32px;
-  padding: 48px 24px 120px;
+  justify-content: flex-start;
+  padding: 32px 24px 96px;
   text-align: center;
 }
+
+/* ── Shared display type ────────────────────────────────────── */
 
 .book-lead {
   margin: 0;
   font-family: 'Fraunces', Georgia, serif;
   font-style: italic;
   font-weight: 400;
-  font-size: 32px;
-  line-height: 1.3;
+  font-size: 28px;
+  line-height: 1.35;
   color: var(--ink);
-  max-width: 22em;
+  max-width: 24em;
 }
 
 @media (max-width: 600px) {
-  .book-lead {
-    font-size: 26px;
-  }
+  .book-lead { font-size: 24px; }
 }
 
 .book-sub {
-  margin: 0;
+  margin: 12px 0 0 0;
   font-family: 'Manrope', sans-serif;
   font-weight: 500;
   font-size: 11px;
@@ -87,8 +86,290 @@
   color: var(--ink-mute);
 }
 
-/* CTA — same hairline gold-dash structure as /qualify's .cta--primary. */
-.book-cta {
+.book-status {
+  margin: 96px 0 0 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.book-error-block,
+.book-empty-block {
+  margin-top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.book-back {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-decoration: none;
+  padding: 0 0 4px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 200ms ease, border-color 200ms ease;
+  align-self: flex-start;
+  margin-bottom: 32px;
+}
+
+.book-back:hover {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+/* ── Month grid ─────────────────────────────────────────────── */
+
+.book-month {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.book-month-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.book-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.book-month-arrow {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  color: var(--ink-mute);
+  padding: 6px 10px;
+  transition: color 200ms ease;
+}
+
+.book-month-arrow:hover {
+  color: var(--ink);
+}
+
+.book-month-label {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  text-transform: capitalize;
+}
+
+.book-month-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.book-weekday {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-align: center;
+  padding: 6px 0;
+}
+
+.book-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.book-day {
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--ink-mute);
+  aspect-ratio: 1;
+  cursor: default;
+  opacity: 0.3;
+  transition: opacity 200ms ease, box-shadow 200ms ease, color 200ms ease;
+}
+
+.book-day-outside {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.book-day.is-available {
+  opacity: 1;
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--rule);
+}
+
+.book-day.is-available:hover {
+  box-shadow: inset 0 0 0 1px var(--gold);
+  color: var(--ink);
+}
+
+/* ── Time slots ─────────────────────────────────────────────── */
+
+.book-slots {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.book-slots > .book-back {
+  align-self: center;
+}
+
+.book-slot-list {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.book-slot {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 12px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule);
+  transition: border-color 200ms ease;
+}
+
+.book-slot:hover {
+  border-bottom-color: var(--gold);
+}
+
+.book-slot-dashes {
+  color: var(--gold);
+  font-size: 13px;
+  letter-spacing: -0.08em;
+  transition: transform 220ms ease;
+  display: inline-block;
+}
+
+.book-slot:hover .book-slot-dashes {
+  transform: scaleX(0.7);
+}
+
+.book-slot-time {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+}
+
+/* ── Confirm form ───────────────────────────────────────────── */
+
+.book-confirm {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.book-confirm > .book-back {
+  align-self: center;
+}
+
+.book-confirm-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.book-input {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ink);
+  padding: 8px 0 6px 0;
+  text-align: center;
+  color: var(--ink);
+  width: 100%;
+  outline: none;
+  transition: border-color 200ms ease;
+}
+
+.book-input::placeholder { color: var(--ink-mute); }
+
+.book-input:focus { border-bottom-color: var(--gold); }
+
+.book-input-name {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+}
+
+.book-input-email {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.book-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.book-cta-confirm {
   appearance: none;
   background: none;
   border: none;
@@ -104,6 +385,12 @@
   color: var(--ink);
   padding: 10px 14px;
   margin-top: 8px;
+  transition: opacity 200ms ease;
+}
+
+.book-cta-confirm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .book-cta-dashes {
@@ -114,7 +401,7 @@
   display: inline-block;
 }
 
-.book-cta:hover .book-cta-dashes {
+.book-cta-confirm:not(:disabled):hover .book-cta-dashes {
   transform: scaleX(0.7);
 }
 
@@ -133,14 +420,81 @@
   transition: left 220ms ease, right 220ms ease;
 }
 
-.book-cta:hover .book-cta-text::after {
+.book-cta-confirm:not(:disabled):hover .book-cta-text::after {
   left: 0;
   right: 0;
 }
 
+.book-error {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #B23A48;
+}
+
+/* ── Done view ──────────────────────────────────────────────── */
+
+.book-done {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.book-done-meta {
+  margin: 32px 0 0 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  width: 100%;
+}
+
+.book-done-meta dt {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-top: 24px;
+}
+
+.book-done-meta dd {
+  margin: 4px 0 0 0;
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.book-done-link {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 2px;
+}
+
+.book-done .book-back {
+  margin-top: 48px;
+  align-self: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .book-day,
+  .book-slot,
+  .book-slot-dashes,
   .book-cta-dashes,
-  .book-cta-text::after {
+  .book-cta-text::after,
+  .book-month-arrow,
+  .book-back {
     transition: none;
   }
 }

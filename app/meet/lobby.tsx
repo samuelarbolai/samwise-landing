@@ -75,8 +75,13 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !email.trim()) return
-    if (!EMAIL_RE.test(email.trim())) {
+    // Both fields are optional now (per user 2026-05-27 — "make the room
+    // free to enter for now"). Defaults: name = "Guest", email = "" so
+    // testing is one-click. If email IS provided, still validate format
+    // so a typo doesn't silently produce a bogus prospectKey.
+    const trimmedName = name.trim() || "Guest"
+    const trimmedEmail = email.trim()
+    if (trimmedEmail && !EMAIL_RE.test(trimmedEmail)) {
       setError(s.email_invalid)
       return
     }
@@ -88,8 +93,8 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "create",
-          name: name.trim(),
-          email: email.trim(),
+          name: trimmedName,
+          email: trimmedEmail,
           language: lang,
         }),
       })
@@ -107,8 +112,10 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
     }
   }
 
-  const canSubmit =
-    !submitting && name.trim().length > 0 && EMAIL_RE.test(email.trim())
+  // Always enabled — empty fields are valid. The only gate is the
+  // submitting state (so you can't double-fire while a request is in
+  // flight).
+  const canSubmit = !submitting
 
   return (
     <main className="meet-lobby" lang={lang}>

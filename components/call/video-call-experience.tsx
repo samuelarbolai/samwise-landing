@@ -222,47 +222,54 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
   }, [camOn])
 
   return (
-    <div className="demo-call-video">
-      <div ref={remoteContainerRef} className="demo-call-video-remote" />
+    <div className="demo-call-video-frame">
+      {/* The contained tile — dark interior, rounded corners, soft
+          shadow. Sits on the gallery-white page surface. */}
+      <div className="demo-call-video">
+        <div ref={remoteContainerRef} className="demo-call-video-remote" />
 
-      <div className="demo-call-video-self">
-        <video
-          ref={localVideoRef}
-          autoPlay
-          muted
-          playsInline
-          className="demo-call-video-self-el"
-        />
+        <div className="demo-call-video-self">
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="demo-call-video-self-el"
+          />
+        </div>
+
+        {phase !== 'active' && (
+          <div className="demo-call-video-overlay" aria-live="polite">
+            {phase === 'connecting' && status && (
+              <>
+                <p className="demo-call-overlay-lead">{status.connectingLead}</p>
+                <p className="demo-call-overlay-sub">{status.connectingSub}</p>
+              </>
+            )}
+            {phase === 'peer-waiting' && status && (
+              <>
+                <p className="demo-call-overlay-lead">{status.waitingLead}</p>
+                <p className="demo-call-overlay-sub">{status.waitingSub}</p>
+              </>
+            )}
+            {phase === 'ended' && status && (
+              <>
+                <p className="demo-call-overlay-lead">{status.endedLead}</p>
+                <p className="demo-call-overlay-sub">{status.endedSub}</p>
+              </>
+            )}
+            {phase === 'error' && (
+              <p className="demo-call-overlay-lead">
+                {errorMsg ?? 'Something went wrong.'}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
-      {phase !== 'active' && (
-        <div className="demo-call-video-overlay" aria-live="polite">
-          {phase === 'connecting' && status && (
-            <>
-              <p className="demo-call-overlay-lead">{status.connectingLead}</p>
-              <p className="demo-call-overlay-sub">{status.connectingSub}</p>
-            </>
-          )}
-          {phase === 'peer-waiting' && status && (
-            <>
-              <p className="demo-call-overlay-lead">{status.waitingLead}</p>
-              <p className="demo-call-overlay-sub">{status.waitingSub}</p>
-            </>
-          )}
-          {phase === 'ended' && status && (
-            <>
-              <p className="demo-call-overlay-lead">{status.endedLead}</p>
-              <p className="demo-call-overlay-sub">{status.endedSub}</p>
-            </>
-          )}
-          {phase === 'error' && (
-            <p className="demo-call-overlay-lead">
-              {errorMsg ?? 'Something went wrong.'}
-            </p>
-          )}
-        </div>
-      )}
-
+      {/* Controls live OUTSIDE the tile, on the page surface — small
+          Manrope-small-caps text buttons with hairline underline
+          on hover, in keeping with the qualify register. No dark bar. */}
       <div className="demo-call-controls">
         <button
           type="button"

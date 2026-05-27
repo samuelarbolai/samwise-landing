@@ -1,12 +1,12 @@
-import { BookClient } from "./book-client"
+import { BookRoot } from "./book-root"
 
 export const dynamic = "force-static"
 
-// Samwise-branded booking surface. Replaces "Samuel sends them a raw
-// cal.com URL" with samwise.life/book?lang=en|es. Cal element-click
-// modal opens in place when the CTA is tapped — Cal's own UI handles
-// the calendar pick + confirmation, then samwise's calDemoBookingWebhook
-// fires and the prospect receives the demo-call/[bookingId] link.
+// Samwise-branded booking surface. Reads Samuel's calendar
+// availability from Google Calendar (via samwise-app's /api/book/slots),
+// renders a from-scratch picker (month grid → time slots → confirm →
+// done). Bilingual via ?lang=es. No Cal embed, no cal.com domain in the
+// user's URL bar at any point.
 export default async function BookPage({
   searchParams,
 }: {
@@ -14,5 +14,5 @@ export default async function BookPage({
 }) {
   const { lang } = await searchParams
   const resolvedLang = lang === "es" ? "es" : "en"
-  return <BookClient lang={resolvedLang} />
+  return <BookRoot lang={resolvedLang} />
 }

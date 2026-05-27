@@ -188,41 +188,56 @@
 }
 
 /* ── In-call layout ────────────────────────────────────────────── */
-/* Two regions: video tile (main) + variables panel (right rail).
-   On mobile, video stacks above notes. */
+/* Editorial register (per user 2026-05-27 — "the screen takes the
+   entire screen and the notes and the panel are separated by a
+   straight line in the middle"). New shape:
+     - gallery white page background (NOT the dark video filling it)
+     - contained video tile with margin + soft shadow + rounded corners
+     - notes column floats right with no border, no panel background
+     - on mobile: video stacks above notes; same air, no border
+*/
 
 .demo-call-room {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 60vh auto;
-  height: 100dvh;
-  overflow: hidden;
+  background: var(--bg);
+  min-height: 100dvh;
+  padding: 40px 24px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
 }
 
 @media (min-width: 900px) {
   .demo-call-room {
-    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
-    grid-template-rows: 1fr;
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+    gap: 56px;
+    padding: 56px 56px 64px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: start;
   }
 }
 
 .demo-call-room-video {
-  position: relative;
-  background: var(--ink);
-  overflow: hidden;
+  /* The video region of the layout — just a positioning slot for
+     the .demo-call-video-frame VideoCallExperience renders inside. */
+  display: flex;
+  flex-direction: column;
 }
 
 .demo-call-room-notes {
-  background: var(--bg);
-  overflow: auto;
-  padding: 32px 28px 48px;
-  border-top: 1px solid var(--rule);
+  /* No border, no panel background — just air. Cards float on the
+     page surface. */
+  background: transparent;
+  border: none;
+  padding: 0;
+  overflow: visible;
 }
 
 @media (min-width: 900px) {
   .demo-call-room-notes {
-    border-top: none;
-    border-left: 1px solid var(--rule);
+    /* Align top with the top of the video tile. */
+    padding-top: 8px;
   }
 }
 
@@ -239,9 +254,8 @@
 .qualify-notes {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  max-width: 32em;
-  margin: 0 auto;
+  gap: 36px;
+  max-width: 28em;
 }
 
 .qualify-notes-card {
@@ -290,19 +304,30 @@
 
 /* ── Video tile internals (VideoCallExperience renders these) ───── */
 
+/* The frame wraps both the tile and the controls so they share the
+   same column on the editorial layout. */
+.demo-call-video-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* The tile itself — contained, dark interior, rounded corners, soft
+   shadow. Sits on the gallery-white page surface. */
 .demo-call-video {
   position: relative;
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
   background: var(--ink);
   color: #FFFFFF;
+  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.22);
 }
 
 .demo-call-video-remote {
-  position: relative;
-  flex: 1;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
 }
 
@@ -322,19 +347,29 @@
   pointer-events: none;
 }
 
+/* Self-view — bottom-right INSIDE the tile, smaller than before. */
 .demo-call-video-self {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 168px;
-  height: 120px;
-  border-radius: 6px;
+  bottom: 14px;
+  right: 14px;
+  width: 132px;
+  height: 96px;
+  border-radius: 4px;
   overflow: hidden;
   background: #000000;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   z-index: 2;
   pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .demo-call-video-self {
+    width: 96px;
+    height: 72px;
+    bottom: 10px;
+    right: 10px;
+  }
 }
 
 .demo-call-video-self-el {
@@ -379,50 +414,78 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* Controls — editorial text-button row on the page surface, below
+   the video tile. No dark bar; the page stays gallery white. Hover
+   reveals a hairline underline that expands from center. */
 .demo-call-controls {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: rgba(0, 0, 0, 0.92);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  z-index: 3;
+  gap: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .demo-call-control-btn {
   appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: none;
   background: transparent;
-  color: #FFFFFF;
+  color: var(--ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 500;
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  padding: 10px 18px;
-  border-radius: 999px;
+  padding: 8px 4px;
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease;
+  position: relative;
+  transition: color 200ms ease;
 }
 
-.demo-call-control-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.32);
+.demo-call-control-btn::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 2px;
+  height: 1px;
+  background: var(--ink);
+  transition: left 200ms ease, right 200ms ease;
 }
 
+.demo-call-control-btn:hover::after {
+  left: 4px;
+  right: 4px;
+}
+
+/* Pressed-state (Muted / Camera-off) — gold tint to signal "off". */
 .demo-call-control-btn[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.42);
+  color: var(--gold);
 }
 
+.demo-call-control-btn[aria-pressed="true"]::after {
+  background: var(--gold);
+  left: 4px;
+  right: 4px;
+}
+
+/* End-call — hairline red tint, not a red fill. */
 .demo-call-control-end {
-  border-color: rgba(220, 60, 60, 0.55);
-  color: #FF8A8A;
+  color: #B23A48;
+}
+
+.demo-call-control-end::after {
+  background: #B23A48;
 }
 
 .demo-call-control-end:hover {
-  background: rgba(220, 60, 60, 0.18);
-  border-color: rgba(220, 60, 60, 0.85);
-  color: #FFFFFF;
+  color: #8E1F2D;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-call-control-btn,
+  .demo-call-control-btn::after {
+    transition: none;
+  }
 }
