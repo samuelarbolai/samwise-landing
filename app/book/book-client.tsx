@@ -87,9 +87,9 @@ export function BookClient({ lang }: BookClientProps) {
           C.Cal = fn as Window["Cal"]
           return C.Cal!
         })()
-      cal("init", "demo", { origin: "https://app.cal.com" })
-      if (cal.ns?.demo) {
-        cal.ns.demo("ui", {
+      cal("init", "breakthrough", { origin: "https://app.cal.com" })
+      if (cal.ns?.breakthrough) {
+        cal.ns.breakthrough("ui", {
           hideEventTypeDetails: false,
           layout: "month_view",
         })
@@ -117,8 +117,8 @@ export function BookClient({ lang }: BookClientProps) {
         <button
           type="button"
           className="book-cta"
-          data-cal-link="samuel-giraldo-concha-yqvtot/demo"
-          data-cal-namespace="demo"
+          data-cal-link="samuel-giraldo-concha-yqvtot/breakthrough"
+          data-cal-namespace="breakthrough"
           data-cal-config='{"layout":"month_view","useSlotsViewOnSmallScreen":"true"}'
         >
           <span className="book-cta-dashes" aria-hidden="true">
