@@ -6,6 +6,11 @@ import { MonthGrid } from "./month-grid"
 import { TimeSlots } from "./time-slots"
 import { Confirm } from "./confirm"
 import { Done } from "./done"
+import {
+  groupByLocalDay,
+  type LocalDay,
+  type LocalSlot,
+} from "./lib"
 import "./book.css"
 
 export interface DaySlots {
@@ -27,14 +32,12 @@ export interface BookingResult {
 type View =
   | { kind: "loading" }
   | { kind: "error"; message: string }
-  | { kind: "month"; days: DaySlots[]; timeZone: string }
-  | { kind: "slots"; days: DaySlots[]; timeZone: string; day: string }
+  | { kind: "month"; days: LocalDay[] }
+  | { kind: "slots"; days: LocalDay[]; localDay: string }
   | {
       kind: "confirm"
-      days: DaySlots[]
-      timeZone: string
-      day: string
-      slot: string
+      days: LocalDay[]
+      slot: LocalSlot
     }
   | { kind: "done"; result: BookingResult }
 
@@ -50,7 +53,16 @@ function getCreateUrl(): string {
   return `${base.replace(/\/$/, "")}/api/book/create`
 }
 
+function detectDeviceTz(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch {
+    return "America/Bogota"
+  }
+}
+
 export function BookRoot({ lang }: { lang: Lang }) {
+  const [deviceTz] = useState<string>(detectDeviceTz)
   const [view, setView] = useState<View>({ kind: "loading" })
 
   useEffect(() => {
@@ -66,11 +78,8 @@ export function BookRoot({ lang }: { lang: Lang }) {
         }
         const data = (await res.json()) as SlotsResponse
         if (cancelled) return
-        setView({
-          kind: "month",
-          days: data.days,
-          timeZone: data.timeZone,
-        })
+        const localDays = groupByLocalDay(data.days, deviceTz)
+        setView({ kind: "month", days: localDays })
       } catch (err) {
         if (cancelled) return
         setView({
@@ -83,7 +92,7 @@ export function BookRoot({ lang }: { lang: Lang }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [deviceTz])
 
   const headerBackHref = "/"
 
@@ -122,13 +131,9 @@ export function BookRoot({ lang }: { lang: Lang }) {
           <MonthGrid
             lang={lang}
             days={view.days}
-            onSelectDay={(day) =>
-              setView({
-                kind: "slots",
-                days: view.days,
-                timeZone: view.timeZone,
-                day,
-              })
+            deviceTz={deviceTz}
+            onSelectDay={(localDay) =>
+              setView({ kind: "slots", days: view.days, localDay })
             }
           />
         )}
@@ -136,26 +141,14 @@ export function BookRoot({ lang }: { lang: Lang }) {
         {view.kind === "slots" && (
           <TimeSlots
             lang={lang}
-            day={view.day}
+            localDay={view.localDay}
             slots={
-              view.days.find((d) => d.day === view.day)?.slots ?? []
+              view.days.find((d) => d.localDay === view.localDay)?.slots ??
+              []
             }
-            timeZone={view.timeZone}
-            onBack={() =>
-              setView({
-                kind: "month",
-                days: view.days,
-                timeZone: view.timeZone,
-              })
-            }
+            onBack={() => setView({ kind: "month", days: view.days })}
             onSelectSlot={(slot) =>
-              setView({
-                kind: "confirm",
-                days: view.days,
-                timeZone: view.timeZone,
-                day: view.day,
-                slot,
-              })
+              setView({ kind: "confirm", days: view.days, slot })
             }
           />
         )}
@@ -163,15 +156,13 @@ export function BookRoot({ lang }: { lang: Lang }) {
         {view.kind === "confirm" && (
           <Confirm
             lang={lang}
-            day={view.day}
             slot={view.slot}
-            timeZone={view.timeZone}
+            deviceTz={deviceTz}
             onBack={() =>
               setView({
                 kind: "slots",
                 days: view.days,
-                timeZone: view.timeZone,
-                day: view.day,
+                localDay: view.slot.localDay,
               })
             }
             onSubmit={async ({ name, email }) => {
@@ -179,8 +170,8 @@ export function BookRoot({ lang }: { lang: Lang }) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                  day: view.day,
-                  slot: view.slot,
+                  day: view.slot.bogotaDay,
+                  slot: view.slot.bogotaSlot,
                   name,
                   email,
                   language: lang,

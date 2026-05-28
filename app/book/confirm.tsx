@@ -2,12 +2,12 @@
 
 import { useState, type FormEvent } from "react"
 import type { Lang } from "@/lib/qualify/strings"
+import type { LocalSlot } from "./lib"
 
 interface ConfirmProps {
   lang: Lang
-  day: string
-  slot: string
-  timeZone: string
+  slot: LocalSlot
+  deviceTz: string
   onBack: () => void
   onSubmit: (args: { name: string; email: string }) => Promise<void>
 }
@@ -24,6 +24,7 @@ const STRINGS = {
     email_invalid: "That doesn't look like an email.",
     name_required: "Your name, please.",
     error_generic: "Couldn't book. Try again in a moment.",
+    bogotaClarifier: (hhmm: string) => `Samuel is in Bogotá — ${hhmm} there.`,
   },
   es: {
     back: "← Atrás",
@@ -36,30 +37,38 @@ const STRINGS = {
     email_invalid: "Eso no se ve como un correo.",
     name_required: "Tu nombre, por favor.",
     error_generic: "No pudimos reservar. Intenta en un momento.",
+    bogotaClarifier: (hhmm: string) => `Samuel está en Bogotá — ${hhmm} allá.`,
   },
 } as const
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function whenLabel(day: string, slot: string, lang: Lang): string {
-  const [y, m, d] = day.split("-").map(Number)
-  const [h, mn] = slot.split(":").map(Number)
-  const date = new Date(Date.UTC(y, m - 1, d, h, mn))
+function whenLabel(slot: LocalSlot, deviceTz: string, lang: Lang): string {
   return new Intl.DateTimeFormat(lang === "es" ? "es-CO" : "en-US", {
-    timeZone: "UTC",
+    timeZone: deviceTz,
     weekday: "long",
     month: "long",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
     hour12: lang === "en",
-  }).format(date)
+  }).format(new Date(slot.startMs))
+}
+
+function formatBogotaHHmm(bogotaSlot: string, lang: Lang): string {
+  const [h, m] = bogotaSlot.split(":").map(Number)
+  if (lang === "es") {
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+  }
+  const period = h >= 12 ? "PM" : "AM"
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`
 }
 
 export function Confirm({
   lang,
-  day,
   slot,
+  deviceTz,
   onBack,
   onSubmit,
 }: ConfirmProps) {
@@ -92,6 +101,7 @@ export function Confirm({
   }
 
   const canSubmit = !submitting && name.trim() && EMAIL_RE.test(email.trim())
+  const showBogotaClarifier = deviceTz !== "America/Bogota"
 
   return (
     <div className="book-confirm">
@@ -99,7 +109,12 @@ export function Confirm({
         {s.back}
       </button>
       <p className="book-lead">{s.lead}</p>
-      <p className="book-sub">{whenLabel(day, slot, lang)}</p>
+      <p className="book-sub">{whenLabel(slot, deviceTz, lang)}</p>
+      {showBogotaClarifier && (
+        <p className="book-tz-bogota-clarifier">
+          {s.bogotaClarifier(formatBogotaHHmm(slot.bogotaSlot, lang))}
+        </p>
+      )}
 
       <form className="book-confirm-form" onSubmit={handleSubmit}>
         <input

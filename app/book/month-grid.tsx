@@ -2,18 +2,20 @@
 
 import { useMemo, useState } from "react"
 import type { Lang } from "@/lib/qualify/strings"
-import type { DaySlots } from "./book-root"
+import type { LocalDay } from "./lib"
+import { formatShortTimeZone } from "./lib"
 
 interface MonthGridProps {
   lang: Lang
-  days: DaySlots[]
-  onSelectDay: (day: string) => void
+  days: LocalDay[]
+  deviceTz: string
+  onSelectDay: (localDay: string) => void
 }
 
 const STRINGS = {
   en: {
     lead: "Pick a day.",
-    sub: "Times shown in Bogotá time.",
+    sub: (tz: string) => `Times shown in your local time (${tz}).`,
     weekday_mon: "Mon",
     weekday_tue: "Tue",
     weekday_wed: "Wed",
@@ -28,7 +30,7 @@ const STRINGS = {
   },
   es: {
     lead: "Elige un día.",
-    sub: "Horas en hora de Bogotá.",
+    sub: (tz: string) => `Horas en tu hora local (${tz}).`,
     weekday_mon: "Lun",
     weekday_tue: "Mar",
     weekday_wed: "Mié",
@@ -43,11 +45,7 @@ const STRINGS = {
   },
 } as const
 
-// First day of the visible month grid. If the user passes a month
-// containing no available days, we still render it; navigation arrows
-// let them step forward.
 function firstOfMonth(year: number, month: number): Date {
-  // month is 1-12. Use Date.UTC for stability.
   return new Date(Date.UTC(year, month - 1, 1))
 }
 
@@ -61,16 +59,11 @@ function monthLabel(year: number, month: number, lang: Lang): string {
   return fmt.format(d)
 }
 
-// Build the 42-cell grid for the given month. Cells before the first
-// of the month and after the last are filled with the bracketing days
-// so the grid is always 6 rows × 7 cols.
 function buildGridCells(year: number, month: number): string[] {
-  // Day-of-week of the 1st. Mon-first (Mon=0..Sun=6).
   const first = firstOfMonth(year, month)
-  const jsDow = first.getUTCDay() // 0=Sun..6=Sat
-  const monFirstDow = (jsDow + 6) % 7 // Mon=0..Sun=6
+  const jsDow = first.getUTCDay()
+  const monFirstDow = (jsDow + 6) % 7
 
-  // Start the grid on the Monday of the week containing the 1st.
   const gridStart = new Date(first)
   gridStart.setUTCDate(first.getUTCDate() - monFirstDow)
 
@@ -85,15 +78,14 @@ function buildGridCells(year: number, month: number): string[] {
   return cells
 }
 
-export function MonthGrid({ lang, days, onSelectDay }: MonthGridProps) {
+export function MonthGrid({ lang, days, deviceTz, onSelectDay }: MonthGridProps) {
   const s = STRINGS[lang]
   const availableSet = useMemo(
-    () => new Set(days.map((d) => d.day)),
+    () => new Set(days.map((d) => d.localDay)),
     [days],
   )
 
-  // Earliest available day determines the starting month view.
-  const firstAvailable = days[0]?.day
+  const firstAvailable = days[0]?.localDay
   const initialMonth = useMemo(() => {
     const base = firstAvailable ?? new Date().toISOString().slice(0, 10)
     const [y, m] = base.split("-").map(Number)
@@ -114,6 +106,8 @@ export function MonthGrid({ lang, days, onSelectDay }: MonthGridProps) {
     else setMonth({ year, month: month + 1 })
   }
 
+  const shortTz = formatShortTimeZone(deviceTz)
+
   if (days.length === 0) {
     return (
       <div className="book-empty-block">
@@ -126,7 +120,7 @@ export function MonthGrid({ lang, days, onSelectDay }: MonthGridProps) {
     <div className="book-month">
       <div className="book-month-head">
         <p className="book-lead">{s.lead}</p>
-        <p className="book-sub">{s.sub}</p>
+        <p className="book-sub">{s.sub(shortTz)}</p>
       </div>
 
       <div className="book-month-nav">
