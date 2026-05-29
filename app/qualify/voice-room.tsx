@@ -101,6 +101,48 @@ export function VoiceRoom({
     finalizingRef.current = finalizing
   }, [finalizing])
 
+  // ---- Auto-follow the newest note ----
+  // Once notes fill the viewport, new cards append below the fold (the
+  // speaker dock is fixed at the bottom — see qualify.css :has(.qualify-notes)).
+  // We scroll the newest note into view, but ONLY if the user is already at
+  // the bottom — never yank someone who scrolled up to re-read. A scroll
+  // listener tracks that intent: a new note doesn't move scrollY, so the
+  // flag reflects where the user last left the page, not the post-growth
+  // position. The .qualify-voice 248px padding-bottom lands the last note
+  // above the fixed dock + scrim.
+  const stickToBottomRef = useRef(true)
+  useEffect(() => {
+    const NEAR_BOTTOM_PX = 150
+    const onScroll = () => {
+      const dist =
+        document.documentElement.scrollHeight -
+        window.scrollY -
+        window.innerHeight
+      stickToBottomRef.current = dist <= NEAR_BOTTOM_PX
+    }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const noteCount = Object.values(variables).filter(
+    (v) => typeof v === "string" && v.trim().length > 0,
+  ).length
+  const prevNoteCountRef = useRef(0)
+  useEffect(() => {
+    const grew = noteCount > prevNoteCountRef.current
+    prevNoteCountRef.current = noteCount
+    if (!grew || !stickToBottomRef.current) return
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: reduce ? "auto" : "smooth",
+      })
+    })
+  }, [noteCount])
+
   // Mirror state into a ref so async handlers see the current value.
   const setMicState = useCallback((next: MicState) => {
     micStateRef.current = next
