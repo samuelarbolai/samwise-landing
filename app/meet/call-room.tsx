@@ -58,21 +58,33 @@ const STRINGS = {
 
 export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
   const [variables, setVariables] = useState<VariablesState>({})
+  const [storyStage, setStoryStage] = useState<StoryStage>("hidden")
 
   const onDataMessage = useCallback((msg: unknown) => {
-    if (
-      typeof msg !== "object" ||
-      msg === null ||
-      !("type" in msg) ||
-      (msg as { type?: unknown }).type !== "demo-call:variable_update"
-    ) {
+    if (typeof msg !== "object" || msg === null || !("type" in msg)) return
+    const type = (msg as { type?: unknown }).type
+
+    if (type === "demo-call:variable_update") {
+      const m = msg as { name?: unknown; value?: unknown }
+      if (typeof m.name !== "string") return
+      if (!isVariableKey(m.name)) return
+      const value = typeof m.value === "string" ? m.value : ""
+      setVariables((prev) => ({ ...prev, [m.name as VariableKey]: value }))
       return
     }
-    const m = msg as { type: string; name?: unknown; value?: unknown }
-    if (typeof m.name !== "string") return
-    if (!isVariableKey(m.name)) return
-    const value = typeof m.value === "string" ? m.value : ""
-    setVariables((prev) => ({ ...prev, [m.name as VariableKey]: value }))
+
+    if (type === "demo-call:show_visual") {
+      const stage = (msg as { stage?: unknown }).stage
+      if (
+        stage === "hidden" ||
+        stage === "doc" ||
+        stage === "cycle" ||
+        stage === "neuro"
+      ) {
+        setStoryStage(stage)
+      }
+      return
+    }
   }, [])
 
   const lang = init.booking.language
@@ -99,6 +111,7 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
         aria-label={s.notes_label}
       >
         <VariablesPanel lang={lang} variables={variables} />
+        <RitualStory lang={lang} stage={storyStage} variables={variables} />
       </aside>
     </div>
   )
