@@ -14,6 +14,7 @@ import {
 // minimum .qualify-notes-* declarations the reused panel needs).
 import "@/components/call/call.css"
 import type { MeetInitResponse } from "./lobby"
+import { RitualStory, type StoryStage } from "./story/ritual-story"
 
 // Mirrors the demo-call user-side call-room: video tile (main) +
 // VariablesPanel (right rail on desktop, below on mobile). The walk-in
