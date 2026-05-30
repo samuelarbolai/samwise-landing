@@ -66,10 +66,24 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
   const remoteContainerRef = useRef<HTMLDivElement | null>(null)
   const startingRef = useRef(false)
   const hardCapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Ref-mirror the callbacks + init so the connect closure always sees
+  // the latest values WITHOUT re-binding `start`. Without this, a parent
+  // that recreates `init` / `onRoomReady` on render (e.g. on every
+  // keystroke in a sibling) would change `start`'s identity, re-run the
+  // connect effect, and tear down + reconnect the room. With a shared
+  // LiveKit identity that also kicks the other tab, producing a churn.
   const onDataMessageRef = useRef(onDataMessage)
   useEffect(() => {
     onDataMessageRef.current = onDataMessage
   }, [onDataMessage])
+  const onRoomReadyRef = useRef(onRoomReady)
+  useEffect(() => {
+    onRoomReadyRef.current = onRoomReady
+  }, [onRoomReady])
+  const initRef = useRef(init)
+  useEffect(() => {
+    initRef.current = init
+  }, [init])
 
   useEffect(() => {
     return () => {
@@ -162,7 +176,7 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     room.on(RoomEvent.DataReceived, onData)
 
     try {
-      await room.connect(init.wsUrl, init.token)
+      await room.connect(initRef.current.wsUrl, initRef.current.token)
 
       const localTracks: LocalTrack[] = await createLocalTracks({
         audio: true,
@@ -189,7 +203,7 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
       if (room.remoteParticipants.size > 0) setPhase('active')
       else setPhase('peer-waiting')
 
-      onRoomReady?.(room)
+      onRoomReadyRef.current?.(room)
     } catch (err) {
       console.error('[demo-call] connect failed', err)
       // STRIP LISTENERS BEFORE disconnect — otherwise the Disconnected
@@ -216,7 +230,11 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     } finally {
       startingRef.current = false
     }
-  }, [init, hardCapMs, endCall, onRoomReady])
+    // `init` + `onRoomReady` are read via refs (above), so they are
+    // intentionally NOT deps — the room must connect once, not on every
+    // parent re-render. `hardCapMs` is a value-stable primitive and
+    // `endCall` is stable (memoized on the stable `onEnded`).
+  }, [hardCapMs, endCall])
 
   useEffect(() => {
     void start()
