@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
   VideoCallExperience,
   type VideoCallInit,
@@ -88,6 +88,30 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
       return
     }
   }, [])
+
+  // Auto-advance: when Samuel moves the story to a new beat, bring it into
+  // view so the prospect watches it unfold without touching the screen.
+  // Waits out the crossfade so the freshly-mounted beat is the scroll
+  // target; honours reduced-motion.
+  useEffect(() => {
+    if (storyStage === "hidden") return
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const t = setTimeout(
+      () => {
+        const el =
+          document.querySelector(".ritual-story-beat") ??
+          document.querySelector(".ritual-story")
+        el?.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "center",
+        })
+      },
+      reduce ? 50 : 480,
+    )
+    return () => clearTimeout(t)
+  }, [storyStage])
 
   const lang = init.booking.language
   const s = STRINGS[lang]

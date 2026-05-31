@@ -1,0 +1,177 @@
+/* GRAPHIC VARIANT of the Ritual Story — more diagram, less text.
+   Reuses call.css's :root tokens (--bg/--ink/--ink-soft/--ink-mute/--rule/
+   --gold) and the literal Fraunces/Manrope stacks. Sibling of story.css;
+   does NOT touch the canonical components. */
+
+.gstory {
+  margin-top: 44px;
+  padding-top: 36px;
+  border-top: 1px solid var(--rule);
+  max-width: 28em;
+}
+.gstory-beat {
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+}
+.gstory-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.gstory-kicker {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0;
+}
+.gsvg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* SVG primitives (presentation via class so var() resolves) */
+.g-line { stroke: var(--rule); stroke-width: 1.5; fill: none; }
+.g-flow { stroke: var(--ink-mute); stroke-width: 1.5; fill: none; }
+.g-flow-gold { stroke: var(--gold); stroke-width: 2; fill: none; }
+.g-curve-old { stroke: var(--ink-mute); stroke-width: 2; fill: none; stroke-dasharray: 3 3; }
+.g-curve-fast { stroke: var(--gold); stroke-width: 2.5; fill: none; }
+.g-curve-slow { stroke: var(--ink); stroke-width: 2; fill: none; }
+.g-node { fill: var(--bg); stroke: var(--gold); stroke-width: 1.5; }
+.g-node-center { fill: var(--bg); stroke: var(--ink); stroke-width: 1.5; }
+.g-chip { fill: var(--bg); stroke: var(--rule); stroke-width: 1; }
+.g-fill-gold { fill: var(--gold); }
+.g-fill-paper { fill: var(--bg); }
+.g-fill-rule { fill: var(--rule); }
+.g-fill-soft { fill: #F2EAD9; } /* faint gold wash for "filled" doc lines */
+
+/* SVG text */
+.g-t {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  fill: var(--ink);
+}
+.g-t-mute {
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  fill: var(--ink-mute);
+}
+.g-t-gold {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--gold);
+}
+.g-t-serif {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  fill: var(--ink);
+}
+.g-num {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  fill: var(--gold);
+}
+
+/* Caption under a diagram — the single short line of text we allow */
+.gstory-cap {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--ink);
+  margin: 0;
+}
+.gstory-legend {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gstory-legend-n {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  color: var(--gold);
+}
+
+/* Mechanism branch diagram (HTML, so the long labels wrap cleanly) */
+.gmech {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.gmech-root {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 4px 18px;
+  background: var(--bg);
+}
+.gmech-stem {
+  width: 1px;
+  height: 18px;
+  background: var(--rule);
+}
+.gmech-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+}
+.gmech-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gmech-col-h {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0;
+}
+.gmech-chip {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+}
+.gmech-chip--action {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-left: 2px solid var(--gold);
+}
+.gmech-out {
+  font-family: 'Manrope', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}

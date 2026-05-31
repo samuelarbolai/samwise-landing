@@ -220,9 +220,22 @@
 
 .demo-call-room-video {
   /* The video region of the layout — just a positioning slot for
-     the .demo-call-video-frame VideoCallExperience renders inside. */
+     the .demo-call-video-frame VideoCallExperience renders inside.
+     STICKY: the therapist tile stays put while the notes + story column
+     scrolls (and auto-advances), so the prospect keeps watching Samuel
+     while the story unfolds below — no manual scrolling. */
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 16px;
+  z-index: 2;
+  align-self: start;
+}
+
+@media (min-width: 900px) {
+  .demo-call-room-video {
+    top: 56px;
+  }
 }
 
 .demo-call-room-notes {
