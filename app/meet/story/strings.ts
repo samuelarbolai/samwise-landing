@@ -65,6 +65,21 @@ export interface StoryCopy {
   loop_body: string
   loop_nodes: [LoopNode, LoopNode, LoopNode]
   loop_repeat: string
+
+  // Beat 4 — the ritual mechanism (Paso 3). Three components; the two
+  // actionable ones map to the promise's two changes (protection → stops
+  // the behaviour now; new belief system → shifts thoughts/feelings).
+  mechanism_kicker: string
+  mechanism_title: string
+  mechanism_said_label: string
+  mechanism_said: string
+  mechanism_action_label: string
+  mechanism_actions: { head: string; body: string }[]
+
+  // Non-invasive "yet to be answered" overlay — open loops the rep leaves
+  // to build anticipation for onboarding. Item count derives from stage.
+  unanswered_kicker: string
+  unanswered_items: [string, string]
 }
 
 export const STORY_STRINGS: Record<Lang, StoryCopy> = {
@@ -154,6 +169,22 @@ export const STORY_STRINGS: Record<Lang, StoryCopy> = {
       { label: "What happened", body: "A short call keeps it." },
     ],
     loop_repeat: "↻ every day",
+
+    mechanism_kicker: "Inside the ritual",
+    mechanism_title: "What you say, and what you do.",
+    mechanism_said_label: "What you say",
+    mechanism_said: "Your mantras",
+    mechanism_action_label: "What you do",
+    mechanism_actions: [
+      { head: "Protection", body: "stops the behaviour — now" },
+      {
+        head: "A new belief system",
+        body: "shifts how you think and feel — gradually",
+      },
+    ],
+
+    unanswered_kicker: "Yet to be answered",
+    unanswered_items: ["Why we call you every day", "Why the mantras"],
   },
   es: {
     doc_kicker: "Tu Ritual",
@@ -241,5 +272,21 @@ export const STORY_STRINGS: Record<Lang, StoryCopy> = {
       { label: "Lo que pasó", body: "Una llamada corta lo guarda." },
     ],
     loop_repeat: "↻ cada día",
+
+    mechanism_kicker: "Adentro del ritual",
+    mechanism_title: "Lo que decís, y lo que hacés.",
+    mechanism_said_label: "Lo que decís",
+    mechanism_said: "Tus mantras",
+    mechanism_action_label: "Lo que hacés",
+    mechanism_actions: [
+      { head: "Protección", body: "frena el comportamiento — ya" },
+      {
+        head: "Nuevo sistema de creencia",
+        body: "cambia cómo pensás y sentís — de a poco",
+      },
+    ],
+
+    unanswered_kicker: "Aún por responder",
+    unanswered_items: ["Por qué te llamamos cada día", "Por qué los mantras"],
   },
 }
