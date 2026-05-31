@@ -77,9 +77,9 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
       const stage = (msg as { stage?: unknown }).stage
       if (
         stage === "hidden" ||
-        stage === "doc" ||
-        stage === "cycle" ||
-        stage === "neuro"
+        stage === "promise" ||
+        stage === "experience" ||
+        stage === "loop"
       ) {
         setStoryStage(stage)
       }

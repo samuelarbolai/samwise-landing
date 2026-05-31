@@ -1,5 +1,8 @@
 import type { Lang } from "@/lib/qualify/strings"
 
+// Experience beat (the six steps = the whole journey: map → design → live
+// → optimize → live → repeat). Multi-session; optimization is its own
+// session, not a daily thing.
 export interface CycleStep {
   n: string
   head: string
@@ -7,24 +10,61 @@ export interface CycleStep {
   body: string
 }
 
+// Daily-loop beat (the engine that runs every day): agent calls → user
+// does the ritual → a short call tracks how it went. Generic on purpose —
+// it does NOT name the tracking agent.
+export interface LoopNode {
+  label: string
+  body: string
+}
+
+// One row of the persistent doc spine. `locked` = a section the prospect
+// will fill in onboarding (ghosted "to-come"); the unlocked first section
+// is seeded LIVE from his captured notes. `sub` is an optional second line
+// (e.g. the Ritual Call's four parts).
+export interface DocSection {
+  label: string
+  locked?: boolean
+  sub?: string
+  // Ghosted sub-fields nested under this section (the real doc nests the
+  // ritual details inside "Problem & Solution"). Rendered muted.
+  items?: string[]
+}
+
 export interface StoryCopy {
+  // Persistent document spine (rendered above every beat).
   doc_kicker: string
   doc_title: string
   doc_body: string
-  doc_sections: [string, string, string]
+  doc_sections: DocSection[]
+  doc_progress: string
   doc_slot_note: string
 
+  // Beat 1 — the promise (reworked neuro, three curves). Editorial voice
+  // preserved from the original approved neuro copy; layers the two
+  // changes (behaviour now / thoughts & feelings slowly) without
+  // sloganeering, and opens with the tactical-empathy reassurance that
+  // disarms the "I've tried things and they faded" fear.
+  promise_kicker: string
+  promise_title: string
+  promise_body: string
+  promise_curve_old: string // fallback when behaviour_to_change is empty
+  promise_curve_behaviour: string
+  promise_curve_mind: string
+  promise_axis: string
+
+  // Beat 2 — the whole experience (six steps). Unchanged from the
+  // original approved copy.
   cycle_kicker: string
   cycle_title: string
-  cycle_doc_label: string
   cycle_steps: CycleStep[]
 
-  neuro_kicker: string
-  neuro_title: string
-  neuro_body: string // approved copy — behavioural framing, no clinical claim
-  neuro_curve_old: string
-  neuro_curve_new: string
-  neuro_axis: string
+  // Beat 3 — the daily loop.
+  loop_kicker: string
+  loop_title: string
+  loop_body: string
+  loop_nodes: [LoopNode, LoopNode, LoopNode]
+  loop_repeat: string
 }
 
 export const STORY_STRINGS: Record<Lang, StoryCopy> = {
@@ -33,12 +73,38 @@ export const STORY_STRINGS: Record<Lang, StoryCopy> = {
     doc_title: "One document holds all of it.",
     doc_body:
       "Everything we build lives on one page — your ritual, the call that runs it, and how it sharpens over time. It's yours, and it travels with you.",
-    doc_sections: ["Problem & Solution", "The Ritual Call", "Metadata"],
+    doc_sections: [
+      {
+        label: "Problem & Solution",
+        items: [
+          "Unsettling reality",
+          "The solution",
+          "The enemy, named",
+          "The ritual — mantras & protection",
+          "Your schedule",
+        ],
+      },
+      {
+        label: "The Ritual Call",
+        sub: "Your symbol · gratitude · intentions · commitment · company",
+        locked: true,
+      },
+      { label: "Metadata", locked: true },
+    ],
+    doc_progress: "1 of 3 — so far",
     doc_slot_note: "Your words above become the first page.",
+
+    promise_kicker: "What's happening underneath",
+    promise_title: "We phase one out as we phase the other in.",
+    promise_body:
+      "You don't have to feel different first. Each time you live the ritual instead of the old pattern, what you do shifts that same day — and how you think and feel follows, slower. We don't erase anything overnight; we trade one for the other.",
+    promise_curve_old: "the old pattern",
+    promise_curve_behaviour: "what you do — now",
+    promise_curve_mind: "how you think and feel — over time",
+    promise_axis: "call by call",
 
     cycle_kicker: "How it works",
     cycle_title: "Six steps. One loop. The document at the center.",
-    cycle_doc_label: "Your Ritual Document",
     cycle_steps: [
       {
         n: "01",
@@ -78,25 +144,54 @@ export const STORY_STRINGS: Record<Lang, StoryCopy> = {
       },
     ],
 
-    neuro_kicker: "What's happening underneath",
-    neuro_title: "We phase one out as we phase the other in.",
-    neuro_body:
-      "Each time you live the ritual instead of the old pattern, that path gets stronger and the other gets quieter. We don't erase anything overnight — we trade one for the other, call by call.",
-    neuro_curve_old: "the old pattern",
-    neuro_curve_new: "your ritual",
-    neuro_axis: "call by call",
+    loop_kicker: "Day to day",
+    loop_title: "A short loop you don't have to carry.",
+    loop_body:
+      "The hard part of any ritual isn't building it — it's keeping it. So the days hold themselves: a call brings you into your ritual, you live it, and a short call after keeps what happened. You don't have to remember anything.",
+    loop_nodes: [
+      { label: "The call", body: "Brings you into your ritual." },
+      { label: "Your ritual", body: "You live it, in your own words." },
+      { label: "What happened", body: "A short call keeps it." },
+    ],
+    loop_repeat: "↻ every day",
   },
   es: {
     doc_kicker: "Tu Ritual",
     doc_title: "Un solo documento lo contiene todo.",
     doc_body:
       "Todo lo que construimos vive en una página — tu ritual, la llamada que lo activa, y cómo se va afinando con el tiempo. Es tuyo, y va con vos.",
-    doc_sections: ["Problema y Solución", "La Llamada del Ritual", "Metadata"],
+    doc_sections: [
+      {
+        label: "Problema y Solución",
+        items: [
+          "Realidad inquietante",
+          "La solución",
+          "El enemigo, con nombre",
+          "El ritual — mantras y protección",
+          "Tus horarios",
+        ],
+      },
+      {
+        label: "La Llamada del Ritual",
+        sub: "Tu símbolo · gratitud · intenciones · compromiso · compañía",
+        locked: true,
+      },
+      { label: "Metadata", locked: true },
+    ],
+    doc_progress: "1 de 3 — por ahora",
     doc_slot_note: "Tus palabras de arriba se vuelven la primera página.",
+
+    promise_kicker: "Lo que pasa por debajo",
+    promise_title: "Vamos sacando uno mientras metemos el otro.",
+    promise_body:
+      "No tenés que sentirte distinto primero. Cada vez que vivís el ritual en lugar del viejo patrón, lo que hacés cambia ese mismo día — y tu manera de pensar y sentir va detrás, más lento. No borramos nada de un día para otro; cambiamos uno por el otro.",
+    promise_curve_old: "el viejo patrón",
+    promise_curve_behaviour: "lo que hacés — ya",
+    promise_curve_mind: "cómo pensás y sentís — con el tiempo",
+    promise_axis: "llamada por llamada",
 
     cycle_kicker: "Cómo funciona",
     cycle_title: "Seis pasos. Un ciclo. El documento en el centro.",
-    cycle_doc_label: "Tu Documento del Ritual",
     cycle_steps: [
       {
         n: "01",
@@ -136,12 +231,15 @@ export const STORY_STRINGS: Record<Lang, StoryCopy> = {
       },
     ],
 
-    neuro_kicker: "Lo que pasa por debajo",
-    neuro_title: "Vamos sacando uno mientras metemos el otro.",
-    neuro_body:
-      "Cada vez que vivís el ritual en lugar del viejo patrón, ese camino se hace más fuerte y el otro más callado. No borramos nada de un día para otro — cambiamos uno por el otro, llamada por llamada.",
-    neuro_curve_old: "el viejo patrón",
-    neuro_curve_new: "tu ritual",
-    neuro_axis: "llamada por llamada",
+    loop_kicker: "El día a día",
+    loop_title: "Un ciclo corto que no tenés que cargar.",
+    loop_body:
+      "Lo difícil de un ritual no es armarlo — es cumplirlo. Por eso los días se sostienen solos: una llamada te lleva a tu ritual, lo vivís, y una llamada corta después guarda lo que pasó. No tenés que acordarte de nada.",
+    loop_nodes: [
+      { label: "La llamada", body: "Te lleva a tu ritual." },
+      { label: "Tu ritual", body: "Lo vivís, en tus palabras." },
+      { label: "Lo que pasó", body: "Una llamada corta lo guarda." },
+    ],
+    loop_repeat: "↻ cada día",
   },
 }

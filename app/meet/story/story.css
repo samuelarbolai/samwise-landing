@@ -194,3 +194,156 @@
   color: var(--gold);
   font-weight: 600;
 }
+
+/* ===================================================================
+   Redesign (2026-05-30): persistent doc spine, promise beat (three
+   curves), daily-loop beat. Reuses the :root tokens above.
+   =================================================================== */
+
+/* The document spine — persists above every beat. */
+.ritual-doc-spine {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Separator between the persistent spine and the active beat. */
+.ritual-story-beat {
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+}
+
+/* Ghosted "to-come" doc sections — the curiosity engine. */
+.ritual-doc-section--locked {
+  opacity: 0.55;
+  border-left: 2px dashed var(--rule);
+}
+.ritual-doc-section--locked .ritual-doc-section-label {
+  color: var(--ink-mute);
+}
+.ritual-doc-section-sub {
+  display: block;
+  margin-top: 4px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--ink-mute);
+}
+/* Ghosted sub-fields nested inside a section (the doc's real shape). */
+.ritual-doc-items {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ritual-doc-item {
+  position: relative;
+  padding-left: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  color: var(--ink-mute);
+}
+.ritual-doc-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 1px;
+  background: var(--rule);
+}
+.ritual-doc-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+.ritual-doc-progress {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Promise beat — the two changes layered over the old pattern. */
+.ritual-neuro-fast {
+  stroke: var(--gold);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.ritual-neuro-slow {
+  stroke: var(--ink-soft);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.ritual-neuro-legend--triple {
+  flex-direction: column;
+  gap: 4px;
+}
+.ritual-neuro-legend-fast {
+  color: var(--gold);
+  font-weight: 600;
+}
+.ritual-neuro-legend-slow {
+  color: var(--ink-soft);
+}
+
+/* Daily-loop beat — three nodes + a loop-back. */
+.ritual-loop {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ritual-loop-node {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.ritual-loop-node:last-child {
+  border-bottom: none;
+}
+.ritual-loop-dot {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ritual-loop-head {
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0 0 2px;
+}
+.ritual-loop-body {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.ritual-loop-repeat {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 10px;
+}

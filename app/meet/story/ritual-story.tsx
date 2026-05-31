@@ -5,13 +5,15 @@ import type { Lang } from "@/lib/qualify/strings"
 import type { VariablesState } from "@/app/qualify/components/variables-panel"
 import { STORY_STRINGS } from "./strings"
 import { DocSpine } from "./doc-spine"
+import { PromiseBeat } from "./neuro-crossfade"
 import { CycleMap } from "./cycle-map"
-import { NeuroCrossfade } from "./neuro-crossfade"
+import { DailyLoop } from "./daily-loop"
 import "./story.css"
 
 // Mirror of samwise-app's StoryStage (cross-repo dup, like
-// VideoCallExperience's init type). Kept in sync by hand.
-export type StoryStage = "hidden" | "doc" | "cycle" | "neuro"
+// VideoCallExperience's init type). Kept in sync by hand. The document is
+// NOT a stage — it renders as a persistent spine whenever a beat is live.
+export type StoryStage = "hidden" | "promise" | "experience" | "loop"
 
 export function RitualStory({
   lang,
@@ -25,27 +27,35 @@ export function RitualStory({
   const reduced = useReducedMotion()
   const copy = STORY_STRINGS[lang]
 
-  const scene =
-    stage === "doc" ? (
-      <DocSpine copy={copy} variables={variables} reduced={!!reduced} />
-    ) : stage === "cycle" ? (
+  // Nothing live → render nothing at all (no stray spine, no border rule).
+  if (stage === "hidden") return null
+
+  const beat =
+    stage === "promise" ? (
+      <PromiseBeat copy={copy} variables={variables} reduced={!!reduced} />
+    ) : stage === "experience" ? (
       <CycleMap copy={copy} reduced={!!reduced} />
-    ) : stage === "neuro" ? (
-      <NeuroCrossfade copy={copy} variables={variables} reduced={!!reduced} />
+    ) : stage === "loop" ? (
+      <DailyLoop copy={copy} reduced={!!reduced} />
     ) : null
 
   return (
     <div className="ritual-story" aria-live="polite">
+      {/* The document spine persists across beats. */}
+      <DocSpine copy={copy} variables={variables} reduced={!!reduced} />
+
+      {/* The active beat crossfades below the spine. */}
       <AnimatePresence mode="wait">
-        {scene && (
+        {beat && (
           <motion.div
             key={stage}
+            className="ritual-story-beat"
             initial={reduced ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
             transition={{ duration: 0.42, ease: "easeOut" }}
           >
-            {scene}
+            {beat}
           </motion.div>
         )}
       </AnimatePresence>

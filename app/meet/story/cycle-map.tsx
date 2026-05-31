@@ -15,14 +15,6 @@ export function CycleMap({
       <p className="ritual-story-kicker">{copy.cycle_kicker}</p>
       <h3 className="ritual-story-title">{copy.cycle_title}</h3>
 
-      {/* The doc, pinned at the top as the spine the steps write into. */}
-      <div className="ritual-cycle-doc">
-        <span className="ritual-cycle-doc-mark" aria-hidden="true">
-          ✦
-        </span>
-        <span className="ritual-cycle-doc-label">{copy.cycle_doc_label}</span>
-      </div>
-
       <ol className="ritual-cycle">
         {copy.cycle_steps.map((step, i) => (
           <motion.li

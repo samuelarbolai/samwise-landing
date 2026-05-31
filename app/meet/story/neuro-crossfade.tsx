@@ -4,9 +4,11 @@ import { motion } from "motion/react"
 import type { VariablesState } from "@/app/qualify/components/variables-panel"
 import type { StoryCopy } from "./strings"
 
-// Two curves over a row of call-dots: the old pattern descends, the
-// ritual rises, they cross. SVG in a 0..100 × 0..60 viewBox.
-export function NeuroCrossfade({
+// Beat 1 — "the promise". Keeps the old-pattern-vs-ritual base (the old
+// pattern descends) and LAYERS the two changes on top: behaviour rises
+// FAST (changes now, inside the ritual) and thoughts & emotions rise
+// SLOWLY (gradual). Three curves over a 0..100 × 0..60 viewBox (y down).
+export function PromiseBeat({
   copy,
   variables,
   reduced,
@@ -16,14 +18,14 @@ export function NeuroCrossfade({
   reduced: boolean
 }) {
   const rawOld = variables.behaviour_to_change?.trim()
-  // Use the prospect's own behaviour as the descending-curve label,
-  // truncated so it fits; fall back to the neutral copy.
+  // The descending curve carries the prospect's own behaviour (truncated
+  // to fit); fall back to the neutral copy.
   const oldLabel =
     rawOld && rawOld.length > 0
-      ? rawOld.length > 28
-        ? rawOld.slice(0, 27) + "…"
+      ? rawOld.length > 24
+        ? rawOld.slice(0, 23) + "…"
         : rawOld
-      : copy.neuro_curve_old
+      : copy.promise_curve_old
 
   const draw = reduced
     ? {}
@@ -33,48 +35,55 @@ export function NeuroCrossfade({
         transition: { duration: 1.1, ease: "easeInOut" as const },
       }
 
-  const dots = [0, 25, 50, 75, 100]
-
   return (
     <section className="ritual-story-scene">
-      <p className="ritual-story-kicker">{copy.neuro_kicker}</p>
-      <h3 className="ritual-story-title">{copy.neuro_title}</h3>
+      <p className="ritual-story-kicker">{copy.promise_kicker}</p>
+      <h3 className="ritual-story-title">{copy.promise_title}</h3>
 
       <svg
         className="ritual-neuro"
         viewBox="0 0 100 60"
         preserveAspectRatio="none"
         role="img"
-        aria-label={`${oldLabel} ↓ / ${copy.neuro_curve_new} ↑`}
+        aria-label={`${oldLabel} ↓ / ${copy.promise_curve_behaviour} / ${copy.promise_curve_mind}`}
       >
         {/* baseline */}
         <line x1="0" y1="58" x2="100" y2="58" className="ritual-neuro-axis" />
-        {/* old pattern: high → low */}
+        {/* old pattern: high → low (the base "phase one out") */}
         <motion.path
           d="M0,8 C30,12 55,40 100,54"
           className="ritual-neuro-old"
           fill="none"
           {...draw}
         />
-        {/* ritual: low → high */}
+        {/* behaviour: rises FAST and plateaus high */}
         <motion.path
-          d="M0,54 C40,48 70,16 100,6"
-          className="ritual-neuro-new"
+          d="M0,52 C18,30 34,12 100,9"
+          className="ritual-neuro-fast"
           fill="none"
           {...draw}
         />
-        {dots.map((cx) => (
-          <circle key={cx} cx={cx} cy="58" r="1.2" className="ritual-neuro-dot" />
-        ))}
+        {/* thoughts & emotions: rises GRADUALLY */}
+        <motion.path
+          d="M0,55 C40,52 72,42 100,24"
+          className="ritual-neuro-slow"
+          fill="none"
+          {...draw}
+        />
       </svg>
 
-      <div className="ritual-neuro-legend">
+      <div className="ritual-neuro-legend ritual-neuro-legend--triple">
         <span className="ritual-neuro-legend-old">↓ {oldLabel}</span>
-        <span className="ritual-neuro-legend-new">↑ {copy.neuro_curve_new}</span>
+        <span className="ritual-neuro-legend-fast">
+          ↑ {copy.promise_curve_behaviour}
+        </span>
+        <span className="ritual-neuro-legend-slow">
+          ↑ {copy.promise_curve_mind}
+        </span>
       </div>
-      <p className="ritual-neuro-axis-label">{copy.neuro_axis}</p>
+      <p className="ritual-neuro-axis-label">{copy.promise_axis}</p>
 
-      <p className="ritual-story-body">{copy.neuro_body}</p>
+      <p className="ritual-story-body">{copy.promise_body}</p>
     </section>
   )
 }
