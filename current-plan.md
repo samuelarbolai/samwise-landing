@@ -1,214 +1,259 @@
-# current-plan.md — /meet Ritual Story redesign + notes-sync fix + sticky rep controls
+# current-plan.md — /meet fade-in-place + samwise-app editorial deepening (2026-05-31)
 
-> Supersedes the original 3-scene Ritual Story plan (shipped). This is a redesign
-> driven by real-use feedback (2026-05-30). Spans BOTH repos: `samwise-app` (rep
-> side) and `samwise-landing` (prospect side).
->
-> ⚠️ **Prospect-facing copy in this plan is DRAFT and needs Samuel's sign-off
-> (landing Rule 8).** Anything marked `[CONFIRM]` is a product/visual decision I
-> must not settle alone (script-work Rule 8: don't invent). Structure + the bug
-> fix are high-confidence; copy is for review.
+> Neurotic-implementer rules in force: ask before deducing; prospect-facing copy needs
+> sign-off; never commit unless asked. Two repos: samwise-landing + samwise-app.
 
----
+## Reconciliation vs the handoff (git state moved on)
+The handoff was written when this work was uncommitted. It is now committed + pushed:
+- **samwise-app** `fe3eb90` (notes fix), `9e95f82` (story stages + sticky StoryControl), editorial token pass — working tree was clean.
+- **samwise-landing** `7b8ae5c` (sticky video + scrollIntoView auto-advance) — clean except this file.
+- ⚠️ **The committed notes fix was dead code:** `prospectPresent` in `WalkInShell.tsx` was never set
+  true, so the reactive re-broadcast never fired. **Fixed this session** (see Phase 0).
+- ⚠️ **`app/meet/story-graphic-test/page.tsx` got committed** → it's a live `/meet/story-graphic-test`
+  route in prod. Needs a deletion commit (see After-implementation).
 
-## Plan Summary
-
-Three things, one pass:
-
-1. **BUG — prospect notes don't appear.** Two causes:
-   - *Prefilled notes never sent:* the auto qualification-load on mount writes via `setStateRaw`, which bypasses the DataChannel broadcaster. Confirmed in code (`WalkInShell` passes `setState: setStateRaw` to `prefillFromQualification`).
-   - *Live-filled notes weren't arriving:* the live path IS correct in code (`VariablesTable` → `setState` wrapper → `diffAndPublish`). They failed to deliver because the **connection churn** was erroring every `reliable` DataChannel send (the `Unknown DataChannel error on reliable` lines). The connect-once fix already landed addresses that; this plan adds a **snapshot-on-join** so prefilled + pre-join values also arrive, and a verification step.
-
-2. **REDESIGN — the story.** Corrected model after reading the skills:
-   - **Promise (reworked neuro, FIRST):** the ritual changes two things at two speeds — behaviour (now) + thoughts & emotions (gradually). Keep the old-pattern-vs-ritual base, *layer the two-changes on top*.
-   - **The whole experience (six steps, kept):** map → design → live → **optimize** → live → repeat. Multi-session; optimization is its own session.
-   - **The daily loop (NEW beat):** AI agent calls → you do your ritual → tracking agent calls to track. The engine inside "live your call," feeding "optimize."
-   - **The document = persistent spine:** seeded by his captured words, ghosted "to-come" sections + a progress meter → the pull to fill it.
-
-3. **REP CONTROLS — sticky.** Move `StoryControl` from top-of-column to a compact **sticky strip inside the variables column** so Samuel never scrolls up to advance the story. Re-label/re-order buttons to the new arc.
-
-### Conceptual model (the source of truth for all copy)
-
-| Layer | What it is |
-|---|---|
-| The promise (neuro) | ritual changes **behaviour** (now) + **thoughts & emotions** (gradually) |
-| The whole experience (six steps) | map → design → live → optimize → live → repeat (across sessions) |
-| The daily loop (engine) | agent calls → user does ritual → tracking agent calls to track |
-| The *how* (mechanisms) | protection via social help · new belief via mantras · daily progressive activities |
-| The document (spine) | holds it all, seeded by his words, grows = his progress |
-
-Hard constraints (from the script/onboarding skills):
-- `enemy_name` is captured in **onboarding**, not the demo — the story can only show it as a ghosted "to-come" slot, never a real value.
-- Rule 7 vocab: no *paciente / recaída / terapia / comportamiento autodestructivo* anywhere on the prospect's screen.
-- The four-part daily call = `el Alto / la Consciencia / la Intención / el Compromiso` (THE STOP / CONSCIOUSNESS / INTENTION / COMMITMENT), plus symbolic-help + social-help = the six ritual moments. (This is the daily call's internal shape, already referenced in step 02 copy.)
+## Decisions locked this session
+- **Task-1 layout:** "Story leads, notes below." When the story goes live, the Ritual Story leads the
+  right column (top-aligned with the sticky video) and beats fade out→in **in place**; the live notes
+  flow beneath, still scrollable. One gentle scroll brings the story into view the first time it
+  appears; after that, no per-beat scroll-jump.
+- **Notes-fix bug:** fix now, ship first (DONE — Phase 0).
 
 ---
 
-## Plan Architecture (Flow)
-
-Unchanged transport. Still rides the existing LiveKit DataChannel; still `type`-discriminated JSON.
-
-```
-REP (samwise-app, WalkInShell)                 PROSPECT (samwise-landing, /meet)
-─────────────────────────────                  ─────────────────────────────────
-StoryControl (sticky)  ──publishVisual(stage)──▶  onDataMessage → setStoryStage → RitualStory
-VariablesTable edit    ──diffAndPublish───────▶   onDataMessage → setVariables  → VariablesPanel
-prospect JOINS room    ──publishSnapshot()────▶   (same variable_update events) → VariablesPanel
-```
-
-- New: `publishSnapshot()` fires on `RoomEvent.ParticipantConnected` (the prospect joining), re-emitting every non-empty `userVisible` cleaned variable as ordinary `demo-call:variable_update` events → **zero landing-side change for the bug fix.**
-- `StoryStage` union changes (both repos, kept in sync by hand like the `VideoCallExperience` dup):
-  `"hidden" | "promise" | "experience" | "loop"`. The document renders as a **persistent spine** whenever stage ≠ hidden (no separate "doc" stage).
+## Phase 0 — DONE this session: notes-fix (samwise-app, ship-first)
+`components/walk-in/WalkInShell.tsx` `handleRoomReady`: wire `setProspectPresent` to the room's
+`ParticipantConnected`/`ParticipantDisconnected` events (+ an initial `syncPresence()`), so the
+reactive snapshot effect actually fires and re-broadcasts notes on every cleaned-value change while
+the prospect is present. Scoped to one file. **Commit message in After-implementation.**
 
 ---
 
-## Plan Structure (Directories and files)
+## Phase 1 — /meet story fade-in-place ("story leads, notes below")
+Files: `app/meet/call-room.tsx`, `app/meet/story/ritual-story.tsx`, `app/meet/story/story.css`.
+(No `call.css` change needed — the column reorder is pure JSX + the story's own CSS.)
 
-### samwise-app (rep)
-- `lib/demo-call/broadcast.ts` — update `StoryStage` union; add `publishSnapshot`.
-- `app/copilot/story-control.tsx` — re-order/re-label buttons; make sticky-friendly.
-- `components/walk-in/WalkInShell.tsx` — sticky wrapper for StoryControl; `stateRef`; wire `ParticipantConnected → publishSnapshot`.
+### Step 1.1 — `app/meet/call-room.tsx`: import `useRef`
+- **Location:** line 3.
+- **Code:** `import { useCallback, useEffect, useRef, useState } from "react"`
 
-### samwise-landing (prospect)
-- `app/meet/story/strings.ts` — copy for `promise` (reworked neuro), `experience` (kept six steps), `loop` (NEW), and doc spine (ghosted sections + progress + slot note). EN/ES.
-- `app/meet/story/ritual-story.tsx` — new `StoryStage` union; stage dispatch; render the doc spine persistently + active beat.
-- `app/meet/story/neuro-crossfade.tsx` → **rework** into the `promise` beat (old-vs-ritual base + two-changes layer).
-- `app/meet/story/cycle-map.tsx` → the `experience` beat (mostly kept).
-- `app/meet/story/doc-spine.tsx` → **rework** into the persistent spine (seeded words + ghosted sections + progress meter).
-- `app/meet/story/daily-loop.tsx` → **NEW** beat (agent → ritual → tracking).
-- `app/meet/story/story.css` — styles for ghosted sections, progress meter, daily-loop, the promise beat's extra curve/legend.
-- `app/meet/call-room.tsx` — update the stage allow-list to the new union.
+### Step 1.2 — `app/meet/call-room.tsx`: replace the per-beat auto-scroll with one-time scroll-on-appear
+- **Location:** the `useEffect` at lines 92–114 (the `scrollIntoView` block).
+- **Should NOT modify:** the `onDataMessage` callback, the `storyStage` state, the DataChannel handling.
+- **Code (replaces the whole effect):**
+  ```tsx
+  // Fade-in-place: bring the story into view ONCE, when it first appears
+  // (hidden → live). After that, beats fade out/in in place — no per-beat
+  // scroll-jump (the prospect isn't yanked around as Samuel advances).
+  // Honours reduced-motion.
+  const prevStageRef = useRef<StoryStage>("hidden")
+  useEffect(() => {
+    const prev = prevStageRef.current
+    prevStageRef.current = storyStage
+    // Only on the first reveal: previous was hidden AND now we're live.
+    if (prev !== "hidden" || storyStage === "hidden") return
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const t = setTimeout(
+      () => {
+        document
+          .querySelector(".ritual-story")
+          ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+      },
+      reduce ? 0 : 80,
+    )
+    return () => clearTimeout(t)
+  }, [storyStage])
+  ```
+- **Explanation:** `prevStageRef` lets us detect the single hidden→live transition. Subsequent
+  live→live changes return early (no scroll). The beat itself crossfades via AnimatePresence (Step 1.3).
 
----
+### Step 1.3 — `app/meet/call-room.tsx`: render the story ABOVE the notes
+- **Location:** the `<aside className="demo-call-room-notes">` block (lines 135–141).
+- **Code:**
+  ```tsx
+  <aside className="demo-call-room-notes" aria-label={s.notes_label}>
+    <RitualStory lang={lang} stage={storyStage} variables={variables} />
+    <VariablesPanel lang={lang} variables={variables} />
+  </aside>
+  ```
+- **Explanation:** `RitualStory` returns null when `stage==="hidden"`, so during phases 1–8 the column
+  is notes-only — byte-identical to today. When the story goes live it leads; notes follow beneath.
 
-## Modifications (phases and steps)
+### Step 1.4 — `app/meet/story/ritual-story.tsx`: pure-opacity fade (no slide)
+- **Location:** the `<motion.div className="ritual-story-beat">` props (lines 82–86).
+- **Should NOT modify:** `mode="wait"` on AnimatePresence (keeps it strict-serial: old fully out, then
+  new in — the landing's no-cross-fade rule), the persistent DocSpine/UnansweredList outside it.
+- **Code:**
+  ```tsx
+  initial={reduced ? false : { opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
+  transition={{ duration: reduced ? 0 : 0.5, ease: "easeInOut" }}
+  ```
+- **Explanation:** "fade in place" = opacity only, no `y` translate. `mode="wait"` already gives the
+  serial exit→enter the landing choreography uses.
 
-### Phase 1 — Bug fix: snapshot the notes on prospect-join (samwise-app)
-
-**Step 1.1 — `lib/demo-call/broadcast.ts`: add `publishSnapshot`.**
-- In-file location: the `VariableBroadcaster` interface + `createVariableBroadcaster` return object.
-- Do NOT modify: `diffAndPublish` logic, the event names, `publishVisual`.
-- Code:
-  ```ts
-  export interface VariableBroadcaster {
-    diffAndPublish: (/* unchanged */) => void
-    publishVisual: (stage: StoryStage) => void
-    /** Re-emit every non-empty userVisible cleaned value as variable_update
-     *  events. Called when the prospect joins so prefilled / pre-join notes
-     *  arrive (the diff path only fires on CHANGES while connected, and the
-     *  on-mount qualification prefill bypasses the broadcaster entirely). */
-    publishSnapshot: (cleaned: Record<string, string>, variables: DemoCallVariable[]) => void
-  }
-  // in the returned object:
-  publishSnapshot(cleaned, variables) {
-    for (const v of variables) {
-      if (!v.userVisible) continue
-      const value = (cleaned[v.name] ?? "").trim()
-      if (!value) continue
-      const payload = encoder.encode(
-        JSON.stringify({ type: "demo-call:variable_update", name: v.name, value }),
-      )
-      void room.localParticipant.publishData(payload, { reliable: true })
-    }
+### Step 1.5 — `app/meet/story/story.css`: the story now LEADS (separator below, not above)
+- **Location:** the `.ritual-story` rule (lines 5–10).
+- **Code:**
+  ```css
+  .ritual-story {
+    max-width: 28em; /* match .qualify-notes */
+    padding-bottom: 40px;
+    margin-bottom: 44px;
+    border-bottom: 1px solid var(--rule);
   }
   ```
-- Explanation: reuses the existing `variable_update` shape, so the landing side needs no change. Only non-empty userVisible values are sent.
+- **Explanation:** dropped the top `margin/padding/border` (it used to "continue the notes column
+  downward"); now it leads, with a hairline rule + air separating it from the notes that follow.
+  `.ritual-story-beat`'s own top rule (separating spine from beat) stays.
 
-**Step 1.2 — `WalkInShell.tsx`: keep a `stateRef`, fire snapshot on join.**
-- In-file location: alongside `broadcasterRef`/`roomReady`; and inside `handleRoomReady`.
-- Do NOT modify: the `setState` wrapper's diff logic, the init effect.
-- Code:
-  ```ts
-  // mirror latest state so the join-listener reads fresh cleaned values
-  const stateRef = useRef<SessionState | null>(null)
-  useEffect(() => { stateRef.current = state }, [state])
+### Phase 1 verification (browser preview)
+The live path needs a real LiveKit room, so verify with the existing harness:
+`app/meet/story-test/page.tsx` (stage + lang switches, sample vars) — already in the repo. Drive it
+through doc→promise→loop→mechanism→experience and confirm: (a) story leads, notes below;
+(b) beats crossfade in place with NO page scroll on live→live; (c) one smooth scroll on first reveal;
+(d) reduced-motion → instant. Use `preview_eval` to read `getComputedStyle(.ritual-story-beat).opacity`
+across a stage change and `window.scrollY` before/after a live→live change (should be unchanged).
 
-  const handleRoomReady = (room: Room) => {
-    const broadcaster = createVariableBroadcaster(room)
-    broadcasterRef.current = broadcaster
-    setRoomReady(true)
-    // When the prospect joins, re-emit current notes. Fire on connect AND
-    // for anyone already present (rep may have joined second).
-    const snapshot = () => {
-      const s = stateRef.current
-      if (s) broadcaster.publishSnapshot(s.cleaned, DEMO_CALL_VARIABLES)
-    }
-    room.on(RoomEvent.ParticipantConnected, snapshot)
-    if (room.remoteParticipants.size > 0) snapshot()
+---
+
+## Phase 2 — samwise-app editorial deepening (product surfaces ONLY)
+NEVER touch `/trip` or `/outreach` (`.paper-module`). All edits are scoped to `.brand-editorial`.
+Card titles are ALREADY Fraunces 400 (the `[data-slot="card-title"]` heading rule in globals.css) —
+so the remaining work is shapes, the sidebar mark, the dark surfaces, and forms.
+
+### Step 2.1 — Gold ✦ wordmark in the sidebar (`app/page.tsx` + `app/globals.css`)
+- **globals.css** (add after the `.brand-editorial ::selection` rule, ~line 270):
+  ```css
+  /* ── Brand wordmark — Fraunces italic + tiny gold ✦ (mirrors the landing
+     navbar mark). ──────────────────────────────────────────────────────── */
+  .brand-editorial .brand-wordmark {
+    font-family: var(--app-fraunces), 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
+    display: inline-flex;
+    align-items: baseline;
+    line-height: 1;
+  }
+  .brand-editorial .brand-wordmark__star {
+    color: var(--accent-gold);
+    font-size: 0.5em;
+    vertical-align: super;
+    padding-left: 3px;
+    font-style: normal;
   }
   ```
-  (add `import { RoomEvent } from "livekit-client"`.)
-- Explanation: covers prefilled values AND values filled before the prospect arrived. Live edits after join keep flowing through the (now-healthy) diff path.
-- `[CONFIRM]` possible race: if `publishData` right at `ParticipantConnected` outruns the data channel to that peer, add a ~500 ms delay or publish on first `TrackSubscribed` instead. Verify in test (Phase 4).
+- **page.tsx** `<SidebarHeader>` (lines 88–95) — replace the Sparkles-in-a-box:
+  ```tsx
+  <SidebarHeader>
+    <div className="flex items-center px-2 py-1.5">
+      <span className="brand-wordmark text-[17px]">
+        Samwise<span className="brand-wordmark__star">✦</span>
+      </span>
+    </div>
+  </SidebarHeader>
+  ```
+  (Keep the `Sparkles` import — still used by NAV + the copilot sidebar link.)
 
-**Step 1.3 — verify the live path.** No code. On the fixed/deployed build, confirm a live edit in `/copilot` shows on `/meet` within the clean round-trip, with no `Unknown DataChannel error` in console. (This is the part the connect-once fix already addresses.)
+### Step 2.2 — Cards: hairline border, no heavy shadow, calmer radius (`app/globals.css`)
+- Add (scoped):
+  ```css
+  /* ── Cards — hairline border, no shadow, calmer radius (titles are
+     already Fraunces 400 via the heading rule). ──────────────────────── */
+  .brand-editorial [data-slot="card"] {
+    box-shadow: none;
+    border-color: var(--border);
+    border-radius: var(--radius);
+  }
+  /* Inputs / select triggers — drop the shadcn inner shadow; hairline +
+     gold focus ring already come from the brand tokens. */
+  .brand-editorial [data-slot="input"],
+  .brand-editorial [data-slot="select-trigger"] {
+    box-shadow: none;
+  }
+  ```
 
----
+### Step 2.3 — Card-header icon blobs (`app/page.tsx`) — JUDGMENT CALL ⚠️
+The two card headers + the (now-replaced) sidebar use a `bg-primary/10` filled circle with a lucide
+icon — the most "SaaS-default" shape left. **Recommend** replacing each with a small gold ✦ above the
+title (matches the brand mark, drops the blob):
+```tsx
+<div className="mx-auto mb-3 text-[var(--accent-gold)] text-lg leading-none">✦</div>
+```
+Alternative (keep the icon, lose the fill): hairline gold ring —
+`border border-[color:var(--accent-gold)]/40` with `text-[var(--accent-gold)]` icon.
+**Need your nod on which** (both operator-facing, no prospect copy).
 
-### Phase 2 — Story redesign (samwise-landing) — STRUCTURE
+### Step 2.4 — Forms/inputs register — JUDGMENT CALL ⚠️
+Inputs already inherit hairline border + gold focus ring from the tokens; 2.2 drops their inner
+shadow. **Recommend stopping there** (keep them boxed — appropriate for an operator form), rather than
+converting to the landing's full hairline-underline inputs (too stylized for utility forms). Operator
+buttons stay ink-filled (`bg-primary` = ink) — that reads editorial-restrained, not marketing-y, so I
+**won't** convert them to gold-dash CTAs. Confirm.
 
-**Step 2.1 — `StoryStage` union (both repos, in lockstep).**
-- `broadcast.ts` and `ritual-story.tsx`: `"hidden" | "promise" | "experience" | "loop"`.
-- Document is NOT a stage — it renders as a persistent spine in `RitualStory` whenever stage ≠ hidden.
+### Step 2.5 — `/ritual-call` dark → editorial (`components/ritual-call/RitualCallExperience.tsx`) ⚠️ BIG
+This 380-line surface is hardcoded dark (`bg-neutral-950 text-neutral-100`, `border-neutral-700
+bg-neutral-900`, …) and ignores the brand tokens — so it stays dark inside the editorial skin and
+clashes. Convert all states (idle/identifying/connecting/active/disconnected/error) to the editorial
+register: gallery-white bg, ink text, hairline `border`/`text-muted-foreground`, gold accents, the
+brand ✦ where a mark appears. Mirrors the landing's gallery-white in-call register (not dark). This is
+the largest visual change — **confirm the gallery-white direction.** Verify each state in-browser.
 
-**Step 2.2 — `ritual-story.tsx`: persistent doc spine + active beat.**
-- Render `<DocSpine …/>` always (when stage ≠ hidden), then the active beat below it inside the `AnimatePresence` crossfade.
-- Dispatch: `promise → PromiseBeat`, `experience → CycleMap`, `loop → DailyLoop`.
+### Step 2.6 — `/meet` WalkInShell dark edge-states (`components/walk-in/WalkInShell.tsx`)
+The error + "Joining the call…" screens (lines 199–216) hardcode `bg-neutral-950 text-neutral-100`.
+Drop those classes so they inherit the brand-editorial white/ink (the shell is already wrapped by
+`app/meet/layout.tsx`):
+```tsx
+// error
+<main className="flex h-screen items-center justify-center p-6 text-foreground"> …
+  <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+// loading
+<main className="flex h-screen items-center justify-center text-foreground">
+  <p className="text-sm text-muted-foreground">Joining the call…</p>
+```
 
-**Step 2.3 — `doc-spine.tsx` → persistent spine.**
-- Page card with: section list, his captured words slotted into the active "Problema y Solución" section, **ghosted "to-come" sections**, and a **progress meter** (e.g. `3 / 9`).
-- `[CONFIRM]` the section list (maps to real onboarding/call-design deliverables). Draft:
-  - ✅ seeded now (from his notes): *Problema y Solución* (behaviour + motivation)
-  - 🔒 to-come (onboarding/call-design): *Tu ancla simbólica*, *Tu enemigo con nombre*, *Tu mantra de desidentificación*, *Tus ayudadores (protección)*, *Tu actividad diaria*, *La Llamada del Ritual (Alto · Consciencia · Intención · Compromiso)*, *El pacto*, *Metadata / progreso*
-- `[CONFIRM]` show the numeric progress meter? and the count denominator.
+### Step 2.7 — Shared copilot panes (low priority, optional)
+`story-control.tsx`, `variables-table.tsx`, `script-pane.tsx` already use brand tokens (ink/white via
+the wrapper). Light polish only (Manrope eyebrow labels, gold active accents) IF time — not load-
+bearing. Skip unless it reads ugly in the preview.
 
-**Step 2.4 — `neuro-crossfade.tsx` → the `promise` beat.**
-- Keep old-pattern (declining) vs ritual (rising) base. **Layer the two changes:**
-  - `[CONFIRM]` visual approach — proposed: split the rising side into TWO curves — **behaviour** (rises fast → "ya, en el ritual") and **thoughts & emotions** (rises gradually) — over the declining **old pattern**. Legend names all three. Alt: keep two curves, add a caption-only "two changes, two speeds" layer (no new curve).
-  - `[CONFIRM]` personalization: keep his `behaviour_to_change` as the old-pattern label?
-
-**Step 2.5 — `daily-loop.tsx` → NEW beat.**
-- Three-node loop: **agent calls** → **you do your ritual** → **tracking call** → (back). Anchored to the doc.
-- `[CONFIRM]` copy + whether the tracking node names the tracking agent or stays generic.
-
-**Step 2.6 — `cycle-map.tsx` (the `experience` beat).** Keep current six steps. Minor: ensure it reads under the persistent doc spine (avoid duplicating the doc pin that doc-spine now owns).
-
-**Step 2.7 — `story.css`.** Styles for ghosted sections (reduced-opacity + lock affordance), progress meter, the daily-loop nodes, and the promise beat's extra curve/legend.
-
----
-
-### Phase 3 — Sticky rep controls (samwise-app)
-
-**Step 3.1 — `story-control.tsx`:** re-order + re-label to the arc:
-`1 · The Promise` (promise) · `2 · The Experience` (experience) · `3 · The Daily Loop` (loop) · Clear. Keep the `ready` gate + `aria-pressed`.
-
-**Step 3.2 — `WalkInShell.tsx`:** make the StoryControl a **sticky strip** at the top of the scrolling middle column (`position: sticky; top: 0; z-index`), so it stays put while the variables table scrolls. Keep it visually compact.
-- `[CONFIRM]` sticky at the very top of the column vs. a slimmer floating bar.
+### Phase 2 verification (browser preview)
+`preview_start`, then for each surface: `/` (sidebar star + cards), `/ritual-call` (all states),
+`/meet/[id]` (WalkInShell — error/loading + StoryControl). `preview_screenshot` the before/after of
+each; `preview_inspect` card `box-shadow` (should be `none`) and the wordmark `font-family` (Fraunces)
++ star `color` (`#D4A85A`). `preview_console_logs level:error` to catch nothing regressed.
 
 ---
 
 ## Testing phase
-
-- **Local:** `npx tsc --noEmit` in both repos, filtered to changed files (pre-existing unrelated errors ignored).
-- **Integration (2-party):** drive a real `/copilot` ↔ `/meet` pair. Verify:
-  1. Prefilled notes appear on the prospect screen at join (Phase 1).
-  2. A live edit appears within the clean round-trip; no `Unknown DataChannel error`.
-  3. Each sticky button advances the correct beat; doc spine persists; progress/ghosted sections read right.
-  4. ES/voseo correct; no Rule-7 vocab; no horizontal overflow at 375px.
-  5. Reduced-motion path (code-gated).
-- **README:** n/a.
+- **Local (browser preview):** per-phase as above. No prospect copy changes → no sign-off gate here.
+- **Live 2-party test (you run):** `/copilot` (or `/meet/[id]` therapist) ↔ `/meet` (prospect) — confirm
+  in one pass: (a) **notes fix** — prospect sees filled notes even when cleaning finishes after they
+  joined; (b) **sticky video** — Samuel's tile stays put while the column scrolls; (c) **fade-in-place** —
+  beats crossfade with no per-beat scroll-jump, one scroll on first reveal.
+- **Integration / README:** n/a (frontend-only).
 
 ## After implementation
-
-- Update `context-for-code-agent.md` in both repos (new beat, new union, snapshot-on-join, sticky control).
-- Sweep the Demo Call Doc Phase 9 + `before_the_call.md` §3i to match the new beat order/labels (the Phase-4 doc edits become: Promise → Experience → Daily Loop). Present as paste-ready (Drive MCP is read-only).
-- Commit per repo (`git commit -am`), deploy both, hard-reload `/meet`. Mark the task DONE in the master Vibe doc (manual).
-
----
-
-## Open decisions blocking copy (need Samuel)
-
-1. Daily-loop beat copy + whether the tracking node names the tracking agent.
-2. Neuro `promise` beat: three-curve split vs caption-only layer; keep `behaviour_to_change` as old-pattern label.
-3. Doc spine: the exact section list (✅ seeded vs 🔒 to-come) + progress meter yes/no + denominator.
-4. Then: full EN/ES copy draft for all beats → your Rule-8 sign-off.
+- **Refresh `context-for-code-agent.md` (both repos):**
+  - samwise-landing: /meet story now "leads, notes below" + fade-in-place (replaces scrollIntoView).
+  - samwise-app: the editorial skin's component-shape pass (gold ✦ wordmark, hairline/flat cards,
+    /ritual-call + WalkInShell de-darkened); note the notes-fix presence wiring.
+- **Scoped commit messages (you commit — one `git commit -am` per repo):**
+  - samwise-app, SHIP FIRST (Phase 0, already in the tree, scoped to one file):
+    `git commit -am "fix(/meet): wire prospectPresent so the reactive notes snapshot actually fires"`
+    → push + deploy, then run the 2-party notes test. (Will only sweep WalkInShell.tsx if you commit
+    before starting Phase 2; Phase 2 also touches app files, so commit this first.)
+  - samwise-app, Phase 2 (after): `feat(app): deepen editorial skin — gold ✦ wordmark, flat hairline
+    cards, de-dark /ritual-call + /meet edge states` (sweeps page.tsx, globals.css,
+    RitualCallExperience.tsx, WalkInShell.tsx).
+  - samwise-landing, Phase 1 + stray-route deletion: `feat(/meet): story leads + fade-in-place beats;
+    rm stray story-graphic-test route` (sweeps call-room.tsx, ritual-story.tsx, story.css, current-plan.md).
+- **DELETE the stray prod route:** `rm -rf app/meet/story-graphic-test/` (it's tracked; the deletion
+  lands in the landing commit above). The `story-graphic/` components have no page.tsx → harmless, leave
+  for the promote-or-drop decision.
+- Mark task DONE in the master Vibe doc Projects tab (your manual step).

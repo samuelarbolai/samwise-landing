@@ -42,6 +42,20 @@ const TAP_VS_HOLD_THRESHOLD_MS = 200
 const SILENCE_BEFORE_SWAP_MS = 1500
 const OUTCOME_MAX_WAIT_MS = 12000
 
+// Lightweight, greppable client-side tracing for the qualify voice flow.
+// Filter the browser console by "[qualify]" to follow the whole lifecycle:
+//   voice-init → room.connect → agent-join (participantConnected) →
+//   audio (trackSubscribed) → speech (activeSpeakers) → data events.
+// Diagnostic reads:
+//   • "room.connect resolved" but never "participantConnected" → the agent
+//     isn't joining (dispatch / worker side, NOT this page).
+//   • "participantConnected" + "trackSubscribed audio" but you hear nothing
+//     → audio routing / autoplay (client side).
+//   • init throws before "room.connect resolved" → voice-init / env / token.
+const qlog = (...args: unknown[]) => {
+  console.log("[qualify]", ...args)
+}
+
 export function VoiceRoom({
   lang,
   name,
@@ -154,6 +168,7 @@ export function VoiceRoom({
     let cancelled = false
     const room = new Room()
     roomRef.current = room
+    qlog("voice room mounting", { lang, hasName: !!name, hasEmail: !!email })
 
     const finalizeOutcome = () => {
       const out = pendingOutcomeRef.current
@@ -192,6 +207,7 @@ export function VoiceRoom({
           name?: string
           value?: string
         }
+        qlog("data ←", msg.type, msg.name ?? msg.outcome ?? "")
         if (
           msg.type === "qualification:outcome" &&
           (msg.outcome === "qualified" ||
@@ -242,6 +258,7 @@ export function VoiceRoom({
     })
 
     room.on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
+      qlog("activeSpeakers", speakers.map((p) => p.identity))
       if (!pendingOutcomeRef.current) return
       const agentSpeaking = speakers.some(
         (s) => s.identity !== room.localParticipant?.identity,
@@ -260,15 +277,36 @@ export function VoiceRoom({
 
     room.on(
       RoomEvent.TrackSubscribed,
-      (track: RemoteTrack, _pub: RemoteTrackPublication, _p: RemoteParticipant) => {
+      (track: RemoteTrack, _pub: RemoteTrackPublication, p: RemoteParticipant) => {
+        qlog("trackSubscribed", { kind: track.kind, from: p.identity })
         // Pipe inbound audio (the agent's TTS) to the hidden sink.
         if (track.kind === "audio" && audioSinkRef.current) {
           track.attach(audioSinkRef.current)
+          qlog("agent audio attached → sink")
+        } else if (track.kind === "audio") {
+          console.warn("[qualify] audio track arrived but no sink element yet")
         }
       },
     )
 
-    room.on(RoomEvent.Disconnected, () => {
+    room.on(RoomEvent.ParticipantConnected, (p) => {
+      qlog("participantConnected", p.identity, {
+        remotes: room.remoteParticipants.size,
+      })
+    })
+    room.on(RoomEvent.ParticipantDisconnected, (p) => {
+      qlog("participantDisconnected", p.identity)
+    })
+    room.on(RoomEvent.ConnectionStateChanged, (state) => {
+      qlog("connectionState", state)
+    })
+
+    room.on(RoomEvent.Disconnected, (reason) => {
+      qlog("disconnected", {
+        reason,
+        deliberate: deliberateDisconnectRef.current,
+        cancelled,
+      })
       // If we didn't disconnect ourselves, surface a generic error.
       // The outcome event always sets deliberateDisconnectRef first.
       if (!deliberateDisconnectRef.current && !cancelled) {
@@ -278,24 +316,46 @@ export function VoiceRoom({
 
     ;(async () => {
       try {
+        qlog("POST /api/qualify/voice-init …")
         const resp = await fetch("/api/qualify/voice-init", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ language: lang, name, email }),
         })
+        qlog("voice-init status", resp.status)
         if (!resp.ok) throw new Error(`voice-init failed: ${resp.status}`)
         const { token, url } = (await resp.json()) as { token: string; url: string }
+        qlog("voice-init ok", { hasToken: !!token, url })
 
         if (cancelled) return
         await room.connect(url, token)
+        qlog("room.connect resolved", {
+          name: room.name,
+          state: room.state,
+          remotes: room.remoteParticipants.size,
+        })
         // Important: enable inbound audio output (autoplay-unblock).
         await room.startAudio()
+        qlog("startAudio resolved", { canPlaybackAudio: room.canPlaybackAudio })
         // Mic stays DISABLED — PTT controls it.
         await room.localParticipant.setMicrophoneEnabled(false)
         if (!cancelled) setConnecting(false)
+        qlog("connected — waiting for the agent to join + speak")
+        // Watchdog: the agent should join within a couple of seconds. If no
+        // remote participant after 10s, the dispatch never produced a worker
+        // — that's server/agent side, NOT this page.
+        setTimeout(() => {
+          if (cancelled) return
+          const r = roomRef.current
+          if (r && r.remoteParticipants.size === 0) {
+            console.warn(
+              "[qualify] NO agent joined 10s after connect — dispatch/worker side, not the client",
+            )
+          }
+        }, 10000)
       } catch (e) {
         if (!cancelled) {
-          console.error("voice-room init failed", e)
+          console.error("[qualify] voice-room init FAILED", e)
           setError(s.error_generic)
         }
       }
