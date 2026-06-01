@@ -80,10 +80,10 @@ export function RitualStory({
           <motion.div
             key={stage}
             className="ritual-story-beat"
-            initial={reduced ? false : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduced ? { opacity: 0 } : { opacity: 0, y: -8 }}
-            transition={{ duration: 0.42, ease: "easeOut" }}
+            initial={reduced ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduced ? 0 : 0.42, ease: "easeInOut" }}
           >
             {beat}
           </motion.div>

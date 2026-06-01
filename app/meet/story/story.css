@@ -3,9 +3,12 @@
    --gold) and the literal 'Fraunces'/'Manrope' stacks. */
 
 .ritual-story {
-  margin-top: 44px;
-  padding-top: 36px;
-  border-top: 1px solid var(--rule);
+  /* The story LEADS the notes column when live (call-room renders it above
+     <VariablesPanel>), top-aligned with the sticky video. The separator goes
+     on the BOTTOM — dividing the story from the live notes that now follow. */
+  margin-bottom: 44px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid var(--rule);
   max-width: 28em; /* match .qualify-notes */
 }
 

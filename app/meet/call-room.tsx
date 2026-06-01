@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   VideoCallExperience,
   type VideoCallInit,
@@ -89,26 +89,27 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
     }
   }, [])
 
-  // Auto-advance: when Samuel moves the story to a new beat, bring it into
-  // view so the prospect watches it unfold without touching the screen.
-  // Waits out the crossfade so the freshly-mounted beat is the scroll
-  // target; honours reduced-motion.
+  // Fade-in-place: the story LEADS the right column (top-aligned with the
+  // sticky video) and beats fade out/in where they sit — no per-beat scroll.
+  // We scroll ONCE, only the first time the story appears (hidden → live), to
+  // bring it into view if the prospect had scrolled down into the notes. After
+  // that, beats just crossfade. Honours reduced-motion.
+  const prevStageRef = useRef<StoryStage>("hidden")
   useEffect(() => {
-    if (storyStage === "hidden") return
+    const prev = prevStageRef.current
+    prevStageRef.current = storyStage
+    if (prev !== "hidden" || storyStage === "hidden") return
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const t = setTimeout(
       () => {
-        const el =
-          document.querySelector(".ritual-story-beat") ??
-          document.querySelector(".ritual-story")
-        el?.scrollIntoView({
+        document.querySelector(".ritual-story")?.scrollIntoView({
           behavior: reduce ? "auto" : "smooth",
-          block: "center",
+          block: "start",
         })
       },
-      reduce ? 50 : 480,
+      reduce ? 0 : 80,
     )
     return () => clearTimeout(t)
   }, [storyStage])
@@ -136,8 +137,8 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
         className="demo-call-room-notes"
         aria-label={s.notes_label}
       >
-        <VariablesPanel lang={lang} variables={variables} />
         <RitualStory lang={lang} stage={storyStage} variables={variables} />
+        <VariablesPanel lang={lang} variables={variables} />
       </aside>
     </div>
   )
