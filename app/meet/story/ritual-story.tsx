@@ -68,13 +68,10 @@ export function RitualStory({
 
   return (
     <div className="ritual-story" aria-live="polite">
-      {/* Non-invasive open-loops list (appears from the daily-loop beat on). */}
-      <UnansweredList copy={copy} count={unansweredCount(stage)} reduced={!!reduced} />
-
-      {/* The document spine persists across beats. */}
-      <DocSpine copy={copy} variables={variables} reduced={!!reduced} />
-
-      {/* The active beat crossfades below the spine. */}
+      {/* The active beat LEADS the column. Each freshly-introduced beat takes
+          the top and the focus; the spine below slides down to make room. The
+          doc is never stitched to the top — but (per its "persistent spine"
+          intent) it never disappears either, it just follows the live beat. */}
       <AnimatePresence mode="wait">
         {beat && (
           <motion.div
@@ -89,6 +86,13 @@ export function RitualStory({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Non-invasive open-loops list (appears from the daily-loop beat on). */}
+      <UnansweredList copy={copy} count={unansweredCount(stage)} reduced={!!reduced} />
+
+      {/* The document spine persists BELOW the active beat — the curiosity
+          engine the prospect keeps watching fill in, no longer hogging the top. */}
+      <DocSpine copy={copy} variables={variables} reduced={!!reduced} />
     </div>
   )
 }
