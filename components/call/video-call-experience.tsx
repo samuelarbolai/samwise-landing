@@ -45,6 +45,11 @@ export interface VideoCallExperienceProps {
     waitingSub: string
     endedLead: string
     endedSub: string
+    /** Shown centered over the tile when a remote participant is connected
+     * but publishes NO video (an audio-only agent). Omit for human calls —
+     * then the empty tile is left as-is. */
+    audioOnlyLabel?: string
+    audioOnlySub?: string
   }
   onDataMessage?: (msg: unknown) => void
   onRoomReady?: (room: Room) => void
@@ -60,10 +65,14 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
   const [micOn, setMicOn] = useState(true)
   const [camOn, setCamOn] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  // Whether the connected remote publishes video. Stays false for an
+  // audio-only agent → we render an intentional voice panel, not a black tile.
+  const [remoteHasVideo, setRemoteHasVideo] = useState(false)
 
   const roomRef = useRef<Room | null>(null)
   const localVideoRef = useRef<HTMLVideoElement | null>(null)
   const remoteContainerRef = useRef<HTMLDivElement | null>(null)
+  const remoteVideoCountRef = useRef(0)
   const startingRef = useRef(false)
   const hardCapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Ref-mirror the callbacks + init so the connect closure always sees
@@ -144,6 +153,8 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
         const v = el as HTMLVideoElement
         v.playsInline = true
         v.dataset.role = 'remote-video'
+        remoteVideoCountRef.current += 1
+        setRemoteHasVideo(true)
       } else if (track.kind === Track.Kind.Audio) {
         el.dataset.role = 'remote-audio'
       }
@@ -152,6 +163,10 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     }
     const onTrackUnsubscribed = (track: RemoteTrack) => {
       track.detach().forEach((el) => el.remove())
+      if (track.kind === Track.Kind.Video) {
+        remoteVideoCountRef.current = Math.max(0, remoteVideoCountRef.current - 1)
+        setRemoteHasVideo(remoteVideoCountRef.current > 0)
+      }
     }
     const onParticipantConnected = () => setPhase('active')
     const onParticipantDisconnected = () => {
@@ -297,6 +312,18 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
               <p className="demo-call-overlay-lead">
                 {errorMsg ?? 'Something went wrong.'}
               </p>
+            )}
+          </div>
+        )}
+
+        {/* Audio-only remote (e.g. the AI guide): the call is live but there's
+            no video track, so render an intentional voice panel instead of a
+            black tile. Only fires when the caller passes audioOnlyLabel. */}
+        {phase === 'active' && !remoteHasVideo && status?.audioOnlyLabel && (
+          <div className="demo-call-video-overlay" aria-live="polite">
+            <p className="demo-call-overlay-lead">{status.audioOnlyLabel}</p>
+            {status.audioOnlySub && (
+              <p className="demo-call-overlay-sub">{status.audioOnlySub}</p>
             )}
           </div>
         )}

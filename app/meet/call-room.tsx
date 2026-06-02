@@ -116,6 +116,21 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
 
   const lang = init.booking.language
   const s = STRINGS[lang]
+  // Autonomous demo: the "other side" is the AI guide, not Samuel. Use
+  // guide-neutral waiting copy and pass the audio-only voice-panel labels —
+  // the agent publishes no video, so the remote tile would otherwise be a
+  // black box.
+  const autonomous = init.booking.autonomous === true
+  const waitingLead = autonomous
+    ? lang === "es"
+      ? "Tu guía se está conectando."
+      : "Your guide is connecting."
+    : s.waiting_lead
+  const waitingSub = autonomous
+    ? lang === "es"
+      ? "Un momento."
+      : "One moment."
+    : s.waiting_sub
 
   return (
     <div className="demo-call-room" lang={lang}>
@@ -125,10 +140,18 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
           status={{
             connectingLead: s.connecting_lead,
             connectingSub: s.connecting_sub,
-            waitingLead: s.waiting_lead,
-            waitingSub: s.waiting_sub,
+            waitingLead,
+            waitingSub,
             endedLead: s.ended_lead,
             endedSub: s.ended_sub,
+            ...(autonomous
+              ? {
+                  audioOnlyLabel:
+                    lang === "es" ? "Tu guía de Samwise" : "Your Samwise guide",
+                  audioOnlySub:
+                    lang === "es" ? "En vivo · por voz" : "Live · voice",
+                }
+              : {}),
           }}
           onDataMessage={onDataMessage}
         />

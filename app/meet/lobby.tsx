@@ -16,6 +16,10 @@ export interface MeetInitResponse {
     prospectFirstName: string
     language: Lang
     scheduledFor: string
+    /** True when this room runs with the autonomous AI guide instead of a
+     * human therapist — the call-room uses it for guide-neutral copy + the
+     * audio-only voice panel. */
+    autonomous?: boolean
   }
 }
 
@@ -38,6 +42,7 @@ const STRINGS = {
     submitting: "Joining…",
     email_invalid: "That doesn't look like an email.",
     error_generic: "Couldn't join. Try again in a moment.",
+    autonomous_label: "Run with the AI guide",
   },
   es: {
     lead: "Tu reunión con Samuel.",
@@ -51,6 +56,7 @@ const STRINGS = {
     submitting: "Entrando…",
     email_invalid: "Eso no se ve como un correo.",
     error_generic: "No pudimos entrar. Intenta en un momento.",
+    autonomous_label: "Hablar con el guía de IA",
   },
 } as const
 
@@ -68,6 +74,7 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [lang, setLang] = useState<Lang>("en")
+  const [autonomous, setAutonomous] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -96,6 +103,7 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
           name: trimmedName,
           email: trimmedEmail,
           language: lang,
+          autonomous,
         }),
       })
       if (!res.ok) {
@@ -178,6 +186,26 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
             disabled={submitting}
             autoComplete="email"
           />
+
+          <label
+            className="meet-autonomous-toggle"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.8rem",
+              opacity: 0.7,
+              cursor: "pointer",
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={autonomous}
+              onChange={(e) => setAutonomous(e.target.checked)}
+              disabled={submitting}
+            />
+            <span>{s.autonomous_label}</span>
+          </label>
 
           <button
             type="submit"
