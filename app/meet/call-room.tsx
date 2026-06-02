@@ -159,14 +159,16 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
             rejoinLabel: s.rejoin_cta,
             endedLead: s.ended_lead,
             endedSub: s.ended_sub,
-            ...(autonomous
-              ? {
-                  audioOnlyLabel:
-                    lang === "es" ? "Tu guía de Samwise" : "Your Samwise guide",
-                  audioOnlySub:
-                    lang === "es" ? "En vivo · por voz" : "Live · voice",
-                }
-              : {}),
+            // Always passed — the audio-only panel must cover the (video-less)
+            // tile whenever the other side is audio-only, NOT only when the
+            // autonomous flag threaded through. Agent → guide label; otherwise
+            // the therapist's name (covers a human with camera off too).
+            audioOnlyLabel: autonomous
+              ? lang === "es"
+                ? "Tu guía de Samwise"
+                : "Your Samwise guide"
+              : init.booking.therapistName,
+            audioOnlySub: lang === "es" ? "En vivo · por voz" : "Live · voice",
           }}
           onDataMessage={onDataMessage}
         />

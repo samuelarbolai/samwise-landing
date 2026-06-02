@@ -412,14 +412,35 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
         {/* Audio-only remote (e.g. the AI guide): the call is live but there's
             no video track, so render an intentional voice panel instead of a
             black tile. Only fires when the caller passes audioOnlyLabel. */}
-        {phase === 'active' && !remoteHasVideo && status?.audioOnlyLabel && (
+        {phase === 'active' && !remoteHasVideo && (
           <div className="demo-call-video-overlay" aria-live="polite">
-            <p className="demo-call-overlay-lead">{status.audioOnlyLabel}</p>
-            {status.audioOnlySub && (
+            {status?.audioOnlyLabel && (
+              <p className="demo-call-overlay-lead">{status.audioOnlyLabel}</p>
+            )}
+            {status?.audioOnlySub && (
               <p className="demo-call-overlay-sub">{status.audioOnlySub}</p>
             )}
           </div>
         )}
+
+        {/* TEMP black-tile diagnostic — remove once resolved. If you don't see
+            this green line at all, the new build isn't live. */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 4,
+            left: 4,
+            zIndex: 5,
+            font: '10px monospace',
+            color: '#39ff14',
+            background: 'rgba(0,0,0,0.55)',
+            padding: '2px 5px',
+            borderRadius: 3,
+            pointerEvents: 'none',
+          }}
+        >
+          {`phase=${phase} · remoteVideo=${String(remoteHasVideo)} · label=${status?.audioOnlyLabel ? 'yes' : 'no'}`}
+        </div>
       </div>
 
       {/* Controls live OUTSIDE the tile, on the page surface — small
