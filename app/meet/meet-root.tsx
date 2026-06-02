@@ -1,12 +1,17 @@
 "use client"
 
-import { MeetLobby } from "./lobby"
+import { useState } from "react"
+import { MeetLobby, type MeetInitResponse } from "./lobby"
+import { MeetCallRoom } from "./call-room"
 import "./meet.css"
 
-// The walk-in entry. The lobby collects who's joining, creates the room, then
-// REDIRECTS to the stable /meet/[walkInId] URL — so a reload or reopened tab
-// rejoins the same session (in-page state would be lost on reload). The call
-// itself renders at /meet/[id], shared with scheduled bookings.
+// Walk-in entry. The lobby collects who's joining + creates the room, then
+// hands the init back so the call renders IN-PAGE (no navigation) — the Join
+// click flows straight into the room, no extra step. The lobby ALSO swaps the
+// URL to /meet/[walkInId] via replaceState, so a reload lands on the recovery
+// route (/meet/[id], shared with scheduled bookings) and rejoins the same room.
 export function MeetRoot() {
-  return <MeetLobby />
+  const [init, setInit] = useState<MeetInitResponse | null>(null)
+  if (!init) return <MeetLobby onJoined={setInit} />
+  return <MeetCallRoom init={init} />
 }

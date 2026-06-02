@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
-import { useRouter } from "next/navigation"
 import type { Lang } from "@/lib/qualify/strings"
 
 // What /api/walk-in/init returns on mode === "create". Includes everything
@@ -65,18 +64,21 @@ const STRINGS = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+interface MeetLobbyProps {
+  onJoined: (init: MeetInitResponse) => void
+}
+
 // Lobby form. Visual register mirrors /qualify's language picker:
 // Fraunces italic lead, Manrope small-caps sub, hairline-underline inputs,
 // gold-dash CTA. UI language toggles on the page based on the language
 // the user picks.
-export function MeetLobby() {
+export function MeetLobby({ onJoined }: MeetLobbyProps) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [lang, setLang] = useState<Lang>("en")
   const [autonomous, setAutonomous] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   const s = STRINGS[lang]
 
@@ -113,12 +115,15 @@ export function MeetLobby() {
         throw new Error(body.error ?? `init failed (${res.status})`)
       }
       const init = (await res.json()) as MeetInitResponse
-      // Redirect to the STABLE per-walk-in URL rather than rendering the call
-      // in-page. /meet/[walkInId] resolves the SAME room via join_existing, so
-      // a reload or reopened tab rejoins the same session — in-page state would
-      // be lost on reload, stranding the prospect in a brand-new room. Keep
-      // `submitting` true: this component unmounts as the navigation lands.
-      router.push(`/meet/${init.walkInId}`)
+      // Enter the call IN-PAGE (no navigation) so the Join click flows straight
+      // into the room — no second "tap to join" step, and the user gesture is
+      // preserved for getUserMedia (mobile Safari). We still swap the URL to the
+      // stable /meet/[walkInId] via replaceState (no reload, no Next nav), so a
+      // RELOAD lands on the recovery route and rejoins the same room. That cold
+      // route keeps its own pre-join tap — a fresh page load genuinely needs it
+      // for the media-permission gesture.
+      window.history.replaceState(null, "", `/meet/${init.walkInId}`)
+      onJoined(init)
     } catch (err) {
       setError(err instanceof Error ? err.message : s.error_generic)
       setSubmitting(false)
