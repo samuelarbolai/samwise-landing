@@ -43,6 +43,7 @@ const STRINGS = {
     email_invalid: "That doesn't look like an email.",
     error_generic: "Couldn't join. Try again in a moment.",
     autonomous_label: "Run with the AI guide",
+    call_language_label: "Your call will be in",
   },
   es: {
     lead: "Tu reunión con Samuel.",
@@ -57,6 +58,7 @@ const STRINGS = {
     email_invalid: "Eso no se ve como un correo.",
     error_generic: "No pudimos entrar. Intenta en un momento.",
     autonomous_label: "Hablar con el guía de IA",
+    call_language_label: "Tu llamada será en",
   },
 } as const
 
@@ -206,6 +208,42 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
             />
             <span>{s.autonomous_label}</span>
           </label>
+
+          {autonomous && (
+            <div
+              className="meet-call-lang"
+              role="radiogroup"
+              aria-label={s.call_language_label}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                fontSize: "0.8rem",
+              }}
+            >
+              <span style={{ opacity: 0.7 }}>{s.call_language_label}</span>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={lang === "en"}
+                className={`meet-lang-btn${lang === "en" ? " is-active" : ""}`}
+                onClick={() => setLang("en")}
+                disabled={submitting}
+              >
+                {s.lang_en}
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={lang === "es"}
+                className={`meet-lang-btn${lang === "es" ? " is-active" : ""}`}
+                onClick={() => setLang("es")}
+                disabled={submitting}
+              >
+                {s.lang_es}
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"

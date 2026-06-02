@@ -400,7 +400,7 @@ export default function Chamber({
           </div>
         </div>
         <div className="rite">
-          <div className={`rite-num ${monoClass}`}>step two · 90 min</div>
+          <div className={`rite-num ${monoClass}`}>step two · 150 min</div>
           <div className="rite-title">
             Problem Clarification &amp; Belief System.
           </div>

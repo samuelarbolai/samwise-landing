@@ -48,7 +48,7 @@ samwise-landing/
 │   │                       #   StickyScene (try): one CtaBlockReveal
 │   │                       #   Teaser section in natural flow:
 │   │                       #     TeaserLine (label) → TeaserHeadline (manifesto h3)
-│   │                       #     → TeaserLine (90-min) → TeaserLine (optimization)
+│   │                       #     → TeaserLine (150-min) → TeaserLine (optimization)
 │   │                       # Collapse-to-star navbar (FourPointStar SVG, 4 links:
 │   │                       #   Us / Try / Advisors / Scientific Evidence)
 │   │                       # Root: `editorial-root letter-root tease-root` — letter-root
