@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, type FormEvent } from "react"
+import { useRouter } from "next/navigation"
 import type { Lang } from "@/lib/qualify/strings"
 
 // What /api/walk-in/init returns on mode === "create". Includes everything
@@ -64,21 +65,18 @@ const STRINGS = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-interface MeetLobbyProps {
-  onJoined: (init: MeetInitResponse) => void
-}
-
 // Lobby form. Visual register mirrors /qualify's language picker:
 // Fraunces italic lead, Manrope small-caps sub, hairline-underline inputs,
 // gold-dash CTA. UI language toggles on the page based on the language
 // the user picks.
-export function MeetLobby({ onJoined }: MeetLobbyProps) {
+export function MeetLobby() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [lang, setLang] = useState<Lang>("en")
   const [autonomous, setAutonomous] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const s = STRINGS[lang]
 
@@ -115,7 +113,12 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
         throw new Error(body.error ?? `init failed (${res.status})`)
       }
       const init = (await res.json()) as MeetInitResponse
-      onJoined(init)
+      // Redirect to the STABLE per-walk-in URL rather than rendering the call
+      // in-page. /meet/[walkInId] resolves the SAME room via join_existing, so
+      // a reload or reopened tab rejoins the same session — in-page state would
+      // be lost on reload, stranding the prospect in a brand-new room. Keep
+      // `submitting` true: this component unmounts as the navigation lands.
+      router.push(`/meet/${init.walkInId}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : s.error_generic)
       setSubmitting(false)

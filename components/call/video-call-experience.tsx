@@ -25,7 +25,17 @@ import {
   type RemoteTrackPublication,
 } from 'livekit-client'
 
-type Phase = 'connecting' | 'active' | 'peer-waiting' | 'ended' | 'error'
+type Phase =
+  | 'connecting'
+  | 'active'
+  | 'peer-waiting'
+  | 'reconnecting'
+  | 'dropped'
+  | 'ended'
+  | 'error'
+
+// Delay before the first auto-reconnect attempt after an involuntary drop.
+const RECONNECT_DELAY_MS = 2000
 
 export interface VideoCallInit {
   token: string
@@ -43,6 +53,11 @@ export interface VideoCallExperienceProps {
     connectingSub: string
     waitingLead: string
     waitingSub: string
+    reconnectingLead: string
+    reconnectingSub: string
+    droppedLead: string
+    droppedSub: string
+    rejoinLabel: string
     endedLead: string
     endedSub: string
     /** Shown centered over the tile when a remote participant is connected
@@ -94,8 +109,24 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     initRef.current = init
   }, [init])
 
+  // Reconnect state. deliberateRef tells an involuntary drop apart from a
+  // user-driven exit (End call / cap / unmount). reconnectTimerRef holds the
+  // pending auto-retry. connectRoomRef lets the listener closures + the Rejoin
+  // button re-enter connectRoom without re-binding it.
+  const deliberateRef = useRef(false)
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const connectRoomRef = useRef<() => Promise<void>>(async () => {})
+  const clearReconnectTimer = () => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current)
+      reconnectTimerRef.current = null
+    }
+  }
+
   useEffect(() => {
     return () => {
+      deliberateRef.current = true
+      clearReconnectTimer()
       const r = roomRef.current
       if (r) {
         r.removeAllListeners()
@@ -121,6 +152,8 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
   }, [phase])
 
   const endCall = useCallback(() => {
+    deliberateRef.current = true
+    clearReconnectTimer()
     const room = roomRef.current
     if (room) {
       room.removeAllListeners()
@@ -135,9 +168,19 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     onEnded?.()
   }, [onEnded])
 
-  const start = useCallback(async () => {
-    if (startingRef.current) return
-    startingRef.current = true
+  // Connect — or RECONNECT — to the SAME room using the still-valid token
+  // (3h TTL). Creates a fresh Room, wires listeners, publishes local tracks,
+  // and re-fires onRoomReady so a parent broadcaster rebinds to the new Room.
+  // On failure it strips its own listeners (so a hard error can't spin the
+  // reconnect path) and rethrows for the caller to surface.
+  const connectRoom = useCallback(async () => {
+    clearReconnectTimer()
+    // Drop any remote media + video-count left over from a previous room so a
+    // reconnect re-derives remoteHasVideo from the fresh subscriptions.
+    const sink = remoteContainerRef.current
+    if (sink) while (sink.firstChild) sink.removeChild(sink.firstChild)
+    remoteVideoCountRef.current = 0
+    setRemoteHasVideo(false)
 
     const room = new Room({ adaptiveStream: true, dynacast: true })
     roomRef.current = room
@@ -172,7 +215,19 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     const onParticipantDisconnected = () => {
       if (room.remoteParticipants.size === 0) setPhase('peer-waiting')
     }
-    const onDisconnect = () => setPhase('ended')
+    // Involuntary drop ONLY — deliberate teardowns (End call / cap / unmount)
+    // strip listeners first, so this never fires on a user-driven exit. Show a
+    // reconnecting state and auto-retry once after a short beat; if that fails,
+    // surface a manual Rejoin ('dropped'). The room is usually still alive with
+    // the peer, so reconnecting lands the user right back in the same session.
+    const onDisconnect = () => {
+      if (deliberateRef.current) return
+      setPhase('reconnecting')
+      clearReconnectTimer()
+      reconnectTimerRef.current = setTimeout(() => {
+        connectRoomRef.current().catch(() => setPhase('dropped'))
+      }, RECONNECT_DELAY_MS)
+    }
     const onData = (payload: Uint8Array) => {
       try {
         const text = new TextDecoder().decode(payload)
@@ -210,23 +265,47 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
         // user can re-trigger via mic button
       }
 
-      hardCapTimerRef.current = setTimeout(() => {
-        console.warn('[demo-call] wall-clock cap reached, ending call')
-        endCall()
-      }, hardCapMs)
-
       if (room.remoteParticipants.size > 0) setPhase('active')
       else setPhase('peer-waiting')
 
       onRoomReadyRef.current?.(room)
     } catch (err) {
-      console.error('[demo-call] connect failed', err)
-      // STRIP LISTENERS BEFORE disconnect — otherwise the Disconnected
-      // event fires and our onDisconnect handler overwrites this
-      // 'error' phase with 'ended', so the user sees "The meeting
-      // has ended" instead of the actual error (e.g. denied camera
-      // permission on mobile Safari). Real bug observed in prod.
+      // Strip BEFORE disconnect so the Disconnected event can't drive the
+      // reconnect path (or the 'ended' race) on a hard error like a denied
+      // camera permission. Rethrow — the caller decides how to surface it.
       room.removeAllListeners()
+      void room.disconnect()
+      roomRef.current = null
+      throw err
+    }
+  }, [])
+  // Stable ref to connectRoom so listener closures + the Rejoin button can
+  // re-enter it without re-binding connectRoom itself.
+  useEffect(() => {
+    connectRoomRef.current = connectRoom
+  }, [connectRoom])
+
+  // Manual Rejoin from the 'dropped' overlay — tries the same room again.
+  const rejoin = useCallback(() => {
+    setPhase('reconnecting')
+    connectRoomRef.current().catch(() => setPhase('dropped'))
+  }, [])
+
+  const start = useCallback(async () => {
+    if (startingRef.current) return
+    startingRef.current = true
+    try {
+      await connectRoom()
+      // Arm the wall-clock cap ONCE; it measures total session time from the
+      // first connect and must survive reconnects (don't re-arm per connect).
+      if (!hardCapTimerRef.current) {
+        hardCapTimerRef.current = setTimeout(() => {
+          console.warn('[demo-call] wall-clock cap reached, ending call')
+          endCall()
+        }, hardCapMs)
+      }
+    } catch (err) {
+      console.error('[demo-call] connect failed', err)
       const isMediaErr =
         err instanceof Error &&
         /Permission|NotAllowed|NotReadable|denied/i.test(
@@ -240,16 +319,10 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
             : 'Could not connect.',
       )
       setPhase('error')
-      void room.disconnect()
-      roomRef.current = null
     } finally {
       startingRef.current = false
     }
-    // `init` + `onRoomReady` are read via refs (above), so they are
-    // intentionally NOT deps — the room must connect once, not on every
-    // parent re-render. `hardCapMs` is a value-stable primitive and
-    // `endCall` is stable (memoized on the stable `onEnded`).
-  }, [hardCapMs, endCall])
+  }, [connectRoom, endCall, hardCapMs])
 
   useEffect(() => {
     void start()
@@ -300,6 +373,26 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
               <>
                 <p className="demo-call-overlay-lead">{status.waitingLead}</p>
                 <p className="demo-call-overlay-sub">{status.waitingSub}</p>
+              </>
+            )}
+            {phase === 'reconnecting' && status && (
+              <>
+                <p className="demo-call-overlay-lead">{status.reconnectingLead}</p>
+                <p className="demo-call-overlay-sub">{status.reconnectingSub}</p>
+              </>
+            )}
+            {phase === 'dropped' && status && (
+              <>
+                <p className="demo-call-overlay-lead">{status.droppedLead}</p>
+                <p className="demo-call-overlay-sub">{status.droppedSub}</p>
+                <button
+                  type="button"
+                  onClick={rejoin}
+                  className="demo-call-control-btn"
+                  style={{ pointerEvents: 'auto', marginTop: '0.75rem' }}
+                >
+                  {status.rejoinLabel}
+                </button>
               </>
             )}
             {phase === 'ended' && status && (
