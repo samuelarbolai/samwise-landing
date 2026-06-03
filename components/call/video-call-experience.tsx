@@ -211,9 +211,16 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
         setRemoteHasVideo(remoteVideoCountRef.current > 0)
       }
     }
-    const onParticipantConnected = () => setPhase('active')
+    // Count only HUMAN remotes for the call's presence state — a silent scribe
+    // (or any agent) joins as a participant but is NOT the person you're
+    // meeting, so it must not flip "waiting" → "active" or hide "peer left".
+    const hasHumanPeer = () =>
+      [...room.remoteParticipants.values()].some((p) => !p.isAgent)
+    const onParticipantConnected = () => {
+      if (hasHumanPeer()) setPhase('active')
+    }
     const onParticipantDisconnected = () => {
-      if (room.remoteParticipants.size === 0) setPhase('peer-waiting')
+      if (!hasHumanPeer()) setPhase('peer-waiting')
     }
     // Involuntary drop ONLY — deliberate teardowns (End call / cap / unmount)
     // strip listeners first, so this never fires on a user-driven exit. Show a
@@ -265,7 +272,7 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
         // user can re-trigger via mic button
       }
 
-      if (room.remoteParticipants.size > 0) setPhase('active')
+      if (hasHumanPeer()) setPhase('active')
       else setPhase('peer-waiting')
 
       onRoomReadyRef.current?.(room)
@@ -422,25 +429,6 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
             )}
           </div>
         )}
-
-        {/* TEMP black-tile diagnostic — remove once resolved. If you don't see
-            this green line at all, the new build isn't live. */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 4,
-            left: 4,
-            zIndex: 5,
-            font: '10px monospace',
-            color: '#39ff14',
-            background: 'rgba(0,0,0,0.55)',
-            padding: '2px 5px',
-            borderRadius: 3,
-            pointerEvents: 'none',
-          }}
-        >
-          {`phase=${phase} · remoteVideo=${String(remoteHasVideo)} · label=${status?.audioOnlyLabel ? 'yes' : 'no'}`}
-        </div>
       </div>
 
       {/* Controls live OUTSIDE the tile, on the page surface — small

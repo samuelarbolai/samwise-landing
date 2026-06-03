@@ -15,6 +15,7 @@ import {
 import "@/components/call/call.css"
 import type { MeetInitResponse } from "./lobby"
 import { RitualStory, type StoryStage } from "./story/ritual-story"
+import { DemoVoiceRoom } from "./demo-voice-room"
 
 // Mirrors the demo-call user-side call-room: video tile (main) +
 // VariablesPanel (right rail on desktop, below on mobile). The walk-in
@@ -141,6 +142,13 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
       ? "Un momento."
       : "One moment."
     : s.waiting_sub
+
+  // Autonomous (AI-guide) call → voice-only surface, no video tile (mirrors
+  // how /qualify handles its no-video agent). Human calls fall through to the
+  // video layout below.
+  if (autonomous) {
+    return <DemoVoiceRoom init={init} />
+  }
 
   return (
     <div className="demo-call-room" lang={lang}>
