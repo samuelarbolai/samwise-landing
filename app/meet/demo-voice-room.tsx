@@ -266,9 +266,19 @@ export function DemoVoiceRoom({ init }: { init: MeetInitResponse }) {
           : s.voice_mic_idle_label
 
   return (
-    <div className="qualify-voice" lang={lang}>
-      {/* Hidden audio sink for the agent's TTS — must exist before startAudio(). */}
-      <audio ref={audioSinkRef} autoPlay playsInline style={{ display: "none" }} />
+    <main className="qualify-root" lang={lang}>
+      <header className="qualify-header">
+        <a href="/" className="qualify-brand" aria-label="Samwise">
+          Samwise
+          <span className="qualify-brand-star" aria-hidden="true">
+            ✦
+          </span>
+        </a>
+      </header>
+      <section className="qualify-stage">
+        <div className="qualify-voice">
+          {/* Hidden audio sink for the agent's TTS — must exist before startAudio(). */}
+          <audio ref={audioSinkRef} autoPlay playsInline style={{ display: "none" }} />
 
       {/* Story visual the agent drives via showVisual. Renders nothing until the
           first one fires (~Phase 5a); leads the column above the notes. */}
@@ -306,8 +316,10 @@ export function DemoVoiceRoom({ init }: { init: MeetInitResponse }) {
         )}
       </div>
 
-      {/* Notes — fills live as the agent commits user-visible values. */}
-      <VariablesPanel lang={lang} variables={variables} />
-    </div>
+          {/* Notes — fills live as the agent commits user-visible values. */}
+          <VariablesPanel lang={lang} variables={variables} />
+        </div>
+      </section>
+    </main>
   )
 }
