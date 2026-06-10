@@ -112,17 +112,24 @@ export function ScheduledMeetClient({ id }: { id: string }) {
       prev.kind === "ready" ? { kind: "joining", init: prev.init } : prev,
     )
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      })
-      stream.getTracks().forEach((t) => t.stop())
+      // Mic is required — the call cannot run without it.
+      const mic = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mic.getTracks().forEach((t) => t.stop())
+      // Camera best-effort, warmed in the same gesture. A webcam-less device
+      // (or a camera "no") must NOT block the join.
+      try {
+        const cam = await navigator.mediaDevices.getUserMedia({ video: true })
+        cam.getTracks().forEach((t) => t.stop())
+      } catch {
+        // ignore — camera optional
+      }
       setLoad((prev) =>
         prev.kind === "joining"
           ? { kind: "in_call", init: prev.init }
           : prev,
       )
     } catch {
+      // Only a mic failure lands here → genuine blocker.
       setLoad((prev) =>
         prev.kind === "joining"
           ? { kind: "permission_denied", init: prev.init }

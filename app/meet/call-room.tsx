@@ -50,6 +50,8 @@ const STRINGS = {
     ended_lead: "The meeting has ended.",
     ended_sub: "Thank you.",
     notes_label: "What he's writing down",
+    tap_to_enable_lead: "Tap to enable sound",
+    tap_to_enable_sub: "Your phone paused the call's audio.",
   },
   es: {
     connecting_lead: "Conectando…",
@@ -64,6 +66,8 @@ const STRINGS = {
     ended_lead: "La reunión terminó.",
     ended_sub: "Gracias.",
     notes_label: "Lo que está anotando",
+    tap_to_enable_lead: "Toca para activar el sonido",
+    tap_to_enable_sub: "Tu teléfono pausó el audio de la llamada.",
   },
 } as const
 
@@ -177,6 +181,8 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
                 : "Your Samwise guide"
               : init.booking.therapistName,
             audioOnlySub: lang === "es" ? "En vivo · por voz" : "Live · voice",
+            tapToEnableLabel: s.tap_to_enable_lead,
+            tapToEnableSub: s.tap_to_enable_sub,
           }}
           onDataMessage={onDataMessage}
         />

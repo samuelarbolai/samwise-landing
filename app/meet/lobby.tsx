@@ -44,6 +44,7 @@ const STRINGS = {
     error_generic: "Couldn't join. Try again in a moment.",
     autonomous_label: "Run with the AI guide",
     call_language_label: "Your call will be in",
+    media_blocked: "We need your microphone. Allow access in your browser, then tap Join again.",
   },
   es: {
     lead: "Tu reunión con Samuel.",
@@ -59,6 +60,7 @@ const STRINGS = {
     error_generic: "No pudimos entrar. Intenta en un momento.",
     autonomous_label: "Hablar con el guía de IA",
     call_language_label: "Tu llamada será en",
+    media_blocked: "Necesitamos tu micrófono. Permite el acceso en tu navegador y toca Entrar de nuevo.",
   },
 } as const
 
@@ -97,6 +99,24 @@ export function MeetLobby({ onJoined }: MeetLobbyProps) {
     setSubmitting(true)
     setError(null)
     try {
+            // Warm permissions INSIDE this tap — mobile Safari only honors
+      // getUserMedia under a fresh user gesture. Mic is required; camera is
+      // probed separately and optionally (a webcam-less device still joins).
+      // Stop the probe tracks immediately; the call room re-acquires its own.
+      try {
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true })
+        mic.getTracks().forEach((t) => t.stop())
+      } catch {
+        setError(s.media_blocked)
+        setSubmitting(false)
+        return
+      }
+      try {
+        const cam = await navigator.mediaDevices.getUserMedia({ video: true })
+        cam.getTracks().forEach((t) => t.stop())
+      } catch {
+        // Camera optional — continue audio-only.
+      }
       const res = await fetch(getInitUrl(), {
         method: "POST",
         headers: { "Content-Type": "application/json" },

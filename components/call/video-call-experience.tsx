@@ -65,6 +65,11 @@ export interface VideoCallExperienceProps {
      * then the empty tile is left as-is. */
     audioOnlyLabel?: string
     audioOnlySub?: string
+    /** Tappable overlay shown when the browser is blocking audio playback
+     * (iOS autoplay / post-background suspension). Tapping re-runs
+     * room.startAudio() from inside the gesture. */
+    tapToEnableLabel?: string
+    tapToEnableSub?: string
   }
   onDataMessage?: (msg: unknown) => void
   onRoomReady?: (room: Room) => void
@@ -83,6 +88,13 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
   // Whether the connected remote publishes video. Stays false for an
   // audio-only agent → we render an intentional voice panel, not a black tile.
   const [remoteHasVideo, setRemoteHasVideo] = useState(false)
+  // iOS Safari blocks audio autoplay until a user gesture, AND suspends
+  // playback when the tab is backgrounded / the phone locks. When that
+  // happens `room.canPlaybackAudio` flips false; we surface a tap-to-enable
+  // affordance that re-runs startAudio() from inside the tap (the only thing
+  // iOS accepts). Covers both the initial autoplay block and post-background
+  // resume — the inbound twin of the mic auto-mute bug.
+  const [audioBlocked, setAudioBlocked] = useState(false)
 
   const roomRef = useRef<Room | null>(null)
   const localVideoRef = useRef<HTMLVideoElement | null>(null)
@@ -137,19 +149,12 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
     }
   }, [])
 
-  useEffect(() => {
-    if (phase !== 'active' && phase !== 'peer-waiting') return
-    const onVis = () => {
-      if (document.visibilityState === 'hidden') {
-        const room = roomRef.current
-        if (!room) return
-        void room.localParticipant.setMicrophoneEnabled(false)
-        setMicOn(false)
-      }
-    }
-    document.addEventListener('visibilitychange', onVis)
-    return () => document.removeEventListener('visibilitychange', onVis)
-  }, [phase])
+  // NOTE: we deliberately do NOT auto-mute on tab-hidden. The prior handler
+  // muted on `visibilitychange → hidden` with no restore on `visible`, so any
+  // backgrounding — switching windows, or on mobile locking the screen /
+  // switching apps — silently killed the mic for the rest of the call. On a
+  // 50–70 min demo that meant audio "lost in the middle". The mic stays under
+  // explicit user control via the Mute button only.
 
   const endCall = useCallback(() => {
     deliberateRef.current = true
@@ -245,20 +250,40 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
       }
     }
 
+    const onAudioPlaybackChanged = () => setAudioBlocked(!room.canPlaybackAudio)
+
     room.on(RoomEvent.TrackSubscribed, onTrackSubscribed)
     room.on(RoomEvent.TrackUnsubscribed, onTrackUnsubscribed)
     room.on(RoomEvent.ParticipantConnected, onParticipantConnected)
     room.on(RoomEvent.ParticipantDisconnected, onParticipantDisconnected)
     room.on(RoomEvent.Disconnected, onDisconnect)
     room.on(RoomEvent.DataReceived, onData)
+    room.on(RoomEvent.AudioPlaybackStatusChanged, onAudioPlaybackChanged)
 
     try {
       await room.connect(initRef.current.wsUrl, initRef.current.token)
 
+      // Mic is required; camera is best-effort. Requesting both together
+      // means a missing/denied camera (webcam-less desktop, camera in use)
+      // fails BOTH and kills the voice call. Acquire audio first, then try
+      // video separately and tolerate its failure → call still works audio-only.
       const localTracks: LocalTrack[] = await createLocalTracks({
         audio: true,
-        video: true,
+        video: false,
       })
+      try {
+        const [videoTrack] = await createLocalTracks({
+          audio: false,
+          video: true,
+        })
+        if (videoTrack) {
+          localTracks.push(videoTrack)
+          setCamOn(true)
+        }
+      } catch {
+        // No camera / camera denied → audio-only. Reflect it in the control.
+        setCamOn(false)
+      }
       await Promise.all(
         localTracks.map((t) => room.localParticipant.publishTrack(t)),
       )
@@ -269,8 +294,10 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
       try {
         await room.startAudio()
       } catch {
-        // user can re-trigger via mic button
+        // Autoplay still blocked (the live gesture was lost across the
+        // connect await) — the tap-to-enable affordance recovers it.
       }
+      setAudioBlocked(!room.canPlaybackAudio)
 
       if (hasHumanPeer()) setPhase('active')
       else setPhase('peer-waiting')
@@ -313,18 +340,24 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
       }
     } catch (err) {
       console.error('[demo-call] connect failed', err)
-      const isMediaErr =
-        err instanceof Error &&
-        /Permission|NotAllowed|NotReadable|denied/i.test(
-          `${err.name} ${err.message}`,
-        )
-      setErrorMsg(
-        isMediaErr
-          ? 'We couldn\'t access your camera or microphone. Grant permission and reload the page.'
-          : err instanceof Error
-            ? err.message
-            : 'Could not connect.',
-      )
+      const sig = err instanceof Error ? `${err.name} ${err.message}` : ''
+      let copy: string
+      if (/NotAllowed|Permission|denied/i.test(sig)) {
+        // The browser has a stored "no" for the mic — reloading will NOT
+        // re-prompt. Point the user at the per-site permission UI instead.
+        copy =
+          'Your microphone is blocked. Open this site\u2019s permissions — ' +
+          'the lock/camera icon in the address bar (on iPhone, tap ' +
+          '\u201c\u1d00A\u201d \u2192 Website Settings) — set Microphone to ' +
+          'Allow, then reload.'
+      } else if (/NotFound|NotReadable|Overconstrained|Devices/i.test(sig)) {
+        copy =
+          'We couldn\u2019t reach a microphone. Check that one is connected ' +
+          'and not in use by another app, then reload.'
+      } else {
+        copy = err instanceof Error ? err.message : 'Could not connect.'
+      }
+      setErrorMsg(copy)
       setPhase('error')
     } finally {
       startingRef.current = false
@@ -334,6 +367,20 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
   useEffect(() => {
     void start()
   }, [start])
+
+  // Re-run the autoplay unblock from inside a real user tap. iOS only honours
+  // startAudio() within a gesture, so this is wired to a visible affordance,
+  // not called automatically. Clears the affordance once playback resumes.
+  const enableAudio = useCallback(async () => {
+    const room = roomRef.current
+    if (!room) return
+    try {
+      await room.startAudio()
+    } catch {
+      // Still blocked — the affordance stays until playback actually resumes.
+    }
+    setAudioBlocked(!room.canPlaybackAudio)
+  }, [])
 
   const toggleMic = useCallback(async () => {
     const room = roomRef.current
@@ -428,6 +475,26 @@ export function VideoCallExperience(props: VideoCallExperienceProps) {
               <p className="demo-call-overlay-sub">{status.audioOnlySub}</p>
             )}
           </div>
+        )}
+
+        {/* iOS audio recovery: the whole tile becomes a tap target when the
+            browser is blocking playback (autoplay block, or suspension after
+            backgrounding / screen-lock). One tap re-runs startAudio(). */}
+        {phase === 'active' && audioBlocked && (
+          <button
+            type="button"
+            onClick={() => void enableAudio()}
+            className="demo-call-video-overlay demo-call-audio-unblock"
+            style={{ pointerEvents: 'auto', cursor: 'pointer', background: 'rgba(0,0,0,0.45)', border: 0 }}
+            aria-live="polite"
+          >
+            <span className="demo-call-overlay-lead">
+              {status?.tapToEnableLabel ?? 'Tap to enable sound'}
+            </span>
+            {status?.tapToEnableSub && (
+              <span className="demo-call-overlay-sub">{status.tapToEnableSub}</span>
+            )}
+          </button>
         )}
       </div>
 
