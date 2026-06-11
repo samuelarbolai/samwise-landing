@@ -5,7 +5,7 @@ import { z } from "zod"
 // these. When you change one, change both.
 
 // ─── SetVariablesArgsSchema ────────────────────────────────────────────────
-// Input schema for the agent's `setVariables` tool. The seven user-facing
+// Input schema for the agent's `setVariables` tool. The user-facing
 // variables the agent commits as live notes during the conversation.
 //
 // Mirrors the inline schema in samwise-backend/ritual-agent/src/flows/
@@ -15,6 +15,10 @@ import { z } from "zod"
 //
 // All fields optional in any single call — the agent commits only the
 // variables it has a verbatim user quote for in that turn.
+//
+// symbolic_anchor_description, alternatives_tried, why_alternatives_failed
+// moved OUT of the Fit Assessment and INTO the Demo Call (captured live in
+// the demo's Phase 1.5). The qualifying experience no longer touches them.
 export const SetVariablesArgsSchema = z.object({
   behaviour_to_change: z
     .string()
@@ -34,24 +38,6 @@ export const SetVariablesArgsSchema = z.object({
     .string()
     .optional()
     .describe("Where the user is in life right now — work, family, what's loud."),
-  symbolic_anchor_description: z
-    .string()
-    .optional()
-    .describe(
-      "If the user draws strength from a tradition, philosophy, religion, or framework, their verbatim description of it. Skip if they don't have one.",
-    ),
-  alternatives_tried: z
-    .string()
-    .optional()
-    .describe(
-      "What the user has already tried, on their own or with help. 'none' if they haven't tried anything.",
-    ),
-  why_alternatives_failed: z
-    .string()
-    .optional()
-    .describe(
-      "For each thing they tried, what was missing. Empty if alternatives_tried is 'none'.",
-    ),
 })
 
 export type SetVariablesArgs = z.infer<typeof SetVariablesArgsSchema>
@@ -68,7 +54,7 @@ export const EndCallArgsSchema = z.object({})
 // extractQualification.
 //
 // Self-contained — no longer extends a separate GateDecisionSchema. The
-// gate verdicts and categorical inferences live here alongside the seven
+// gate verdicts and categorical inferences live here alongside the
 // user-facing fields (which echo SetVariablesArgsSchema but are stored
 // post-extraction, not committed live).
 export const QualificationPayloadSchema = z.object({
@@ -85,7 +71,7 @@ export const QualificationPayloadSchema = z.object({
   behaviour_clarity: z.enum(["clear", "vague", "unknown"]),
   motivation_clarity: z.enum(["clear", "vague", "unknown"]),
 
-  // User-facing variables — same seven fields as SetVariablesArgsSchema.
+  // User-facing variables — same fields as SetVariablesArgsSchema.
   behaviour_to_change: z.string().optional(),
   // Full grounded incident description (WHEN/WHERE/ACTIVITY/ACTION as a
   // noun-phrase). Used as Phase 5b Step 1's moment-anchor in the Demo Call
@@ -95,13 +81,9 @@ export const QualificationPayloadSchema = z.object({
   core_motivation: z.string().optional(),
   problem_duration_self_reported: z.string().optional(),
   life_stage_context: z.string().optional(),
-  symbolic_anchor_type: z
-    .enum(["religious", "philosophical", "esoteric", "hyper-rational", "none", "unknown"])
-    .optional(),
-  symbolic_anchor_description: z.string().optional(),
-  alternatives_tried: z.string().optional(),
-  why_alternatives_failed: z.string().optional(),
-  alternatives_exhaustion_level: z.enum(["low", "medium", "high", "unknown"]).optional(),
+  // symbolic_anchor_*, alternatives_tried, why_alternatives_failed and
+  // alternatives_exhaustion_level moved to the Demo Call (captured live in
+  // Phase 1.5) — no longer extracted by the Fit Assessment.
 })
 
 export type QualificationPayload = z.infer<typeof QualificationPayloadSchema>

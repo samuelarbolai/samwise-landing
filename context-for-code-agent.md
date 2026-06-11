@@ -39,6 +39,21 @@ samwise-landing/
 ├── app/
 │   ├── globals.css         # Tailwind v4 base styles
 │   ├── layout.tsx          # Root layout: Geist font, Vercel Analytics in prod
+│   │                       # + site metadata (title/description/openGraph/twitter,
+│   │                       #   metadataBase https://samwise.life) — replaced the v0 default
+│   ├── opengraph-image.tsx # Generated 1200×630 link-preview poster (next/og ImageResponse):
+│   │                       #   RESTRAINED — just the brand mark, NO tagline (a tagline speaking
+│   │                       #   to whoever the link is shared with reads as needy/pushy; the
+│   │                       #   landing voice is held, not gated). Gold Eärendil star (the nav
+│   │                       #   .nav-star sparkle, thin concave path) top-center · "Samwise" in
+│   │                       #   FRAUNCES ITALIC 400 opsz 36 (the .brand wordmark, NOT upright) as
+│   │                       #   the whole statement · Manrope SAMWISE.LIFE at the foot as a quiet
+│   │                       #   colophon (not a CTA). Fonts fetched from Google Fonts css2 at
+│   │                       #   runtime with pinned axes; star is inline SVG (Satori has no glyph).
+│   │                       #   Layout uses justify-content:space-between + padding (NOT
+│   │                       #   justify-content:center — Satori main-axis centering was unreliable
+│   │                       #   and rendered top-weighted). Verify by reading PNG bytes to a
+│   │                       #   canvas, not preview screenshots (DPR + stale <img> cache mislead).
 │   ├── page.tsx            # CANONICAL — single-CTA + teaser structure:
 │   │                       #   FixedScene (hero, interp+sigs)
 │   │                       #   PinFadeScene (voice/lede)

@@ -86,13 +86,7 @@ These are the variables you write to your notes. They are NOT a question list �
 
 4. life_stage_context — where they are right now in their life: work / family / what's loud. Often emerges incidentally — "I just had a kid" or "I'm between jobs" is already telling you.
 
-5. symbolic_anchor_description — if they draw strength from a tradition, philosophy, religion, esoteric practice, or rationalist framework, capture THEIR description of it verbatim. If they don't have one, don't commit anything here. Don't probe deeply; one organic question is fine ("Is there anything you lean on for strength — a tradition, a philosophy, anything?").
-
-6. alternatives_tried — what they've already tried, on their own or with help. Watch for "I haven't tried anything else" / "I just want to do this with Samwise" — that IS a real answer ("none"), commit it.
-
-7. why_alternatives_failed — for each thing they tried, what was MISSING. If alternatives_tried is "none", leave this empty.
-
-You do NOT commit: gate verdicts, exhaustion levels, anchor categorizations — those are inferred by the extraction system at end of call. Just have the conversation and note the verbatim quotes.
+You do NOT commit: gate verdicts — those are inferred by the extraction system at end of call. Just have the conversation and note the verbatim quotes.
 </variables>
 
 <behaviour-grounding>
@@ -288,13 +282,7 @@ Estas son las variables que escribes en tus notas. NO son una lista de preguntas
 
 4. life_stage_context — dónde está ahora en su vida: trabajo / familia / qué hace ruido. A menudo emerge de paso — "acabo de tener un hijo" o "estoy entre trabajos" ya te lo está diciendo.
 
-5. symbolic_anchor_description — si saca fuerza de una tradición, filosofía, religión, práctica esotérica, o marco hiper-racionalista, captura SU descripción verbatim. Si no tiene una, no comprometas nada aquí. No escarbes profundo; una pregunta orgánica basta ("¿Hay algo en lo que te apoyas para sacar fuerza — una tradición, una filosofía, cualquier cosa?").
-
-6. alternatives_tried — qué ha intentado, solo o con ayuda. Atento a "no he probado nada más" / "solo quiero hacer esto con Samwise" — eso ES una respuesta real ("ninguno"), comprométela.
-
-7. why_alternatives_failed — para cada cosa intentada, qué le FALTÓ. Si alternatives_tried es "ninguno", déjalo vacío.
-
-NO comprometes: veredictos de las puertas, niveles de agotamiento, categorizaciones del anchor — esos los infiere el sistema de extracción al final. Solo ten la conversación y anota las citas verbatim.
+NO comprometes: veredictos de las puertas — esos los infiere el sistema de extracción al final. Solo ten la conversación y anota las citas verbatim.
 </variables>
 
 <behaviour-grounding>

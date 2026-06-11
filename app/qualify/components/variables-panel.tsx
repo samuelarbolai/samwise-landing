@@ -1,15 +1,19 @@
 "use client"
 import { STRINGS, type Lang } from "@/lib/qualify/strings"
 
-// The seven user-facing variables the agent commits via setVariables.
-// Mirrors the <variables> block in the qualification prompt and the
-// SetVariablesArgsSchema in samwise-backend/ritual-agent.
+// The user-facing variables that can appear on the prospect's notes screen.
+// This panel is SHARED: the Fit Assessment (/qualify) AND the Demo Call
+// (/meet) both render it. The Fit Assessment now commits only the first four
+// (symbolic_anchor_description, alternatives_tried, why_alternatives_failed
+// moved to the Demo Call, captured live in its Phase 1.5) — but the Demo
+// still broadcasts all seven, so the type, display order and labels keep the
+// full set. Cards render only when their value is non-empty, so /qualify
+// naturally shows four and the Demo shows seven from the same component.
 //
-// The four LLM-inferred fields (decision_taken, behaviour_clarity,
-// motivation_clarity, alternatives_exhaustion_level, symbolic_anchor_type)
-// are deliberately NOT exposed here — the user shouldn't see judgmental
-// "behaviour_clarity: vague" cards during their call. Those live only
-// in Firestore for the rep's view in /copilot.
+// The LLM-inferred gate fields (decision_taken, behaviour_clarity,
+// motivation_clarity) are deliberately NOT exposed here — the user
+// shouldn't see judgmental "behaviour_clarity: vague" cards during their
+// call. Those live only in Firestore for the rep's view in /copilot.
 export type VariableKey =
   | "behaviour_to_change"
   | "core_motivation"
@@ -23,8 +27,9 @@ export type VariablesState = Partial<Record<VariableKey, string>>
 
 // Display order. Roughly follows the order facts surface in a typical
 // conversation: what + why first, then duration + life stage, then anchor,
-// then alternatives. Cards only render when their value is non-empty,
-// so the panel grows from top-down as the agent commits notes.
+// then alternatives. Cards only render when their value is non-empty, so the
+// panel grows from top-down as the agent commits notes. (The last three only
+// populate on the Demo Call; the Fit Assessment leaves them empty.)
 const DISPLAY_ORDER: VariableKey[] = [
   "behaviour_to_change",
   "core_motivation",

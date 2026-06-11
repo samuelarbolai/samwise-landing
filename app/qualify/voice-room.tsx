@@ -25,9 +25,6 @@ const VALID_VARIABLE_KEYS: Set<string> = new Set<VariableKey>([
   "core_motivation",
   "problem_duration_self_reported",
   "life_stage_context",
-  "symbolic_anchor_description",
-  "alternatives_tried",
-  "why_alternatives_failed",
 ])
 
 type MicState = "idle" | "armed" | "speaking-hold" | "speaking-toggle"

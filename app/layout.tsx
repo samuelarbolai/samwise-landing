@@ -6,12 +6,27 @@ import './globals.css'
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
+const SITE_DESCRIPTION =
+  'A solution that stays with you until you break the loop of self-destruction — for the toughest, most insidious behavioural challenges.'
+
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  metadataBase: new URL('https://samwise.life'),
+  title: 'Samwise',
+  description: SITE_DESCRIPTION,
   icons: {
     icon: { url: '/icon.svg', type: 'image/svg+xml' },
+  },
+  openGraph: {
+    title: 'Samwise',
+    description: SITE_DESCRIPTION,
+    url: 'https://samwise.life',
+    siteName: 'Samwise',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Samwise',
+    description: SITE_DESCRIPTION,
   },
 }
 
