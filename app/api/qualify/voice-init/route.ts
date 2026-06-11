@@ -22,6 +22,11 @@ function randomId(prefix: string): string {
   return `${prefix}-${hex}`
 }
 
+function samwiseAppBase(): string {
+  const base = process.env.NEXT_PUBLIC_SAMWISE_APP_URL
+  return base ? base.replace(/\/$/, "") : "http://localhost:3000"
+}
+
 export async function POST(req: Request) {
   const { language, name, email } = (await req.json()) as {
     language: "es" | "en"
@@ -57,6 +62,17 @@ export async function POST(req: Request) {
   })
   const token = await at.toJwt()
 
+  // Fire the "qualifying session started" notification to Samuel in
+  // parallel with the agent dispatch. Server-to-server; best-effort —
+  // a notify failure must never block the prospect's session.
+  const notifyPromise = fetch(`${samwiseAppBase()}/api/notify/qualify-start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: prospect_name, email: prospect_email, language }),
+  }).catch((err) => {
+    console.error("[voice-init] qualify-start notify failed", err)
+  })
+
   // Dispatch the agent into this room with our metadata payload.
   const dispatch = new AgentDispatchClient(
     LIVEKIT_URL.replace(/^wss?:\/\//, "https://"),
@@ -72,6 +88,10 @@ export async function POST(req: Request) {
       prospect_email,
     }),
   })
+
+  // Ensure the notify request is flushed before the serverless function
+  // returns (un-awaited fetches can be dropped on Vercel). Already caught.
+  await notifyPromise
 
   return Response.json({
     token,
