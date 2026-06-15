@@ -57,7 +57,7 @@ export function RitualStory({
 
   const beat =
     stage === "promise" ? (
-      <PromiseBeat copy={copy} variables={variables} reduced={!!reduced} />
+      <PromiseBeat copy={copy} variables={variables} />
     ) : stage === "loop" ? (
       <DailyLoop copy={copy} reduced={!!reduced} />
     ) : stage === "mechanism" ? (
