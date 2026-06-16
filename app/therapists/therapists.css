@@ -1,0 +1,581 @@
+/* /therapists — recruiting behavioural-change experts. Self-contained,
+   scoped under .therapists-root. Editorial register identical to canonical
+   (gallery white, Fraunces + Manrope, one warm-gold accent, hairline rules,
+   generous space). Also provides the --bg/--ink/--ink-soft/--ink-mute/--rule/
+   --gold token context that the imported story beats (story.css) depend on. */
+
+.therapists-root {
+  /* Brand tokens — identical to canonical .editorial-root / .qualify-root. */
+  --bg: #ffffff;
+  --ink: #000000;
+  --ink-soft: #1a1a1a;
+  --ink-mute: #555555;
+  --rule: #e0e0e0;
+  --accent: #1f3023; /* deep forest */
+  --gold: #d4a85a; /* the one chromatic note */
+
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ── Header / wordmark ── */
+.t-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--rule);
+}
+.t-brand {
+  position: relative;
+  display: inline-block;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+  font-variation-settings: "opsz" 36, "SOFT" 80;
+}
+.t-brand-star {
+  position: absolute;
+  top: -4px;
+  right: -10px;
+  color: var(--gold);
+  line-height: 0;
+}
+
+/* ── Sections — generous vertical rhythm ── */
+.t-section {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(80px, 12vw, 150px) 32px;
+  border-bottom: 1px solid var(--rule);
+}
+.t-section--narrow {
+  max-width: 760px;
+}
+
+.t-eyebrow {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 26px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.t-eyebrow::before {
+  content: "";
+  width: 32px;
+  height: 1px;
+  background: var(--accent);
+}
+
+/* ── Hero ── */
+.t-hero {
+  padding-top: clamp(96px, 14vw, 170px);
+}
+.t-h1 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(44px, 7vw, 88px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  max-width: 16ch;
+  margin: 0;
+}
+.t-h1 em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--accent);
+  font-variation-settings: "opsz" 144, "SOFT" 100;
+}
+.t-lede {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(20px, 2.6vw, 26px);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 34ch;
+  margin: 36px 0 0;
+}
+
+/* ── Headings + prose ── */
+.t-h2 {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 72, "SOFT" 60;
+  max-width: 18ch;
+  margin: 0 0 28px;
+}
+.t-body {
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 0 0 18px;
+}
+.t-quote,
+.t-mantra {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(20px, 2.8vw, 26px);
+  line-height: 1.4;
+  color: var(--ink);
+  max-width: 30ch;
+  margin: 24px 0;
+}
+.t-mantra {
+  padding-left: 18px;
+  border-left: 1px solid var(--gold);
+  color: var(--ink);
+}
+
+.t-list {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.t-list-item {
+  position: relative;
+  padding-left: 22px;
+  font-family: "Manrope", sans-serif;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+.t-list-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 10px;
+  height: 1px;
+  background: var(--gold);
+}
+
+/* Centers an imported story beat in a readable measure. */
+.t-beat {
+  max-width: 30em;
+  margin: 36px 0 8px;
+}
+
+/* ── Sarah's daily calls ── */
+.t-calls {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.t-call {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.t-call:last-child {
+  border-bottom: none;
+}
+.t-call-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 19px;
+  color: var(--ink);
+}
+.t-call-time {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.t-call-body {
+  font-family: "Manrope", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+/* ── Seven steps ── */
+.t-steps {
+  list-style: none;
+  margin: 24px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.t-step {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.t-step:last-child {
+  border-bottom: none;
+}
+.t-step-num {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--gold);
+  min-width: 1.8em;
+}
+.t-step-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+}
+.t-steps--compact .t-step {
+  padding: 8px 0;
+}
+
+/* ── Collaboration ── */
+.t-collab-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 40px;
+}
+.t-collab-head {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+.t-collab-body {
+  font-family: "Manrope", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* ── Offer ── */
+.t-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.t-offer-line {
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 0;
+}
+.t-offer-caveat {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-mute);
+  max-width: 56ch;
+  margin: 0;
+}
+.t-offer-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 24px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.t-offer-share {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(40px, 7vw, 64px);
+  line-height: 1;
+  color: var(--gold);
+}
+.t-offer-share-note {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.t-offer-math {
+  font-family: "Manrope", sans-serif;
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+
+/* ── CTA — gold hairline dashes collapse on hover, gold underline expands ── */
+.t-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  padding: 14px 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+.t-cta::before,
+.t-cta::after {
+  content: "";
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.35s ease;
+}
+.t-cta:hover::before,
+.t-cta:hover::after {
+  width: 0;
+}
+.t-cta-text {
+  position: relative;
+  display: inline-block;
+}
+.t-cta-text::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.35s ease;
+}
+.t-cta:hover .t-cta-text::after {
+  width: 100%;
+}
+.t-cta--mini {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+/* ── Personalization capture ── */
+.t-cap {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+.t-cap-field {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.t-cap-label,
+.t-cap-section {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 14px;
+  padding: 0;
+}
+.t-cap-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.t-cap-path {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease;
+}
+.t-cap-path.is-on {
+  border-color: var(--gold);
+  color: var(--ink);
+}
+.t-cap-path input {
+  accent-color: var(--gold);
+}
+.t-cap-edits {
+  margin-top: 14px;
+}
+.t-cap-hint {
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mute);
+  margin: 0 0 6px;
+}
+.t-cap-steps-ref {
+  margin: 0 0 12px;
+  padding-left: 1.2em;
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-mute);
+}
+
+.t-cap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px 28px;
+}
+.t-cap-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.t-cap-input--area {
+  margin-top: 4px;
+}
+.t-cap-input-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-mute);
+}
+.t-cap-input input {
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 8px 0;
+  outline: none;
+  transition: border-color 0.25s ease;
+}
+.t-cap-input input:focus {
+  border-bottom-color: var(--gold);
+}
+.t-cap-area {
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 12px 14px;
+  outline: none;
+  min-height: 84px;
+  resize: vertical;
+  width: 100%;
+  transition: border-color 0.25s ease;
+}
+.t-cap-area:focus {
+  border-color: var(--gold);
+}
+.t-cap-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-family: "Manrope", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 56ch;
+}
+.t-cap-check input {
+  margin-top: 3px;
+  accent-color: var(--gold);
+}
+.t-cap-out {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.t-cap-summary {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 20px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+.t-cap-or {
+  margin: 4px 0 0;
+}
+
+/* ── Footer ── */
+.t-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 48px 32px 64px;
+}
+.t-foot-mark {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+}
+.t-foot-colophon {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ink-mute);
+}
+
+/* ── Mobile ── */
+@media (max-width: 720px) {
+  .t-section {
+    padding: clamp(64px, 16vw, 90px) 20px;
+  }
+  .t-header {
+    padding: 20px;
+  }
+  .t-collab-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .t-cap-grid {
+    grid-template-columns: 1fr;
+  }
+  .t-beat {
+    max-width: 100%;
+  }
+  .t-foot {
+    padding: 40px 20px 56px;
+  }
+}

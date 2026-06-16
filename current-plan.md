@@ -1,259 +1,275 @@
-# current-plan.md — /meet fade-in-place + samwise-app editorial deepening (2026-05-31)
+# current-plan.md — /therapists visual journey (recruiting behavioural-change experts) (2026-06-15)
 
-> Neurotic-implementer rules in force: ask before deducing; prospect-facing copy needs
-> sign-off; never commit unless asked. Two repos: samwise-landing + samwise-app.
+> Neurotic-implementer rules in force: ask before deducing; therapist-facing copy needs
+> sign-off; never commit unless asked. ONE repo: samwise-landing.
+>
+> **Supersedes** the prior plan (/meet fade-in-place + samwise-app editorial deepening,
+> 2026-05-31) — that task SHIPPED. This file is fully overwritten for the new task.
 
-## Reconciliation vs the handoff (git state moved on)
-The handoff was written when this work was uncommitted. It is now committed + pushed:
-- **samwise-app** `fe3eb90` (notes fix), `9e95f82` (story stages + sticky StoryControl), editorial token pass — working tree was clean.
-- **samwise-landing** `7b8ae5c` (sticky video + scrollIntoView auto-advance) — clean except this file.
-- ⚠️ **The committed notes fix was dead code:** `prospectPresent` in `WalkInShell.tsx` was never set
-  true, so the reactive re-broadcast never fired. **Fixed this session** (see Phase 0).
-- ⚠️ **`app/meet/story-graphic-test/page.tsx` got committed** → it's a live `/meet/story-graphic-test`
-  route in prod. Needs a deletion commit (see After-implementation).
+## Task (master Vibe doc, Projects tab — IN PROGRESS)
+"Visual Journey for recruiting therapists." Prepare a visual journey of the *consultante*
++ the *therapist* using a real anonymized case ("caso del amigo"), covering: first
+sessions, what the ritual is, and the agent-call frequency/type. Adapt the existing
+end-user materials for a therapist audience. Add: the "Sarah" success case,
+desidentification steps, a therapist ask/offer section, and a collaboration framework.
 
-## Decisions locked this session
-- **Task-1 layout:** "Story leads, notes below." When the story goes live, the Ritual Story leads the
-  right column (top-aligned with the sticky video) and beats fade out→in **in place**; the live notes
-  flow beneath, still scrollable. One gentle scroll brings the story into view the first time it
-  appears; after that, no per-beat scroll-jump.
-- **Notes-fix bug:** fix now, ship first (DONE — Phase 0).
+## What this deliverable IS (user clarification, 2026-06-15)
+A **standalone visual journey** that lives at `/therapists` and is **pullable up anytime**
+(incl. in-person meetings on a laptop/screen). It is **NOT a lead-capture funnel** — it does
+NOT end in a form. It ends by laying out the **offer + collaboration + "your first user"** as
+the live next step Samuel sets up *with* the person there.
 
----
+Second venue (FUTURE, separate task): the same visuals get recycled into a **therapist
+version of the Demo Call** (reusing the existing LiveKit call experience, the way
+`demo-voice-room.tsx` recycled `/qualify`). **Consequence for THIS task:** build every new
+therapist-specific visual as a **self-contained, reusable component** (mirroring how
+`app/meet/story/` beats are reusable), so the future therapist-call can import them without
+a rewrite. Do NOT build the therapist-call itself in this task.
 
-## Phase 0 — DONE this session: notes-fix (samwise-app, ship-first)
-`components/walk-in/WalkInShell.tsx` `handleRoomReady`: wire `setProspectPresent` to the room's
-`ParticipantConnected`/`ParticipantDisconnected` events (+ an initial `syncPresence()`), so the
-reactive snapshot effect actually fires and re-broadcasts notes on every cleaned-value change while
-the prospect is present. Scoped to one file. **Commit message in After-implementation.**
+## Decisions locked with the user (2026-06-15)
+- **Location:** NEW first-class route `app/therapists/` (NOT a variant, NOT canonical).
+- **Language:** English. Sarah's disidentification mantra translated FULLY to English (no
+  Spanish kept); her motivation translated to English.
+- **Visuals:** ADAPT the existing Ritual Story beats (`app/meet/story/`) as the shared
+  single source of truth; build only the NEW pieces (offer, collaboration, personalization
+  capture) as reusable components.
+- **Eyebrow:** "for behavioural change experts" (general, less clinically committed).
+- **Case is SIMPLE:** show how the process HELPED Sarah, not a granular step walk (see below).
+- **Close:** NOT a lead-capture form — a FUNCTIONAL personalization-capture step
+  (frontend-only) offering three process paths (use our template as-is / send us your own
+  process doc / edit our script right here) + the fields we need to personalize + "pick your
+  first user." **Delivery = on the spot:** captured live/in-person, assembled into an
+  on-screen structured summary + copy-to-clipboard (NO email, NO backend — Samuel grabs it in
+  the room). PLUS a quiet `/book` link framed as **"Book a quick 15-minute test of adopting
+  Samwise"** (for remote viewing / async follow-up). Capture **field list CONFIRMED** (incl.
+  the three likely-missed: per-step fit signal, current note tools, default cadence).
+  Wordmark links to `/`. OG/share card: reuse the existing canonical brand-mark card.
+- **Content:** SUPPLIED — ask/offer (verbatim below) + Sarah's ritual doc (Google Doc
+  `1AlFhHPkBB9n4eDIpAg4GtXw7IhANvyNv4ziNTBqEbaI`). PII stripped (no surname, no phone).
 
----
+## Plan Summary
+A first-class English route at `/therapists`, scroll-told, designed to be presented live.
+It walks a behavioural-change expert through ONE real anonymized case (Sarah) end-to-end —
+structured around the **seven steps a Samwise therapist delivers** and using the EXISTING
+Ritual Story diagrams as the visual spine — then states the **ask/offer** and the
+**collaboration framework**, closing on "bring your first user." Editorial register
+identical to canonical (gallery white, Fraunces/Manrope, warm-gold accent, hairline-dash
+CTA, generous vertical space, restraint over polish). Beats imported from `app/meet/story/`
+(never forked); new pieces built self-contained for future reuse in the therapist-call.
+Static render (the `/story-preview` pattern: `lang="en"` + a case `VariablesState`, wrapped
+in the token context the SVG strokes need). No LiveKit / agent / DataChannel in this task.
 
-## Phase 1 — /meet story fade-in-place ("story leads, notes below")
-Files: `app/meet/call-room.tsx`, `app/meet/story/ritual-story.tsx`, `app/meet/story/story.css`.
-(No `call.css` change needed — the column reorder is pure JSX + the story's own CSS.)
+## The seven steps a Samwise therapist delivers (from the ask/offer)
+The case section is structured around these (they're literally what the therapist commits to):
+1. Functional analysis of the last relapse
+2. Desidentification
+3. Mapping of origin
+4. Identification of enablers
+5. Design of protection
+6. Identification of current belief system
+7. Design of action toward the new belief system
 
-### Step 1.1 — `app/meet/call-room.tsx`: import `useRef`
-- **Location:** line 3.
-- **Code:** `import { useCallback, useEffect, useRef, useState } from "react"`
+## The ask / offer (verbatim — user-supplied, do not reword without sign-off)
+> We offer you to supply the sessions at your own price, pace and language, as long as you
+> fulfill the steps (functional analysis of last relapse, desidentification, mapping of
+> origin, identification of enablers, design of protection, identification of current belief
+> system, design of action to new belief system).
+> We offer you 50% of the revenue coming from the AI system. Which is 25 USD per month, since
+> we charge the AI agent at 50 USD monthly.
+> We have the goal of increasing the availability of therapists thanks to efficiencies gained
+> from Samwise, but this is yet to be proven.
 
-### Step 1.2 — `app/meet/call-room.tsx`: replace the per-beat auto-scroll with one-time scroll-on-appear
-- **Location:** the `useEffect` at lines 92–114 (the `scrollIntoView` block).
-- **Should NOT modify:** the `onDataMessage` callback, the `storyStage` state, the DataChannel handling.
-- **Code (replaces the whole effect):**
-  ```tsx
-  // Fade-in-place: bring the story into view ONCE, when it first appears
-  // (hidden → live). After that, beats fade out/in in place — no per-beat
-  // scroll-jump (the prospect isn't yanked around as Samuel advances).
-  // Honours reduced-motion.
-  const prevStageRef = useRef<StoryStage>("hidden")
-  useEffect(() => {
-    const prev = prevStageRef.current
-    prevStageRef.current = storyStage
-    // Only on the first reveal: previous was hidden AND now we're live.
-    if (prev !== "hidden" || storyStage === "hidden") return
-    const reduce =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const t = setTimeout(
-      () => {
-        document
-          .querySelector(".ritual-story")
-          ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
-      },
-      reduce ? 0 : 80,
-    )
-    return () => clearTimeout(t)
-  }, [storyStage])
-  ```
-- **Explanation:** `prevStageRef` lets us detect the single hidden→live transition. Subsequent
-  live→live changes return early (no scroll). The beat itself crossfades via AnimatePresence (Step 1.3).
+## Personalization capture — fields (close, Section 10) — PROPOSAL for sign-off
+The expert chooses ONE of the three process paths, then we capture what we need to set them
+up. Proposed fields (Samuel: trim/extend — these are my proposal incl. things you might be
+missing):
+- **You:** name · email (so we can reach you + arrange the 50% payout — see safety note).
+- **Region & time zone** — needed to schedule the agent calls for your users.
+- **Session language(s)** you'll run.
+- **Your price** per user / month (you set it) · **your pace** (how many users, what cadence).
+- **The behaviours you work with** (free text — e.g. screens, substances, relationships,
+  work avoidance).
+- **Process path** (a / b / c) + the payload:
+  - (b) → a link to / description of your own process document.
+  - (c) → the specific changes you'd make to our script (free text).
+- **Your first user** — initials/context + the behaviour they want to change + a rough
+  start date. (Anchors the "pick your first user" close.)
+- **Fit signal (likely-missed):** which of the seven steps you're fully comfortable delivering
+  vs. would want to adapt — surfaces objections/fit early, and tells Samuel where to coach.
+- **Your current note-taking / tools (likely-missed):** how you capture session notes today —
+  informs how your process maps onto ours.
+- **Default agent-call cadence (likely-missed):** the rhythm you'd want for your users by
+  default (Sarah ran 3/day — most won't).
+- **Anything else we should know to personalize** (free text).
+- **Revenue model acknowledgement** — a checkbox confirming the 50% / $25-of-$50 terms.
+> ⚠️ **Safety rule:** do NOT collect bank/card/account numbers or any payment credentials on
+> the page (prohibited). Capture email + "preferred payout method" as free text at most;
+> actual payout details are arranged off-page, directly with Samuel.
 
-### Step 1.3 — `app/meet/call-room.tsx`: render the story ABOVE the notes
-- **Location:** the `<aside className="demo-call-room-notes">` block (lines 135–141).
-- **Code:**
-  ```tsx
-  <aside className="demo-call-room-notes" aria-label={s.notes_label}>
-    <RitualStory lang={lang} stage={storyStage} variables={variables} />
-    <VariablesPanel lang={lang} variables={variables} />
-  </aside>
-  ```
-- **Explanation:** `RitualStory` returns null when `stage==="hidden"`, so during phases 1–8 the column
-  is notes-only — byte-identical to today. When the story goes live it leads; notes follow beneath.
+## The case (Sarah) — source + mapping (PII stripped)
+Source: Sarah's ritual document. Strip "Coral" (surname) and the phone number; render
+"Sarah" + "a family member."
+- **Motivation (translate to EN):** "to be my most self-sufficient, capable self — able to
+  support a family and her businesses."
+- **Problems:** (1) self-destructive avoidance / isolation; (2) perfectionist expectation on
+  new tasks (the unsettling reality).
+- **Solution approach:** break isolation immediately + retrain expectations toward
+  effort-based pride over first-attempt perfection.
+- **The ritual = three daily agent calls (this IS the "frequency & type of agent calls"):**
+  - *Morning Protection* (8am / 10am fallback; 6am Tuesdays): assess vulnerable state,
+    activate social support, coordinate logistics & meals.
+  - *Afternoon Faith-Building* (2pm / 3pm fallback): document tasks attempted, name the
+    learning from failures/unknowns.
+  - *Evening Preparation* (9pm / 10pm fallback): plan morning logistics.
+- **Disidentification mantra (keep Spanish + EN gloss):** "Estoy siendo atacada por un
+  enemigo que me hace maltratarme" → *"I'm being attacked by an enemy that makes me mistreat
+  myself."* Reframes the struggle as external opposition.
+- **Belief reframe:** unconditional faith in facing discomfort; control her *response*, not
+  outcomes.
+> **Keep the case SIMPLE (user 2026-06-15):** do NOT walk every step granularly. Show how the
+> process HELPED Sarah — once she desidentified from her problem with our help (the enemy
+> reframe), she opened up much more easily and adopted everything (the ritual) far more
+> readily. The functional analysis is only the means by which we read identification level;
+> the point to land is the EASE that followed desidentification. The seven steps live in the
+> collaboration/offer section (what the therapist commits to), NOT as a granular case walk.
 
-### Step 1.4 — `app/meet/story/ritual-story.tsx`: pure-opacity fade (no slide)
-- **Location:** the `<motion.div className="ritual-story-beat">` props (lines 82–86).
-- **Should NOT modify:** `mode="wait"` on AnimatePresence (keeps it strict-serial: old fully out, then
-  new in — the landing's no-cross-fade rule), the persistent DocSpine/UnansweredList outside it.
-- **Code:**
-  ```tsx
-  initial={reduced ? false : { opacity: 0 }}
-  animate={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
-  transition={{ duration: reduced ? 0 : 0.5, ease: "easeInOut" }}
-  ```
-- **Explanation:** "fade in place" = opacity only, no `y` translate. `mode="wait"` already gives the
-  serial exit→enter the landing choreography uses.
+## Why "adapt the beats" maps cleanly (the visual spine)
+| Existing beat (`app/meet/story/`) | Section in `/therapists` |
+|---|---|
+| `DocSpine` (`doc-spine.tsx`) | the Ritual Doc the therapist co-creates with the consultante |
+| `PromiseBeat` (`neuro-crossfade.tsx`) | what behaviour change looks like (two changes, two speeds) |
+| `DailyLoop` (`daily-loop.tsx`) | **agent-call frequency & type** — Sarah's 3 daily calls |
+| `RitualMechanism` (`ritual-mechanism.tsx`) | the ritual's components (said mantras + actionable protection / new belief) |
+| `CycleMap` (`cycle-map.tsx`) | the six-step multi-session arc — where the therapist's recurring work lives |
 
-### Step 1.5 — `app/meet/story/story.css`: the story now LEADS (separator below, not above)
-- **Location:** the `.ritual-story` rule (lines 5–10).
-- **Code:**
-  ```css
-  .ritual-story {
-    max-width: 28em; /* match .qualify-notes */
-    padding-bottom: 40px;
-    margin-bottom: 44px;
-    border-bottom: 1px solid var(--rule);
-  }
-  ```
-- **Explanation:** dropped the top `margin/padding/border` (it used to "continue the notes column
-  downward"); now it leads, with a hairline rule + air separating it from the notes that follow.
-  `.ritual-story-beat`'s own top rule (separating spine from beat) stays.
+## Plan Architecture (Flow)
+Server route `app/therapists/page.tsx` (thin) → client orchestrator
+`app/therapists/therapists-journey.tsx` laying out ordered sections in NATURAL FLOW with
+`motion` `whileInView` reveals (`viewport={{ once: true, amount: 0.3 }}`, honoring
+`useReducedMotion()`) — NOT the heavy canonical FixedScene/PinFade choreography (reserved for
+the homepage). Existing beats render statically beneath their section headings; new pieces
+are self-contained components. Self-contained CSS `app/therapists/therapists.css`
+(`.therapists-root` scope; local brand tokens; literal `'Fraunces'`/`'Manrope'`; NO
+`var(--font-fraunces)`).
 
-### Phase 1 verification (browser preview)
-The live path needs a real LiveKit room, so verify with the existing harness:
-`app/meet/story-test/page.tsx` (stage + lang switches, sample vars) — already in the repo. Drive it
-through doc→promise→loop→mechanism→experience and confirm: (a) story leads, notes below;
-(b) beats crossfade in place with NO page scroll on live→live; (c) one smooth scroll on first reveal;
-(d) reduced-motion → instant. Use `preview_eval` to read `getComputedStyle(.ritual-story-beat).opacity`
-across a stage change and `window.scrollY` before/after a live→live change (should be unchanged).
+### Section order (the journey)
+1. **Header** — gold ✦ + "Samwise" italic wordmark (reuse canonical `.brand`/`.brand-star`),
+   wordmark links to `/`. Quiet EN colophon.
+2. **Hero** — eyebrow `FOR BEHAVIOURAL CHANGE EXPERTS` + editorial headline + invitation.
+   `[[PLACEHOLDER: hero headline — I'll propose 2–3 for sign-off; "We help people change
+   behavior…" is sloganeering, must be re-voiced editorially]]`.
+3. **Meet Sarah** — anonymized intro: her motivation, the two problems, where she started.
+4. **How the process helped Sarah** (SIMPLE — one clean narrative beat, not a 7-step walk).
+   The desidentification turn: once she stopped identifying with her problem (the enemy
+   reframe, translated mantra), she opened up far more easily and adopted the ritual readily.
+   Visual: `PromiseBeat` (the two-changes view) + `DocSpine` (her doc being filled).
+5. **Her ritual** — what Sarah's ritual became. Visual: `RitualMechanism`.
+6. **Her daily calls** — the three daily agent calls + cadence. Visual: `DailyLoop`.
+7. **The arc over time** — multi-session journey; names the therapist's recurring optimization
+   work. Visual: `CycleMap`.
+8. **Working with Samwise — the collaboration** — the seven steps you commit to; your price,
+   pace, language; where you plug in (onboarding / call design / optimization).
+9. **The offer** — 50% of AI revenue (25 USD/mo of the 50 USD/mo agent), at your own price/
+   pace/language; the availability-goal caveat ("yet to be proven"). From the verbatim block.
+10. **Set it up — personalization capture** (the close; FULLY FUNCTIONAL frontend, no backend
+    in v1). Three process paths the expert chooses between:
+    (a) **Use our template process as-is.**
+    (b) **Send us your own process** — describe it / paste a link to their document.
+    (c) **Edit our script right here** — write the specific changes they'd make.
+    Plus the personalization fields (see "Personalization capture — fields") and the "pick
+    your first user" prompt. **Delivery = ON THE SPOT:** on completion, assemble an on-screen
+    structured summary + a copy-to-clipboard button (Samuel grabs it live; NO email, NO
+    backend). Below it, a quiet hairline gold-dash `/book` link: **"Book a quick 15-minute
+    test of adopting Samwise"** (the remote/async path).
 
----
-
-## Phase 2 — samwise-app editorial deepening (product surfaces ONLY)
-NEVER touch `/trip` or `/outreach` (`.paper-module`). All edits are scoped to `.brand-editorial`.
-Card titles are ALREADY Fraunces 400 (the `[data-slot="card-title"]` heading rule in globals.css) —
-so the remaining work is shapes, the sidebar mark, the dark surfaces, and forms.
-
-### Step 2.1 — Gold ✦ wordmark in the sidebar (`app/page.tsx` + `app/globals.css`)
-- **globals.css** (add after the `.brand-editorial ::selection` rule, ~line 270):
-  ```css
-  /* ── Brand wordmark — Fraunces italic + tiny gold ✦ (mirrors the landing
-     navbar mark). ──────────────────────────────────────────────────────── */
-  .brand-editorial .brand-wordmark {
-    font-family: var(--app-fraunces), 'Fraunces', Georgia, serif;
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    color: var(--foreground);
-    display: inline-flex;
-    align-items: baseline;
-    line-height: 1;
-  }
-  .brand-editorial .brand-wordmark__star {
-    color: var(--accent-gold);
-    font-size: 0.5em;
-    vertical-align: super;
-    padding-left: 3px;
-    font-style: normal;
-  }
-  ```
-- **page.tsx** `<SidebarHeader>` (lines 88–95) — replace the Sparkles-in-a-box:
-  ```tsx
-  <SidebarHeader>
-    <div className="flex items-center px-2 py-1.5">
-      <span className="brand-wordmark text-[17px]">
-        Samwise<span className="brand-wordmark__star">✦</span>
-      </span>
-    </div>
-  </SidebarHeader>
-  ```
-  (Keep the `Sparkles` import — still used by NAV + the copilot sidebar link.)
-
-### Step 2.2 — Cards: hairline border, no heavy shadow, calmer radius (`app/globals.css`)
-- Add (scoped):
-  ```css
-  /* ── Cards — hairline border, no shadow, calmer radius (titles are
-     already Fraunces 400 via the heading rule). ──────────────────────── */
-  .brand-editorial [data-slot="card"] {
-    box-shadow: none;
-    border-color: var(--border);
-    border-radius: var(--radius);
-  }
-  /* Inputs / select triggers — drop the shadcn inner shadow; hairline +
-     gold focus ring already come from the brand tokens. */
-  .brand-editorial [data-slot="input"],
-  .brand-editorial [data-slot="select-trigger"] {
-    box-shadow: none;
-  }
-  ```
-
-### Step 2.3 — Card-header icon blobs (`app/page.tsx`) — JUDGMENT CALL ⚠️
-The two card headers + the (now-replaced) sidebar use a `bg-primary/10` filled circle with a lucide
-icon — the most "SaaS-default" shape left. **Recommend** replacing each with a small gold ✦ above the
-title (matches the brand mark, drops the blob):
-```tsx
-<div className="mx-auto mb-3 text-[var(--accent-gold)] text-lg leading-none">✦</div>
+## Plan Structure (Directories and files)
 ```
-Alternative (keep the icon, lose the fill): hairline gold ring —
-`border border-[color:var(--accent-gold)]/40` with `text-[var(--accent-gold)]` icon.
-**Need your nod on which** (both operator-facing, no prospect copy).
-
-### Step 2.4 — Forms/inputs register — JUDGMENT CALL ⚠️
-Inputs already inherit hairline border + gold focus ring from the tokens; 2.2 drops their inner
-shadow. **Recommend stopping there** (keep them boxed — appropriate for an operator form), rather than
-converting to the landing's full hairline-underline inputs (too stylized for utility forms). Operator
-buttons stay ink-filled (`bg-primary` = ink) — that reads editorial-restrained, not marketing-y, so I
-**won't** convert them to gold-dash CTAs. Confirm.
-
-### Step 2.5 — `/ritual-call` dark → editorial (`components/ritual-call/RitualCallExperience.tsx`) ⚠️ BIG
-This 380-line surface is hardcoded dark (`bg-neutral-950 text-neutral-100`, `border-neutral-700
-bg-neutral-900`, …) and ignores the brand tokens — so it stays dark inside the editorial skin and
-clashes. Convert all states (idle/identifying/connecting/active/disconnected/error) to the editorial
-register: gallery-white bg, ink text, hairline `border`/`text-muted-foreground`, gold accents, the
-brand ✦ where a mark appears. Mirrors the landing's gallery-white in-call register (not dark). This is
-the largest visual change — **confirm the gallery-white direction.** Verify each state in-browser.
-
-### Step 2.6 — `/meet` WalkInShell dark edge-states (`components/walk-in/WalkInShell.tsx`)
-The error + "Joining the call…" screens (lines 199–216) hardcode `bg-neutral-950 text-neutral-100`.
-Drop those classes so they inherit the brand-editorial white/ink (the shell is already wrapped by
-`app/meet/layout.tsx`):
-```tsx
-// error
-<main className="flex h-screen items-center justify-center p-6 text-foreground"> …
-  <p className="mt-2 text-sm text-muted-foreground">{error}</p>
-// loading
-<main className="flex h-screen items-center justify-center text-foreground">
-  <p className="text-sm text-muted-foreground">Joining the call…</p>
+app/therapists/
+├── page.tsx                 # server, thin; real Samwise metadata (reuse canonical OG card)
+├── therapists-journey.tsx   # client orchestrator: ordered sections + motion reveals
+├── case-data.ts             # Sarah case as a typed object (PII stripped) + case VariablesState
+├── seven-steps.tsx          # NEW reusable: the 7-step delivery the therapist commits to (collab/offer use, NOT a case walk)
+├── offer-card.tsx           # NEW reusable: ask/offer (verbatim copy)
+├── collaboration.tsx        # NEW reusable: where the therapist plugs in (onboarding/call design/optimization)
+├── personalization-capture.tsx  # NEW reusable: the 3-path capture + fields; copy-to-clipboard + mailto (no backend)
+├── sections/                # thin per-section wrappers (page-local layout only)
+│   ├── hero.tsx
+│   ├── case-intro.tsx       # "Meet Sarah"
+│   ├── how-it-helped.tsx    # SIMPLE desidentification narrative; wraps DocSpine + PromiseBeat
+│   ├── the-ritual.tsx       # wraps RitualMechanism
+│   ├── the-calls.tsx        # wraps DailyLoop
+│   ├── the-arc.tsx          # wraps CycleMap
+│   └── close.tsx            # wraps personalization-capture ("set it up + your first user")
+└── therapists.css           # .therapists-root scope + the token context the beats need
 ```
+Imports (single source of truth, NOT copied): `@/app/meet/story/doc-spine`,
+`/neuro-crossfade`, `/daily-loop`, `/ritual-mechanism`, `/cycle-map`,
+`@/app/meet/story/strings` (STORY_STRINGS), `@/app/qualify/components/variables-panel`
+(VariablesState type), `@/lib/qualify/strings` (Lang). Plus `@/app/meet/story/story.css` +
+the qualify token context (verify the strokes render — see Testing).
 
-### Step 2.7 — Shared copilot panes (low priority, optional)
-`story-control.tsx`, `variables-table.tsx`, `script-pane.tsx` already use brand tokens (ink/white via
-the wrapper). Light polish only (Manrope eyebrow labels, gold active accents) IF time — not load-
-bearing. Skip unless it reads ugly in the preview.
+## Modifications (in phases and steps)
 
-### Phase 2 verification (browser preview)
-`preview_start`, then for each surface: `/` (sidebar star + cards), `/ritual-call` (all states),
-`/meet/[id]` (WalkInShell — error/loading + StoryControl). `preview_screenshot` the before/after of
-each; `preview_inspect` card `box-shadow` (should be `none`) and the wordmark `font-family` (Fraunces)
-+ star `color` (`#D4A85A`). `preview_console_logs level:error` to catch nothing regressed.
+### Phase 1 — Route scaffold + token context (no content)
+- **1.1 `page.tsx`** — thin server; `export const metadata` (real Samwise, no v0 default;
+  reuse canonical OG); renders `<TherapistsJourney/>`.
+- **1.2 `therapists.css`** — `.therapists-root` scope; redeclare brand tokens AND the
+  `--ink`/`--ink-mute`/`--ink-soft`/`--rule`/`--gold` tokens the story SVGs read (mirror
+  `.qualify-root`). Literal font stacks. Section padding 120–160px.
+- **1.3 `therapists-journey.tsx`** — `"use client"`; lays out the 10 sections; `motion`
+  `whileInView` + `useReducedMotion()`; header wordmark links to `/`.
+- **Verify:** 200, beats render visibly (not white-on-white), no console errors.
 
----
+### Phase 2 — Wire beats + build the new reusable components
+- **2.1 `case-data.ts`** — Sarah's case `VariablesState` (`behaviour_to_change`,
+  `core_motivation`, `problem_duration_self_reported`, `life_stage_context`) + typed
+  narrative (PII stripped). Real values from the ritual doc.
+- **2.2** the beat-wrapping sections render `<Beat copy={STORY_STRINGS["en"]}
+  variables={sarahVars} …/>`. Risk: STORY_STRINGS labels are demo-call voice; if any reads
+  wrong for therapists, override via a thin local copy object (same shape), don't edit shared
+  strings. Verify in browser.
+- **2.3** build `seven-steps.tsx`, `offer-card.tsx`, `collaboration.tsx`,
+  `personalization-capture.tsx` as self-contained reusable components (props-driven, no
+  page-only coupling) so the future therapist-call can import them.
+- **2.4** `personalization-capture.tsx`: the 3-path chooser + the CONFIRMED fields (see
+  "Personalization capture — fields"); on complete, assemble a structured plain-text summary
+  shown ON SCREEN + a copy-to-clipboard button (delivery is on-the-spot/live — no email, no
+  persistence, no samwise-app route). Then a quiet hairline gold-dash `/book` anchor:
+  **"Book a quick 15-minute test of adopting Samwise."**
+  > Caveat: `/book` is currently the Breakthrough Call picker (against Samuel's calendar). For
+  > v1 reuse it as-is with the 15-min-test label; a distinct 15-min therapist slot type is a
+  > later follow-up if the duration/copy mismatch matters.
 
-## Testing phase
-- **Local (browser preview):** per-phase as above. No prospect copy changes → no sign-off gate here.
-- **Live 2-party test (you run):** `/copilot` (or `/meet/[id]` therapist) ↔ `/meet` (prospect) — confirm
-  in one pass: (a) **notes fix** — prospect sees filled notes even when cleaning finishes after they
-  joined; (b) **sticky video** — Samuel's tile stays put while the column scrolls; (c) **fade-in-place** —
-  beats crossfade with no per-beat scroll-jump, one scroll on first reveal.
-- **Integration / README:** n/a (frontend-only).
+### Phase 3 — Copy pass + sign-off
+- Hero headline: propose 2–3 options for sign-off. Offer card uses the verbatim ask/offer.
+  Mantra Spanish+gloss (confirm). Translate Sarah's motivation. No invented case behaviour
+  beyond the ritual doc.
 
-## After implementation
-- **Refresh `context-for-code-agent.md` (both repos):**
-  - samwise-landing: /meet story now "leads, notes below" + fade-in-place (replaces scrollIntoView).
-  - samwise-app: the editorial skin's component-shape pass (gold ✦ wordmark, hairline/flat cards,
-    /ritual-call + WalkInShell de-darkened); note the notes-fix presence wiring.
-- **Scoped commit messages (you commit — one `git commit -am` per repo):**
-  - samwise-app, SHIP FIRST (Phase 0, already in the tree, scoped to one file):
-    `git commit -am "fix(/meet): wire prospectPresent so the reactive notes snapshot actually fires"`
-    → push + deploy, then run the 2-party notes test. (Will only sweep WalkInShell.tsx if you commit
-    before starting Phase 2; Phase 2 also touches app files, so commit this first.)
-  - samwise-app, Phase 2 (after): `feat(app): deepen editorial skin — gold ✦ wordmark, flat hairline
-    cards, de-dark /ritual-call + /meet edge states` (sweeps page.tsx, globals.css,
-    RitualCallExperience.tsx, WalkInShell.tsx).
-  - samwise-landing, Phase 1 + stray-route deletion: `feat(/meet): story leads + fade-in-place beats;
-    rm stray story-graphic-test route` (sweeps call-room.tsx, ritual-story.tsx, story.css, current-plan.md).
-- **DELETE the stray prod route:** `rm -rf app/meet/story-graphic-test/` (it's tracked; the deletion
-  lands in the landing commit above). The `story-graphic/` components have no page.tsx → harmless, leave
-  for the promote-or-drop decision.
-- Mark task DONE in the master Vibe doc Projects tab (your manual step).
+### Testing phase
+- **Local (always):** `npm run dev` in `samwise-landing/`; open `/therapists`.
+  - `curl -s -o /dev/null -w "%{http_code}" localhost:3000/therapists` → 200.
+  - `preview_console_logs` level error → no motion NaN / missing-CSS warnings.
+  - `preview_inspect` a beat SVG stroke → computed `stroke` is an ink/gold token (not
+    transparent/white) → token context present.
+  - `preview_screenshot` desktop + 375px (mobile-first: no horizontal overflow, beats legible,
+    `aspectRatio` intact). Also test as a presentation surface (large viewport, legible from
+    a few feet — it's shown in meetings).
+  - Reduced-motion: beats degrade to opacity fade.
+- **Integration test:** none (static route).
+- **README:** n/a.
+
+### After implementation
+- Update `context-for-code-agent.md`: add `/therapists` (first-class route; imports story
+  beats as shared visuals; new reusable seven-steps/offer/collaboration components intended
+  for future therapist-call reuse; English; section order; token-context note; PII rule).
+- Mark task DONE in master Vibe doc Projects tab (manual user step — NOT me).
+
+## Open questions — ALL RESOLVED (2026-06-15)
+- Capture delivery: ON THE SPOT — on-screen summary + copy-to-clipboard, no email/backend. ✓
+- Capture fields: CONFIRMED as proposed (incl. fit-signal per step, current note tools,
+  default cadence). ✓
+- `/book` link in the close: INCLUDED, framed as "Book a quick 15-minute test of adopting
+  Samwise." ✓
+
+The plan is fully specified. Only remaining gate: hero-headline wording (2–3 options proposed
+in Phase 3 for sign-off) — does NOT block scaffolding (Phases 1–2).
