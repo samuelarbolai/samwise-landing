@@ -201,7 +201,7 @@ export function TherapistsJourney() {
           personalize, and name the first person you&rsquo;d pilot with. We set
           the rest up together.
         </p>
-        <PersonalizationCapture />
+        <PersonalizationCapture bookHref="/therapists/book" />
       </Section>
 
       <footer className="t-foot">

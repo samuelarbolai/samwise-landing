@@ -41,10 +41,12 @@ type View =
     }
   | { kind: "done"; result: BookingResult }
 
-function getSlotsUrl(): string {
+export type MeetingType = "breakthrough" | "therapist"
+
+function getSlotsUrl(type: MeetingType): string {
   const base = process.env.NEXT_PUBLIC_SAMWISE_APP_URL
-  if (!base) return "http://localhost:3000/api/book/slots"
-  return `${base.replace(/\/$/, "")}/api/book/slots`
+  const root = base ? base.replace(/\/$/, "") : "http://localhost:3000"
+  return `${root}/api/book/slots?type=${type}`
 }
 
 function getCreateUrl(): string {
@@ -61,7 +63,13 @@ function detectDeviceTz(): string {
   }
 }
 
-export function BookRoot({ lang }: { lang: Lang }) {
+export function BookRoot({
+  lang,
+  meetingType = "breakthrough",
+}: {
+  lang: Lang
+  meetingType?: MeetingType
+}) {
   const [deviceTz] = useState<string>(detectDeviceTz)
   const [view, setView] = useState<View>({ kind: "loading" })
 
@@ -69,7 +77,7 @@ export function BookRoot({ lang }: { lang: Lang }) {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await fetch(getSlotsUrl(), { method: "GET" })
+        const res = await fetch(getSlotsUrl(meetingType), { method: "GET" })
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as {
             error?: string
@@ -92,7 +100,7 @@ export function BookRoot({ lang }: { lang: Lang }) {
     return () => {
       cancelled = true
     }
-  }, [deviceTz])
+  }, [deviceTz, meetingType])
 
   const headerBackHref = "/"
 
@@ -175,6 +183,7 @@ export function BookRoot({ lang }: { lang: Lang }) {
                   name,
                   email,
                   language: lang,
+                  type: meetingType,
                 }),
               })
               if (!res.ok) {
