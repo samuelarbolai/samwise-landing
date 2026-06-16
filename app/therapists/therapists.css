@@ -174,10 +174,199 @@
   background: var(--gold);
 }
 
+/* ── Case switcher — flip between success cases ── */
+.t-cases {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 0 36px;
+}
+.t-cases-label {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.t-cases-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.t-case-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+.t-case-chip:hover {
+  border-color: var(--ink-mute);
+}
+.t-case-chip.is-on {
+  border-color: var(--gold);
+}
+.t-case-chip-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink);
+}
+.t-case-chip-tag {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.t-case-chip.is-on .t-case-chip-tag {
+  color: var(--gold);
+}
+
 /* Centers an imported story beat in a readable measure. */
 .t-beat {
   max-width: 30em;
   margin: 36px 0 8px;
+}
+
+/* ── Built artifacts: inputs → components → with the subject ── */
+.t-artifacts {
+  max-width: 980px;
+  margin: 0 auto;
+}
+.t-artifact {
+  padding: clamp(56px, 8vw, 96px) 32px;
+  border-bottom: 1px solid var(--rule);
+}
+.t-artifact-label {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 12px;
+}
+.t-artifact-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(30px, 4.4vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 96, "SOFT" 60;
+  margin: 0 0 16px;
+}
+.t-artifact-blurb {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 42ch;
+  margin: 0 0 40px;
+}
+
+/* inputs → components */
+.t-build {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 28px;
+  padding: 32px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.t-build-lead {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 16px;
+}
+.t-build-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.t-build-item {
+  position: relative;
+  padding-left: 18px;
+  font-family: "Manrope", sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.t-build-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.66em;
+  width: 8px;
+  height: 1px;
+  background: var(--rule);
+}
+.t-build-list--components .t-build-item::before {
+  background: var(--gold);
+}
+.t-build-arrow {
+  align-self: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 28px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+/* with the subject */
+.t-applied {
+  margin-top: 36px;
+}
+.t-applied-lead {
+  font-family: "Manrope", sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 14px;
+}
+.t-applied-text {
+  font-family: "Manrope", sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  max-width: 62ch;
+  margin: 0;
+}
+.t-applied-quote {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.45;
+  color: var(--ink);
+  max-width: 34ch;
+  margin: 20px 0 0;
+  padding-left: 16px;
+  border-left: 1px solid var(--gold);
+}
+.t-applied .t-beat {
+  margin: 32px 0 0;
+}
+.t-applied .t-calls {
+  margin-top: 20px;
 }
 
 /* ── Sarah's daily calls ── */
@@ -429,8 +618,13 @@
 .t-cap-path input {
   accent-color: var(--gold);
 }
+/* The "bring my own process" textarea sits right after the path options —
+   give it the same breathing room as the edits block. */
+.t-cap-paths + .t-cap-area {
+  margin-top: 16px;
+}
 .t-cap-edits {
-  margin-top: 14px;
+  margin-top: 16px;
 }
 .t-cap-hint {
   font-family: "Manrope", sans-serif;
@@ -571,6 +765,19 @@
   }
   .t-cap-grid {
     grid-template-columns: 1fr;
+  }
+  .t-artifact {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .t-build {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .t-build-arrow {
+    justify-self: start;
+    transform: rotate(90deg);
+    margin: 4px 0;
   }
   .t-beat {
     max-width: 100%;

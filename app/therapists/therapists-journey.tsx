@@ -1,16 +1,19 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useState } from "react"
 import { motion, useReducedMotion } from "motion/react"
+import type { VariablesState } from "@/app/qualify/components/variables-panel"
 import { STORY_STRINGS } from "@/app/meet/story/strings"
 import { DocSpine } from "@/app/meet/story/doc-spine"
-import { PromiseBeat } from "@/app/meet/story/neuro-crossfade"
 import { DailyLoop } from "@/app/meet/story/daily-loop"
 import { RitualMechanism } from "@/app/meet/story/ritual-mechanism"
 import { CycleMap } from "@/app/meet/story/cycle-map"
 import "@/app/meet/story/story.css"
 
-import { SARAH, SARAH_VARS } from "./case-data"
+import { CASES, ARTIFACT_TEMPLATES } from "./case-data"
+import { ArtifactAnatomy } from "./artifact-anatomy"
+import { CaseSwitcher } from "./case-switcher"
 import { OfferCard } from "./offer-card"
 import { Collaboration } from "./collaboration"
 import { PersonalizationCapture } from "./personalization-capture"
@@ -65,6 +68,23 @@ function BeatFrame({ children }: { children: ReactNode }) {
 export function TherapistsJourney() {
   const reduced = useReducedMotion()
   const copy = STORY_STRINGS.en
+  const [active, setActive] = useState(0)
+  const c = CASES[active]
+
+  const renderBeat = (b: string, vars: VariablesState) => {
+    switch (b) {
+      case "doc":
+        return <DocSpine copy={copy} variables={vars} reduced={!!reduced} />
+      case "mechanism":
+        return <RitualMechanism copy={copy} reduced={!!reduced} />
+      case "loop":
+        return <DailyLoop copy={copy} reduced={!!reduced} />
+      case "cycle":
+        return <CycleMap copy={copy} reduced={!!reduced} />
+      default:
+        return null
+    }
+  }
 
   return (
     <div className="therapists-root">
@@ -90,12 +110,15 @@ export function TherapistsJourney() {
         </p>
       </section>
 
-      {/* 3 — Meet Sarah */}
-      <Section eyebrow="A real case" heading={<>Meet {SARAH.name}.</>} narrow>
-        <p className="t-body">{SARAH.intro}</p>
-        <p className="t-quote">&ldquo;{SARAH.motivation}&rdquo;</p>
+      {/* 3 — Case switcher + first presentation (behaviour-forward) */}
+      <Section eyebrow="A real case" heading={<>Meet {c.name}.</>} narrow>
+        {CASES.length > 1 && (
+          <CaseSwitcher cases={CASES} active={active} onSelect={setActive} />
+        )}
+        <p className="t-body">{c.intro}</p>
+        <p className="t-quote">&ldquo;{c.motivation}&rdquo;</p>
         <ul className="t-list">
-          {SARAH.problems.map((p) => (
+          {c.problems.map((p) => (
             <li key={p} className="t-list-item">
               {p}
             </li>
@@ -103,46 +126,54 @@ export function TherapistsJourney() {
         </ul>
       </Section>
 
-      {/* 4 — How the process helped (the desidentification turn) */}
-      <Section eyebrow="The turn" heading={SARAH.turn_lead} narrow>
-        <p className="t-body">{SARAH.turn_body}</p>
-        <p className="t-mantra">&ldquo;{SARAH.mantra}&rdquo;</p>
-        <BeatFrame>
-          <PromiseBeat copy={copy} variables={SARAH_VARS} />
-        </BeatFrame>
-        <BeatFrame>
-          <DocSpine copy={copy} variables={SARAH_VARS} reduced={!!reduced} />
-        </BeatFrame>
+      {/* 4 — Overview: from your sessions, two things get built */}
+      <Section
+        eyebrow="How it's built"
+        heading="From your sessions, two things get built."
+        narrow
+      >
+        <p className="t-body">
+          Everything you gather becomes a <em>ritual</em> the person lives —
+          and the daily <em>call</em> that runs it. Here is exactly what goes
+          into each, and what each is made of, with {c.name} as the worked
+          example.
+        </p>
       </Section>
 
-      {/* 5 — Her ritual */}
-      <Section eyebrow="Her ritual" heading="What she says, and what she does." narrow>
-        <BeatFrame>
-          <RitualMechanism copy={copy} reduced={!!reduced} />
-        </BeatFrame>
-        <p className="t-body">{SARAH.protection}</p>
-        <p className="t-body">{SARAH.new_belief}</p>
-      </Section>
+      {/* 5/6 — The two artifacts: inputs → components → with the case subject.
+          Keyed by case id so switching swaps the application + beats cleanly. */}
+      <div className="t-artifacts" key={c.id}>
+        {ARTIFACT_TEMPLATES.map((template) => (
+          <ArtifactAnatomy
+            key={template.key}
+            template={template}
+            application={template.key === "ritual" ? c.ritual : c.call}
+            subjectName={c.name}
+          >
+            {template.showCalls && (
+              <ul className="t-calls">
+                {c.calls.map((call) => (
+                  <li key={call.name} className="t-call">
+                    <span className="t-call-name">{call.name}</span>
+                    <span className="t-call-time">{call.time}</span>
+                    <span className="t-call-body">{call.body}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {template.beats.map((b) => (
+              <BeatFrame key={b}>{renderBeat(b, c.vars)}</BeatFrame>
+            ))}
+          </ArtifactAnatomy>
+        ))}
+      </div>
 
-      {/* 6 — Her daily calls */}
-      <Section eyebrow="The cadence" heading="Three short calls a day." narrow>
-        <p className="t-body">{SARAH.calls_lead}</p>
-        <ul className="t-calls">
-          {SARAH.calls.map((c) => (
-            <li key={c.name} className="t-call">
-              <span className="t-call-name">{c.name}</span>
-              <span className="t-call-time">{c.time}</span>
-              <span className="t-call-body">{c.body}</span>
-            </li>
-          ))}
-        </ul>
-        <BeatFrame>
-          <DailyLoop copy={copy} reduced={!!reduced} />
-        </BeatFrame>
-      </Section>
-
-      {/* 7 — The arc over time */}
-      <Section eyebrow="Over time" heading="The loop you keep running with them." narrow>
+      {/* 7 — Over time: how the ritual + call get sharpened */}
+      <Section eyebrow="Over time" heading="Then you keep sharpening it." narrow>
+        <p className="t-body">
+          Neither artifact is final. Each optimization session is where you
+          rewrite the part that stopped holding — the ritual, or the call.
+        </p>
         <BeatFrame>
           <CycleMap copy={copy} reduced={!!reduced} />
         </BeatFrame>

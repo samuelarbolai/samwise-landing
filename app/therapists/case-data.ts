@@ -1,62 +1,118 @@
 import type { VariablesState } from "@/app/qualify/components/variables-panel"
 
-// The anonymized case ("caso del amigo") — sourced from Sarah's real ritual
-// document. PII STRIPPED for a public page: first name only (no surname), and
-// the family member's phone number is never rendered. English throughout; her
-// motivation and disidentification mantra are translated fully from the
-// original Spanish (user decision 2026-06-15).
+// Case studies for the /therapists journey. The FRAMEWORK (inputs + components
+// of the ritual and the call) is constant across cases — it's the model. Only
+// the APPLICATION changes per case: the intro, the variables that feed the
+// beats, the "with {name}" text, the mantra, and the daily-call schedule.
 //
-// Keep the case SIMPLE: the point to land is that once she desidentified from
-// her problem (the enemy reframe), she opened up far more easily and adopted
-// the ritual readily. NOT a granular step-by-step walk.
+// To ADD A CASE (Samuel uploads more): append one `Case` object to `CASES`
+// below. The switcher and the whole case region pick it up automatically — no
+// other edits needed. PII rule: change the display name from the source, no
+// surname, no phone numbers.
 
-// Feeds the imported story beats (DocSpine slots + PromiseBeat's descending
-// "old pattern" label). Only the first four VariableKeys are used by the beats.
-export const SARAH_VARS: VariablesState = {
-  // Short clause — PromiseBeat truncates the descending-curve label at ~24 chars.
-  behaviour_to_change: "avoidance and isolation",
-  core_motivation: "to become my most self-sufficient, capable self",
-  problem_duration_self_reported: "years",
-  life_stage_context: "building a family and her businesses",
+// ── The framework, shared across all cases ──────────────────────────────────
+export interface ArtifactTemplate {
+  key: "ritual" | "call"
+  label: string
+  title: string
+  blurb: string
+  inputsLead: string
+  inputs: string[]
+  componentsLead: string
+  components: string[]
+  beats: ("doc" | "mechanism" | "loop" | "cycle")[]
+  showCalls?: boolean
 }
 
-export interface CaseCopy {
-  name: string
-  intro: string
+export const ARTIFACT_TEMPLATES: ArtifactTemplate[] = [
+  {
+    key: "ritual",
+    label: "What you build · 1",
+    title: "The ritual",
+    blurb:
+      "The daily practice the person lives. You produce its raw material in session; we assemble it into a ritual they can keep.",
+    inputsLead: "What you gather (the seven steps yield these)",
+    inputs: [
+      "The last relapse, functionally analyzed — one concrete moment, grounded.",
+      "The behaviour, desidentified — named as an enemy, not the person.",
+      "Its origin, mapped.",
+      "The enablers that feed it.",
+      "The current belief system.",
+    ],
+    componentsLead: "What the ritual is built into",
+    components: [
+      "Mantras — what they say.",
+      "Protection — what they do to stop the behaviour now.",
+      "A new belief system — what they do to shift thoughts and feelings over time.",
+      "A schedule — times, with fallbacks.",
+      "Accountability — the people who hold them to it.",
+    ],
+    beats: ["mechanism", "doc"],
+  },
+  {
+    key: "call",
+    label: "What you build · 2",
+    title: "The call that runs it",
+    blurb:
+      "The daily call that carries the person into the ritual, so keeping it never rests on memory. You gather its inputs in the call-design session; we write the call.",
+    inputsLead: "What you gather (the call-design session)",
+    inputs: [
+      "A symbol — the symbolic help they anchor to.",
+      "Consciousness — what they hold gratitude or awareness for.",
+      "Their intentions.",
+      "A pact — a small, concrete commitment.",
+      "Their company — who is with them.",
+    ],
+    componentsLead: "What the call is built into (its four parts)",
+    components: [
+      "The Stop.",
+      "The Consciousness.",
+      "The Intention.",
+      "The Commitment.",
+    ],
+    beats: ["loop"],
+    showCalls: true,
+  },
+]
+
+// ── A single case study ──────────────────────────────────────────────────────
+export interface CaseApplication {
+  mara: string // the "with {name}" text for this artifact
+  quote?: string // optional verbatim line (e.g. the desidentification mantra)
+}
+
+export interface Case {
+  id: string
+  name: string // display name (changed from source for anonymity)
+  tag: string // short label for the switcher, e.g. "Screen addiction"
+  intro: string // first presentation — lead with the concrete behaviour
   motivation: string
   problems: string[]
-  // The desidentification turn — the simple narrative beat.
-  turn_lead: string
-  turn_body: string
-  mantra: string
-  // Her ritual's specifics (caption around the generic RitualMechanism beat).
-  protection: string
-  new_belief: string
-  // Her three daily calls (caption + schedule around the generic DailyLoop beat).
-  calls_lead: string
+  vars: VariablesState // feeds DocSpine slots + PromiseBeat's descending label
   calls: { name: string; time: string; body: string }[]
+  ritual: CaseApplication
+  call: CaseApplication
 }
 
-export const SARAH: CaseCopy = {
-  name: "Sarah",
+const MARA: Case = {
+  id: "mara",
+  name: "Mara",
+  tag: "Screen addiction",
   intro:
-    "Sarah came to us avoiding the work that mattered most and pulling away from people when things got hard. She held every new task to a standard no first attempt could meet, so she rarely started.",
+    "Mara was losing her days to her phone. The moment a task felt too big, she reached for it — scrolling, checking, anything but starting — until whole afternoons disappeared into the screen.",
   motivation:
     "to become my most self-sufficient, capable self — someone who can hold a family and her businesses",
   problems: [
-    "Self-destruction through avoidance — isolating instead of facing the work.",
-    "A perfectionist expectation on anything new, so effort never felt like enough.",
+    "Screen addiction: reaching for the phone the moment the real work got hard, then losing hours to it.",
+    "Underneath it, a perfectionist standard that made starting feel pointless — so the screen always won.",
   ],
-  turn_lead: "The turn came when she stopped identifying with the problem.",
-  turn_body:
-    "Once she could name it as an enemy acting on her — not as who she was — the defensiveness dropped. She opened up far more easily, and the ritual we built became something she could actually live, not another standard to fail.",
-  mantra: "I am being attacked by an enemy that makes me mistreat myself.",
-  protection:
-    "Protection broke the isolation first: each morning she assesses her vulnerable state and activates a family member for support, then coordinates the day's logistics and meals.",
-  new_belief:
-    "The new belief replaced first-attempt perfection with effort-based pride: each afternoon she documents what she attempted and names the learning from whatever failed or stayed unknown.",
-  calls_lead:
-    "Sarah's ritual runs on three short calls a day — the cadence is hers, not a default.",
+  vars: {
+    // Short clause — PromiseBeat/DocSpine truncate the label at ~24 chars.
+    behaviour_to_change: "reaching for my phone",
+    core_motivation: "to become my most self-sufficient, capable self",
+    problem_duration_self_reported: "years",
+    life_stage_context: "building a family and her businesses",
+  },
   calls: [
     {
       name: "Morning Protection",
@@ -74,4 +130,15 @@ export const SARAH: CaseCopy = {
       body: "Plan the next morning's logistics.",
     },
   ],
+  ritual: {
+    mara:
+      "She named her enemy, then built protection that breaks her isolation each morning — assess the vulnerable state, activate a family member, instead of disappearing into the screen — and a new belief that trades first-attempt perfection for effort-based pride.",
+    quote: "I am being attacked by an enemy that makes me mistreat myself.",
+  },
+  call: {
+    mara:
+      "Her ritual runs on three short calls a day, on her cadence, not a default:",
+  },
 }
+
+export const CASES: Case[] = [MARA]
