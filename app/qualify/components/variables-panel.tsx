@@ -22,6 +22,13 @@ export type VariableKey =
   | "symbolic_anchor_description"
   | "alternatives_tried"
   | "why_alternatives_failed"
+  // Therapist-audience variables (the four questions of the therapist
+  // qualification). Same shared panel; cards render only when non-empty, so a
+  // user call shows the user vars and a therapist call shows these four.
+  | "patient_addiction_type"
+  | "last_patient_occurrence"
+  | "helped_patient_attempts"
+  | "why_attempts_failed"
 
 export type VariablesState = Partial<Record<VariableKey, string>>
 
@@ -38,6 +45,10 @@ const DISPLAY_ORDER: VariableKey[] = [
   "symbolic_anchor_description",
   "alternatives_tried",
   "why_alternatives_failed",
+  "patient_addiction_type",
+  "last_patient_occurrence",
+  "helped_patient_attempts",
+  "why_attempts_failed",
 ]
 
 // Label keys in STRINGS for each variable. Kept as a lookup table per
@@ -51,6 +62,10 @@ const LABEL_KEY: Record<VariableKey, keyof (typeof STRINGS)["en"]> = {
   symbolic_anchor_description: "notes_label_symbolic_anchor_description",
   alternatives_tried: "notes_label_alternatives_tried",
   why_alternatives_failed: "notes_label_why_alternatives_failed",
+  patient_addiction_type: "notes_label_patient_addiction_type",
+  last_patient_occurrence: "notes_label_last_patient_occurrence",
+  helped_patient_attempts: "notes_label_helped_patient_attempts",
+  why_attempts_failed: "notes_label_why_attempts_failed",
 }
 
 export function VariablesPanel({

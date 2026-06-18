@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { LanguagePicker, type QualifyMode } from "./language-picker"
+import { LanguagePicker, type QualifyMode, type Audience } from "./language-picker"
 import { VoiceRoom } from "./voice-room"
 import { QualifyChat } from "./chat"
 import { FinalScreen, type Outcome } from "./components/final-screen"
@@ -12,6 +12,7 @@ export default function QualifyPage() {
   const [mode, setMode] = useState<QualifyMode | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [audience, setAudience] = useState<Audience>("user")
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
   // When arriving via the gold-star transition from /dual-cta, /qualify
@@ -76,11 +77,12 @@ export default function QualifyPage() {
     }
   }, [])
 
-  const onProceed = (l: Lang, m: QualifyMode, n: string, em: string) => {
+  const onProceed = (l: Lang, m: QualifyMode, n: string, em: string, a: Audience) => {
     setLang(l)
     setMode(m)
     setName(n)
     setEmail(em)
+    setAudience(a)
   }
 
   return (
@@ -94,11 +96,11 @@ export default function QualifyPage() {
 
       <section className="qualify-stage">
         {outcome && lang ? (
-          <FinalScreen outcome={outcome} lang={lang} name={name} />
+          <FinalScreen outcome={outcome} lang={lang} name={name} audience={audience} />
         ) : !lang || !mode ? (
           <LanguagePicker onProceed={onProceed} />
         ) : mode === "voice" ? (
-          <VoiceRoom lang={lang} name={name} email={email} onOutcome={setOutcome} />
+          <VoiceRoom lang={lang} name={name} email={email} audience={audience} onOutcome={setOutcome} />
         ) : (
           <QualifyChat lang={lang} name={name} email={email} onOutcome={setOutcome} />
         )}

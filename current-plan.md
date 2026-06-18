@@ -1,275 +1,152 @@
-# current-plan.md — /therapists visual journey (recruiting behavioural-change experts) (2026-06-15)
+# current-plan.md — Therapist qualification call (a second audience for /qualify) (2026-06-16)
 
-> Neurotic-implementer rules in force: ask before deducing; therapist-facing copy needs
-> sign-off; never commit unless asked. ONE repo: samwise-landing.
+> Neurotic-implementer rules in force: ask before deducing; prospect/therapist-facing copy
+> needs sign-off; never commit unless asked. THREE surfaces: samwise-landing (/qualify +
+> lib/qualify), samwise-backend/ritual-agent (flows/qualification), samwise-backend/
+> cloud-functions (extractQualification).
 >
-> **Supersedes** the prior plan (/meet fade-in-place + samwise-app editorial deepening,
-> 2026-05-31) — that task SHIPPED. This file is fully overwritten for the new task.
+> **Supersedes** the prior plan (/therapists visual journey + booking meeting types) — that
+> task SHIPPED (landing journey, case switcher, /therapists/book + therapist 15-min meeting
+> type). This file is overwritten for the new task.
+>
+> ⚠️ STATUS: architecture + seams ready for review. A few open questions (DQ behaviour, the
+> post-questions pitch beat, route, calendar) must be answered before I write the final
+> prompt blocks. I will NOT invent the pitch copy or the DQ logic.
 
-## Task (master Vibe doc, Projects tab — IN PROGRESS)
-"Visual Journey for recruiting therapists." Prepare a visual journey of the *consultante*
-+ the *therapist* using a real anonymized case ("caso del amigo"), covering: first
-sessions, what the ritual is, and the agent-call frequency/type. Adapt the existing
-end-user materials for a therapist audience. Add: the "Sarah" success case,
-desidentification steps, a therapist ask/offer section, and a collaboration framework.
+## Task (user 2026-06-16)
+Build the **therapist version of the qualification call** — a second AUDIENCE for `/qualify`.
+"Two types of qualification calls: for users, and for therapists. The therapist one is
+identical, the only differences are: (1) the booking link books a **50-minute demo call**
+(where the /therapists visuals get presented), and (2) the opener + the **four questions /
+variables** captured. The rest of the prompt is **absolutely identical**."
 
-## What this deliverable IS (user clarification, 2026-06-15)
-A **standalone visual journey** that lives at `/therapists` and is **pullable up anytime**
-(incl. in-person meetings on a laptop/screen). It is **NOT a lead-capture funnel** — it does
-NOT end in a form. It ends by laying out the **offer + collaboration + "your first user"** as
-the live next step Samuel sets up *with* the person there.
+The four therapist questions (verbatim, user-supplied):
+> "I am helping people overcome certain addictions. I understand that you probably help some
+> patients that have addictions. Can I ask you four questions and then tell you about what
+> I'm doing?
+> - What is usually the addiction your patients have?
+> - When was the last time you had a patient with this problem?
+> - What have you tried to help this patient?
+> - Why has that failed to work?"
 
-Second venue (FUTURE, separate task): the same visuals get recycled into a **therapist
-version of the Demo Call** (reusing the existing LiveKit call experience, the way
-`demo-voice-room.tsx` recycled `/qualify`). **Consequence for THIS task:** build every new
-therapist-specific visual as a **self-contained, reusable component** (mirroring how
-`app/meet/story/` beats are reusable), so the future therapist-call can import them without
-a rewrite. Do NOT build the therapist-call itself in this task.
+## Where this sits in the therapist funnel (mirrors the user funnel)
+1. **Therapist qualification call** (AI, Nova, `/qualify` variant) — THIS task. Captures the 4
+   answers, then "tells them about what I'm doing", then books →
+2. **Therapist demo call** (50 min, **Samuel human-led**, drives the `/therapists` visuals) —
+   the recruit/pitch. **Separate / later task** — THIS task only builds the booking target
+   (a 50-min `therapist-demo` meeting type) so the qualification can book into it. (See "Scope".)
 
-## Decisions locked with the user (2026-06-15)
-- **Location:** NEW first-class route `app/therapists/` (NOT a variant, NOT canonical).
-- **Language:** English. Sarah's disidentification mantra translated FULLY to English (no
-  Spanish kept); her motivation translated to English.
-- **Visuals:** ADAPT the existing Ritual Story beats (`app/meet/story/`) as the shared
-  single source of truth; build only the NEW pieces (offer, collaboration, personalization
-  capture) as reusable components.
-- **Eyebrow:** "for behavioural change experts" (general, less clinically committed).
-- **Case is SIMPLE:** show how the process HELPED Sarah, not a granular step walk (see below).
-- **Close:** NOT a lead-capture form — a FUNCTIONAL personalization-capture step
-  (frontend-only) offering three process paths (use our template as-is / send us your own
-  process doc / edit our script right here) + the fields we need to personalize + "pick your
-  first user." **Delivery = on the spot:** captured live/in-person, assembled into an
-  on-screen structured summary + copy-to-clipboard (NO email, NO backend — Samuel grabs it in
-  the room). PLUS a quiet `/book` link framed as **"Book a quick 15-minute test of adopting
-  Samwise"** (for remote viewing / async follow-up). Capture **field list CONFIRMED** (incl.
-  the three likely-missed: per-step fit signal, current note tools, default cadence).
-  Wordmark links to `/`. OG/share card: reuse the existing canonical brand-mark card.
-- **Content:** SUPPLIED — ask/offer (verbatim below) + Sarah's ritual doc (Google Doc
-  `1AlFhHPkBB9n4eDIpAg4GtXw7IhANvyNv4ziNTBqEbaI`). PII stripped (no surname, no phone).
+## Approach — parameterize qualification by `audience` (mirror the meeting-type pattern)
+Add `audience: 'user' | 'therapist'` (default `'user'`) threaded through the whole stack. The
+therapist audience swaps ONLY: the opener-framing, the `<questions>` block, the variable
+DEFINITIONS, the variable labels, the extraction schema/prompt, and the final booking link.
+Everything audience-agnostic (Nova persona, conversational rules, `<audio-quality>`,
+`<end-of-call>` / finalize contract, pre-warmed opener, `<hard-rules>`, the converse→extract
+architecture, the voice-room surface) stays byte-identical. Default-`'user'` keeps the
+existing flow untouched.
 
-## Plan Summary
-A first-class English route at `/therapists`, scroll-told, designed to be presented live.
-It walks a behavioural-change expert through ONE real anonymized case (Sarah) end-to-end —
-structured around the **seven steps a Samwise therapist delivers** and using the EXISTING
-Ritual Story diagrams as the visual spine — then states the **ask/offer** and the
-**collaboration framework**, closing on "bring your first user." Editorial register
-identical to canonical (gallery white, Fraunces/Manrope, warm-gold accent, hairline-dash
-CTA, generous vertical space, restraint over polish). Beats imported from `app/meet/story/`
-(never forked); new pieces built self-contained for future reuse in the therapist-call.
-Static render (the `/story-preview` pattern: `lang="en"` + a case `VariablesState`, wrapped
-in the token context the SVG strokes need). No LiveKit / agent / DataChannel in this task.
-
-## The seven steps a Samwise therapist delivers (from the ask/offer)
-The case section is structured around these (they're literally what the therapist commits to):
-1. Functional analysis of the last relapse
-2. Desidentification
-3. Mapping of origin
-4. Identification of enablers
-5. Design of protection
-6. Identification of current belief system
-7. Design of action toward the new belief system
-
-## The ask / offer (verbatim — user-supplied, do not reword without sign-off)
-> We offer you to supply the sessions at your own price, pace and language, as long as you
-> fulfill the steps (functional analysis of last relapse, desidentification, mapping of
-> origin, identification of enablers, design of protection, identification of current belief
-> system, design of action to new belief system).
-> We offer you 50% of the revenue coming from the AI system. Which is 25 USD per month, since
-> we charge the AI agent at 50 USD monthly.
-> We have the goal of increasing the availability of therapists thanks to efficiencies gained
-> from Samwise, but this is yet to be proven.
-
-## Personalization capture — fields (close, Section 10) — PROPOSAL for sign-off
-The expert chooses ONE of the three process paths, then we capture what we need to set them
-up. Proposed fields (Samuel: trim/extend — these are my proposal incl. things you might be
-missing):
-- **You:** name · email (so we can reach you + arrange the 50% payout — see safety note).
-- **Region & time zone** — needed to schedule the agent calls for your users.
-- **Session language(s)** you'll run.
-- **Your price** per user / month (you set it) · **your pace** (how many users, what cadence).
-- **The behaviours you work with** (free text — e.g. screens, substances, relationships,
-  work avoidance).
-- **Process path** (a / b / c) + the payload:
-  - (b) → a link to / description of your own process document.
-  - (c) → the specific changes you'd make to our script (free text).
-- **Your first user** — initials/context + the behaviour they want to change + a rough
-  start date. (Anchors the "pick your first user" close.)
-- **Fit signal (likely-missed):** which of the seven steps you're fully comfortable delivering
-  vs. would want to adapt — surfaces objections/fit early, and tells Samuel where to coach.
-- **Your current note-taking / tools (likely-missed):** how you capture session notes today —
-  informs how your process maps onto ours.
-- **Default agent-call cadence (likely-missed):** the rhythm you'd want for your users by
-  default (Sarah ran 3/day — most won't).
-- **Anything else we should know to personalize** (free text).
-- **Revenue model acknowledgement** — a checkbox confirming the 50% / $25-of-$50 terms.
-> ⚠️ **Safety rule:** do NOT collect bank/card/account numbers or any payment credentials on
-> the page (prohibited). Capture email + "preferred payout method" as free text at most;
-> actual payout details are arranged off-page, directly with Samuel.
-
-## The case (Sarah) — source + mapping (PII stripped)
-Source: Sarah's ritual document. Strip "Coral" (surname) and the phone number; render
-"Sarah" + "a family member."
-- **Motivation (translate to EN):** "to be my most self-sufficient, capable self — able to
-  support a family and her businesses."
-- **Problems:** (1) self-destructive avoidance / isolation; (2) perfectionist expectation on
-  new tasks (the unsettling reality).
-- **Solution approach:** break isolation immediately + retrain expectations toward
-  effort-based pride over first-attempt perfection.
-- **The ritual = three daily agent calls (this IS the "frequency & type of agent calls"):**
-  - *Morning Protection* (8am / 10am fallback; 6am Tuesdays): assess vulnerable state,
-    activate social support, coordinate logistics & meals.
-  - *Afternoon Faith-Building* (2pm / 3pm fallback): document tasks attempted, name the
-    learning from failures/unknowns.
-  - *Evening Preparation* (9pm / 10pm fallback): plan morning logistics.
-- **Disidentification mantra (keep Spanish + EN gloss):** "Estoy siendo atacada por un
-  enemigo que me hace maltratarme" → *"I'm being attacked by an enemy that makes me mistreat
-  myself."* Reframes the struggle as external opposition.
-- **Belief reframe:** unconditional faith in facing discomfort; control her *response*, not
-  outcomes.
-> **Keep the case SIMPLE (user 2026-06-15):** do NOT walk every step granularly. Show how the
-> process HELPED Sarah — once she desidentified from her problem with our help (the enemy
-> reframe), she opened up much more easily and adopted everything (the ritual) far more
-> readily. The functional analysis is only the means by which we read identification level;
-> the point to land is the EASE that followed desidentification. The seven steps live in the
-> collaboration/offer section (what the therapist commits to), NOT as a granular case walk.
-
-## Why "adapt the beats" maps cleanly (the visual spine)
-| Existing beat (`app/meet/story/`) | Section in `/therapists` |
+## The therapist variables (NEW — snake_case, must match across prompt/schema/strings/CF per script-work Rule 4)
+| key | question | 
 |---|---|
-| `DocSpine` (`doc-spine.tsx`) | the Ritual Doc the therapist co-creates with the consultante |
-| `PromiseBeat` (`neuro-crossfade.tsx`) | what behaviour change looks like (two changes, two speeds) |
-| `DailyLoop` (`daily-loop.tsx`) | **agent-call frequency & type** — Sarah's 3 daily calls |
-| `RitualMechanism` (`ritual-mechanism.tsx`) | the ritual's components (said mantras + actionable protection / new belief) |
-| `CycleMap` (`cycle-map.tsx`) | the six-step multi-session arc — where the therapist's recurring work lives |
+| `patient_addiction_type` | What is usually the addiction your patients have? |
+| `last_patient_occurrence` | When was the last time you had a patient with this problem? |
+| `helped_patient_attempts` | What have you tried to help this patient? |
+| `why_attempts_failed` | Why has that failed to work? |
+(Captured verbatim, like the user vars. Names are my proposal — confirm or rename.)
 
-## Plan Architecture (Flow)
-Server route `app/therapists/page.tsx` (thin) → client orchestrator
-`app/therapists/therapists-journey.tsx` laying out ordered sections in NATURAL FLOW with
-`motion` `whileInView` reveals (`viewport={{ once: true, amount: 0.3 }}`, honoring
-`useReducedMotion()`) — NOT the heavy canonical FixedScene/PinFade choreography (reserved for
-the homepage). Existing beats render statically beneath their section headings; new pieces
-are self-contained components. Self-contained CSS `app/therapists/therapists.css`
-(`.therapists-root` scope; local brand tokens; literal `'Fraunces'`/`'Manrope'`; NO
-`var(--font-fraunces)`).
+## Seams to touch (from the stack map; default-'user' everywhere so the user flow is untouched)
 
-### Section order (the journey)
-1. **Header** — gold ✦ + "Samwise" italic wordmark (reuse canonical `.brand`/`.brand-star`),
-   wordmark links to `/`. Quiet EN colophon.
-2. **Hero** — eyebrow `FOR BEHAVIOURAL CHANGE EXPERTS` + editorial headline + invitation.
-   `[[PLACEHOLDER: hero headline — I'll propose 2–3 for sign-off; "We help people change
-   behavior…" is sloganeering, must be re-voiced editorially]]`.
-3. **Meet Sarah** — anonymized intro: her motivation, the two problems, where she started.
-4. **How the process helped Sarah** (SIMPLE — one clean narrative beat, not a 7-step walk).
-   The desidentification turn: once she stopped identifying with her problem (the enemy
-   reframe, translated mantra), she opened up far more easily and adopted the ritual readily.
-   Visual: `PromiseBeat` (the two-changes view) + `DocSpine` (her doc being filled).
-5. **Her ritual** — what Sarah's ritual became. Visual: `RitualMechanism`.
-6. **Her daily calls** — the three daily agent calls + cadence. Visual: `DailyLoop`.
-7. **The arc over time** — multi-session journey; names the therapist's recurring optimization
-   work. Visual: `CycleMap`.
-8. **Working with Samwise — the collaboration** — the seven steps you commit to; your price,
-   pace, language; where you plug in (onboarding / call design / optimization).
-9. **The offer** — 50% of AI revenue (25 USD/mo of the 50 USD/mo agent), at your own price/
-   pace/language; the availability-goal caveat ("yet to be proven"). From the verbatim block.
-10. **Set it up — personalization capture** (the close; FULLY FUNCTIONAL frontend, no backend
-    in v1). Three process paths the expert chooses between:
-    (a) **Use our template process as-is.**
-    (b) **Send us your own process** — describe it / paste a link to their document.
-    (c) **Edit our script right here** — write the specific changes they'd make.
-    Plus the personalization fields (see "Personalization capture — fields") and the "pick
-    your first user" prompt. **Delivery = ON THE SPOT:** on completion, assemble an on-screen
-    structured summary + a copy-to-clipboard button (Samuel grabs it live; NO email, NO
-    backend). Below it, a quiet hairline gold-dash `/book` link: **"Book a quick 15-minute
-    test of adopting Samwise"** (the remote/async path).
+### samwise-landing
+- `lib/qualify/qualification-prompt.ts` — `buildQualificationPrompt(language, name, mode, audience='user')`. Swap the opener-framing + `<questions>` + variable-definitions blocks on `audience`. Keep everything else identical. (The user blocks stay as-is for `audience='user'`.)
+- `lib/qualify/schema.ts` — `SetVariablesArgsSchema` variable-name union + `QualificationPayloadSchema`: allow the therapist keys (a per-audience key set, or a superset). `.nullish()` on optional fields (cross-provider rule).
+- `lib/qualify/strings.ts` — therapist variable labels (`notes_label_*`) for the panel, EN/ES, + any therapist final-screen copy.
+- `app/qualify/components/variables-panel.tsx` — extend the `VariableKey` union + label lookup with the 4 therapist keys (cards render only when non-empty, so a user call still shows only user vars).
+- `app/qualify/voice-room.tsx` — `VALID_VARIABLE_KEYS` includes the therapist keys; accept an `audience` prop.
+- `app/qualify/page.tsx` — thread `audience` (from the route/picker) → voice-init + voice-room.
+- `app/qualify/components/final-screen.tsx` — booking link becomes audience-aware: therapist → the 50-min therapist-demo booking (`/therapists/book?type=therapist-demo` or a dedicated link — see open Q).
+- `app/api/qualify/voice-init/route.ts` — accept `audience`, put it in dispatch metadata.
+- **Entry:** a thin route (proposed `app/therapists/qualify/page.tsx`) that renders the `/qualify` surface with `audience='therapist'` preset (mirrors `/therapists/book`). [open Q: route shape]
 
-## Plan Structure (Directories and files)
-```
-app/therapists/
-├── page.tsx                 # server, thin; real Samwise metadata (reuse canonical OG card)
-├── therapists-journey.tsx   # client orchestrator: ordered sections + motion reveals
-├── case-data.ts             # Sarah case as a typed object (PII stripped) + case VariablesState
-├── seven-steps.tsx          # NEW reusable: the 7-step delivery the therapist commits to (collab/offer use, NOT a case walk)
-├── offer-card.tsx           # NEW reusable: ask/offer (verbatim copy)
-├── collaboration.tsx        # NEW reusable: where the therapist plugs in (onboarding/call design/optimization)
-├── personalization-capture.tsx  # NEW reusable: the 3-path capture + fields; copy-to-clipboard + mailto (no backend)
-├── sections/                # thin per-section wrappers (page-local layout only)
-│   ├── hero.tsx
-│   ├── case-intro.tsx       # "Meet Sarah"
-│   ├── how-it-helped.tsx    # SIMPLE desidentification narrative; wraps DocSpine + PromiseBeat
-│   ├── the-ritual.tsx       # wraps RitualMechanism
-│   ├── the-calls.tsx        # wraps DailyLoop
-│   ├── the-arc.tsx          # wraps CycleMap
-│   └── close.tsx            # wraps personalization-capture ("set it up + your first user")
-└── therapists.css           # .therapists-root scope + the token context the beats need
-```
-Imports (single source of truth, NOT copied): `@/app/meet/story/doc-spine`,
-`/neuro-crossfade`, `/daily-loop`, `/ritual-mechanism`, `/cycle-map`,
-`@/app/meet/story/strings` (STORY_STRINGS), `@/app/qualify/components/variables-panel`
-(VariablesState type), `@/lib/qualify/strings` (Lang). Plus `@/app/meet/story/story.css` +
-the qualify token context (verify the strokes render — see Testing).
+### samwise-backend/ritual-agent
+- `src/types/metadata.ts` — add `audience: 'user' | 'therapist'` to `QualificationMeta` + parse it (default `'user'`). (There's a vestigial no-op `persona:'nova'` field — repurpose or sit beside it.)
+- `src/flows/qualification/prompts/qualification-prompt.ts` — mirror the landing prompt change. ⚠️ **Verify landing/worker prompt parity FIRST** (the stack map flagged a possible pre-existing drift) — sync before adding the audience swap so we don't fork 4 ways.
+- `src/flows/qualification/schema.ts` — mirror schema change.
+- `src/flows/qualification/agent.ts` — pass `meta.audience` to the prompt builder; `VALID_VARIABLE_KEYS` includes therapist keys.
+- `src/flows/qualification/index.ts` — include `audience` in the `extractQualification` POST body.
 
-## Modifications (in phases and steps)
+### samwise-backend/cloud-functions
+- `extractQualification` (`functions/src/index.ts`) — accept `audience`; for `'therapist'`, run a therapist extraction (the 4 vars + outcome) and store on the qualifications doc; audience-aware confirmation email copy + booking link. [depends on open Q: therapist payload + DQ]
+- `extraction_qualification_prompt.txt` — either branch by audience or add a sibling therapist extraction prompt. [depends on open Q]
 
-### Phase 1 — Route scaffold + token context (no content)
-- **1.1 `page.tsx`** — thin server; `export const metadata` (real Samwise, no v0 default;
-  reuse canonical OG); renders `<TherapistsJourney/>`.
-- **1.2 `therapists.css`** — `.therapists-root` scope; redeclare brand tokens AND the
-  `--ink`/`--ink-mute`/`--ink-soft`/`--rule`/`--gold` tokens the story SVGs read (mirror
-  `.qualify-root`). Literal font stacks. Section padding 120–160px.
-- **1.3 `therapists-journey.tsx`** — `"use client"`; lays out the 10 sections; `motion`
-  `whileInView` + `useReducedMotion()`; header wordmark links to `/`.
-- **Verify:** 200, beats render visibly (not white-on-white), no console errors.
+### samwise-app (booking target)
+- `lib/book/meeting-types.ts` — add a **`therapist-demo`** meeting type: **50 min**, its event title + confirmation copy, calendar via env (reuse `THERAPIST_BOOKING_CALENDAR_ID` or a new one — open Q). The therapist-qualify final screen books this. (The existing 15-min `therapist` adoption-test type stays for the /therapists landing close.)
 
-### Phase 2 — Wire beats + build the new reusable components
-- **2.1 `case-data.ts`** — Sarah's case `VariablesState` (`behaviour_to_change`,
-  `core_motivation`, `problem_duration_self_reported`, `life_stage_context`) + typed
-  narrative (PII stripped). Real values from the ritual doc.
-- **2.2** the beat-wrapping sections render `<Beat copy={STORY_STRINGS["en"]}
-  variables={sarahVars} …/>`. Risk: STORY_STRINGS labels are demo-call voice; if any reads
-  wrong for therapists, override via a thin local copy object (same shape), don't edit shared
-  strings. Verify in browser.
-- **2.3** build `seven-steps.tsx`, `offer-card.tsx`, `collaboration.tsx`,
-  `personalization-capture.tsx` as self-contained reusable components (props-driven, no
-  page-only coupling) so the future therapist-call can import them.
-- **2.4** `personalization-capture.tsx`: the 3-path chooser + the CONFIRMED fields (see
-  "Personalization capture — fields"); on complete, assemble a structured plain-text summary
-  shown ON SCREEN + a copy-to-clipboard button (delivery is on-the-spot/live — no email, no
-  persistence, no samwise-app route). Then a quiet hairline gold-dash `/book` anchor:
-  **"Book a quick 15-minute test of adopting Samwise."**
-  > Caveat: `/book` is currently the Breakthrough Call picker (against Samuel's calendar). For
-  > v1 reuse it as-is with the 15-min-test label; a distinct 15-min therapist slot type is a
-  > later follow-up if the duration/copy mismatch matters.
+## Modifications (phases) — final code blocks AFTER the open questions are answered
+- **Phase 1 — meeting type:** add `therapist-demo` (50 min) to `meeting-types.ts`; thread it as a `?type=` value the booking already supports.
+- **Phase 2 — landing prompt + schema + strings + panel** for `audience='therapist'` (opener-framing + 4 questions + 4 vars + labels), default-'user' untouched.
+- **Phase 3 — worker mirror** (parity-sync first), metadata `audience`, agent + index threading.
+- **Phase 4 — extractQualification** therapist extraction + storage + email + booking link.
+- **Phase 5 — entry route** (`/therapists/qualify` thin wrapper) + final-screen audience booking link + voice-init metadata.
 
-### Phase 3 — Copy pass + sign-off
-- Hero headline: propose 2–3 options for sign-off. Offer card uses the verbatim ask/offer.
-  Mantra Spanish+gloss (confirm). Translate Sarah's motivation. No invented case behaviour
-  beyond the ritual doc.
+## Testing
+- **Local:** `/therapists/qualify` (or `?audience=therapist`) renders the picker; voice-init dispatches with `audience='therapist'` (verify metadata). Worker `pnpm dev` + a self-dispatch (`lk dispatch create … --metadata '{"flow":"qualification","audience":"therapist",…}'`) → confirm Nova opens with the framing + asks the 4 questions + books the 50-min demo. `tsc --noEmit` clean in all three repos. The user `/qualify` flow is unchanged (regression check: default-'user').
+- **CF:** unit/manual — POST a therapist transcript to `extractQualification` with `audience:'therapist'`, confirm the 4 vars extracted + doc written + email + 50-min booking link.
+- Per skills: bump `BUILD_TAG` on `lk agent deploy`; verify the live build via self-dispatch log grep.
 
-### Testing phase
-- **Local (always):** `npm run dev` in `samwise-landing/`; open `/therapists`.
-  - `curl -s -o /dev/null -w "%{http_code}" localhost:3000/therapists` → 200.
-  - `preview_console_logs` level error → no motion NaN / missing-CSS warnings.
-  - `preview_inspect` a beat SVG stroke → computed `stroke` is an ink/gold token (not
-    transparent/white) → token context present.
-  - `preview_screenshot` desktop + 375px (mobile-first: no horizontal overflow, beats legible,
-    `aspectRatio` intact). Also test as a presentation surface (large viewport, legible from
-    a few feet — it's shown in meetings).
-  - Reduced-motion: beats degrade to opacity fade.
-- **Integration test:** none (static route).
-- **README:** n/a.
+## Decisions locked (user 2026-06-16)
+1. **DQ behaviour: ALWAYS book the demo.** No hard disqualification — every therapist who
+   answers the 4 questions is invited to book the 50-min demo. The therapist extraction has no
+   gate verdicts; outcome is always "qualified" (→ booking). (The `<continuous-evaluation>`
+   gate block is dropped for `audience='therapist'`.)
+2. **Pitch beat: I draft it.** After the 4 questions, Nova delivers a short (2–3 sentence)
+   Samwise pitch synthesized from the landing value (everyday rituals + AI follow-up + the
+   therapist offer), THEN moves to booking. I propose the copy for sign-off before ship.
+3. **Entry: a selector in the EXISTING `/qualify` flow.** NOT a separate route. Add a
+   user-vs-therapist choice to the `/qualify` language picker (one extra moment); `audience`
+   flows from that selection through the existing surface. (Drops the `/therapists/qualify`
+   route idea.)
+4. **Booking: a 50-min `therapist-demo` meeting type** (distinct from the 15-min `therapist`
+   adoption test). Calendar via `THERAPIST_BOOKING_CALENDAR_ID` (reuse) unless a separate
+   `THERAPIST_DEMO_CALENDAR_ID` is set (same fallback pattern). Confirmation copy therapist-flavored.
+5. **Scope: INCLUDE the 50-min demo call experience too** (Part C below) — the Samuel
+   human-led call that DRIVES the `/therapists` visuals. This is the large piece; it needs a
+   short design pass of its own (see Part C open items) before its code.
+6. **Variable names** — proceeding with the 4 proposed `snake_case` keys (adjust if you object).
 
-### After implementation
-- Update `context-for-code-agent.md`: add `/therapists` (first-class route; imports story
-  beats as shared visuals; new reusable seven-steps/offer/collaboration components intended
-  for future therapist-call reuse; English; section order; token-context note; PII rule).
-- Mark task DONE in master Vibe doc Projects tab (manual user step — NOT me).
+## Part C — the 50-min therapist demo call (now in scope; needs a short design pass)
+A Samuel human-led call (mirrors the prospect Demo Call's HUMAN mode: `/meet` + `WalkInShell`
++ `VideoCallExperience` + a copilot control) where the on-screen visuals are the **`/therapists`
+artifact anatomy** instead of the prospect `RitualStory`. Requires:
+- Make the `/therapists` visuals **stage-drivable** (a `TherapistStage` union, like `StoryStage`)
+  + a DataChannel contract (`therapist-demo:show_visual { stage }`), rendered on the therapist's
+  in-call surface.
+- A **control** on Samuel's side (a StoryControl-equivalent in samwise-app) to advance the stages.
+- Booking → a `/meet`-style human room dispatch (the scribe for transcription), reached from the
+  50-min `therapist-demo` booking.
+- **Design (decided 2026-06-17, mirrors the prospect human-demo pattern):**
+  - **Reuse `/meet`** human-call infra (the prospect↔Samuel video call: landing `call-room.tsx` +
+    `VideoCallExperience`, samwise-app `WalkInShell`, the scribe for transcription). The 50-min
+    `therapist-demo` booking lands the therapist on `/meet/[id]` exactly like a prospect; the only
+    difference is which visuals render in the notes column.
+  - **Stage-drivable visuals:** a `TherapistDemoStory` component (landing `app/meet/therapist-story/`)
+    mirrors `RitualStory` — renders ONE stage at a time from a `TherapistStage` union
+    (`hidden | case | ritual | call | arc | collaboration | offer`), REUSING the `/therapists`
+    components (`ArtifactAnatomy` for ritual+call, the beats, `Collaboration`, `OfferCard`, `CASES`).
+    Driven by a `therapist-demo:show_visual { stage }` DataChannel event (its own namespace; do NOT
+    reuse `demo-call:*`).
+  - **Booking flag:** the `therapist-demo` calendarBooking carries `kind: "therapist-demo"` so
+    `call-room.tsx` branches to `<TherapistDemoStory>` instead of `<RitualStory>`.
+  - **Samuel's control:** extend the samwise-app `StoryControl` (in `WalkInShell`) with a
+    therapist-demo mode that publishes the `therapist-demo:show_visual` stages.
+  - **Build order within C:** (1) `TherapistDemoStory` + a `/therapist-story-preview` harness
+    [landing, verifiable now]; (2) `call-room.tsx` branch on `kind`; (3) samwise-app StoryControl +
+    walk-in/init `kind` plumbing. Step 1 first (foundation, no LiveKit needed).
 
-## Open questions — ALL RESOLVED (2026-06-15)
-- Capture delivery: ON THE SPOT — on-screen summary + copy-to-clipboard, no email/backend. ✓
-- Capture fields: CONFIRMED as proposed (incl. fit-signal per step, current note tools,
-  default cadence). ✓
-- `/book` link in the close: INCLUDED, framed as "Book a quick 15-minute test of adopting
-  Samwise." ✓
+## Build order
+Part A (qualification variant) → Part B (50-min `therapist-demo` meeting type) → Part C (demo
+call experience, after its design pass). Verify each part in-browser before the next.
 
-The plan is fully specified. Only remaining gate: hero-headline wording (2–3 options proposed
-in Phase 3 for sign-off) — does NOT block scaffolding (Phases 1–2).
+## After implementation
+- Update `context-for-code-agent.md` (landing + ritual-agent + cloud-functions) with the audience parameter + therapist variables + the `/therapists/qualify` entry + the `therapist-demo` meeting type.
+- Keep lib/qualify ↔ worker mirror in lockstep (note in both headers).
+- Mark task DONE in master Vibe doc (manual user step).

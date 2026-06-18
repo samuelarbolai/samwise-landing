@@ -15,6 +15,10 @@ import {
 import "@/components/call/call.css"
 import type { MeetInitResponse } from "./lobby"
 import { RitualStory, type StoryStage } from "./story/ritual-story"
+import {
+  TherapistDemoStory,
+  type TherapistStage,
+} from "./therapist-story/therapist-demo-story"
 import { DemoVoiceRoom } from "./demo-voice-room"
 
 // Mirrors the demo-call user-side call-room: video tile (main) +
@@ -74,6 +78,10 @@ const STRINGS = {
 export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
   const [variables, setVariables] = useState<VariablesState>({})
   const [storyStage, setStoryStage] = useState<StoryStage>("hidden")
+  // Therapist-demo stage (Part C). Independent from storyStage so the same
+  // call-room can host either visual track without state collision.
+  const [therapistStage, setTherapistStage] =
+    useState<TherapistStage>("hidden")
 
   const onDataMessage = useCallback((msg: unknown) => {
     if (typeof msg !== "object" || msg === null || !("type" in msg)) return
@@ -99,6 +107,24 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
         stage === "experience"
       ) {
         setStoryStage(stage)
+      }
+      return
+    }
+
+    // Therapist-demo visuals — own namespace so it never collides with the
+    // prospect demo's show_visual stages.
+    if (type === "therapist-demo:show_visual") {
+      const stage = (msg as { stage?: unknown }).stage
+      if (
+        stage === "hidden" ||
+        stage === "case" ||
+        stage === "ritual" ||
+        stage === "call" ||
+        stage === "arc" ||
+        stage === "collaboration" ||
+        stage === "offer"
+      ) {
+        setTherapistStage(stage)
       }
       return
     }
@@ -129,8 +155,30 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
     return () => clearTimeout(t)
   }, [storyStage])
 
+  // Same one-time scroll-on-appear for the therapist demo visuals.
+  const prevTherapistStageRef = useRef<TherapistStage>("hidden")
+  useEffect(() => {
+    const prev = prevTherapistStageRef.current
+    prevTherapistStageRef.current = therapistStage
+    if (prev !== "hidden" || therapistStage === "hidden") return
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const t = setTimeout(
+      () => {
+        document.querySelector(".t-demo-story")?.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "start",
+        })
+      },
+      reduce ? 0 : 80,
+    )
+    return () => clearTimeout(t)
+  }, [therapistStage])
+
   const lang = init.booking.language
   const s = STRINGS[lang]
+  const isTherapistDemo = init.booking.kind === "therapist-demo"
   // Autonomous demo: the "other side" is the AI guide, not Samuel. Use
   // guide-neutral waiting copy and pass the audio-only voice-panel labels —
   // the agent publishes no video, so the remote tile would otherwise be a
@@ -191,7 +239,11 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
         className="demo-call-room-notes"
         aria-label={s.notes_label}
       >
-        <RitualStory lang={lang} stage={storyStage} variables={variables} />
+        {isTherapistDemo ? (
+          <TherapistDemoStory stage={therapistStage} />
+        ) : (
+          <RitualStory lang={lang} stage={storyStage} variables={variables} />
+        )}
         <VariablesPanel lang={lang} variables={variables} />
       </aside>
     </div>

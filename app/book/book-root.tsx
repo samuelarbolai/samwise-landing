@@ -41,7 +41,7 @@ type View =
     }
   | { kind: "done"; result: BookingResult }
 
-export type MeetingType = "breakthrough" | "therapist"
+export type MeetingType = "breakthrough" | "therapist" | "therapist-demo"
 
 function getSlotsUrl(type: MeetingType): string {
   const base = process.env.NEXT_PUBLIC_SAMWISE_APP_URL

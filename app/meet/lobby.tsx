@@ -20,6 +20,15 @@ export interface MeetInitResponse {
      * human therapist — the call-room uses it for guide-neutral copy + the
      * audio-only voice panel. */
     autonomous?: boolean
+    /** Meeting kind. Drives which in-call visuals the call-room renders in
+     * the notes column:
+     *   • default / "demo"           → <RitualStory> (prospect demo, the
+     *                                   ritual story beats).
+     *   • "therapist-demo"           → <TherapistDemoStory> (the /therapists
+     *                                   artifact visuals: case → ritual → call
+     *                                   → arc → collaboration → offer).
+     * Set by samwise-app's walk-in/init from the booking's meeting type. */
+    kind?: "demo" | "therapist-demo"
   }
 }
 

@@ -3,6 +3,10 @@ import { useState } from "react"
 import { STRINGS, type Lang } from "@/lib/qualify/strings"
 
 export type QualifyMode = "voice" | "text"
+// Audience — "user" (someone changing their own behaviour) or "therapist"
+// (a behavioural-change professional). Drives which qualification flow the
+// agent runs and where the final booking link points.
+export type Audience = "user" | "therapist"
 
 // Feature flag for the text-mode fallback ("I'd rather type"). Voice is
 // the primary path; text mode is built and works end-to-end (see
@@ -19,9 +23,16 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export function LanguagePicker({
   onProceed,
 }: {
-  onProceed: (lang: Lang, mode: QualifyMode, name: string, email: string) => void
+  onProceed: (
+    lang: Lang,
+    mode: QualifyMode,
+    name: string,
+    email: string,
+    audience: Audience,
+  ) => void
 }) {
   const [lang, setLang] = useState<Lang | null>(null)
+  const [audience, setAudience] = useState<Audience | null>(null)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
 
@@ -33,7 +44,7 @@ export function LanguagePicker({
   const trimmedName = name.trim()
   const trimmedEmail = email.trim()
   const emailValid = EMAIL_RE.test(trimmedEmail)
-  const ready = !!lang && trimmedName.length > 0 && emailValid
+  const ready = !!lang && !!audience && trimmedName.length > 0 && emailValid
 
   return (
     <div className="qualify-picker">
@@ -62,6 +73,31 @@ export function LanguagePicker({
 
       {lang && (
         <div className="qualify-picker-rest" key={lang}>
+          <div
+            className="qualify-picker-audience"
+            role="radiogroup"
+            aria-label={STRINGS[lang].picker_audience_label}
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={audience === "user"}
+              onClick={() => setAudience("user")}
+              className={`qualify-picker-aud ${audience === "user" ? "is-selected" : ""}`}
+            >
+              {STRINGS[lang].picker_audience_user}
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={audience === "therapist"}
+              onClick={() => setAudience("therapist")}
+              className={`qualify-picker-aud ${audience === "therapist" ? "is-selected" : ""}`}
+            >
+              {STRINGS[lang].picker_audience_therapist}
+            </button>
+          </div>
+
           <input
             type="text"
             className="qualify-picker-name"
@@ -89,7 +125,7 @@ export function LanguagePicker({
             type="button"
             className="qualify-picker-proceed"
             disabled={!ready}
-            onClick={() => onProceed(lang, "voice", trimmedName, trimmedEmail)}
+            onClick={() => onProceed(lang, "voice", trimmedName, trimmedEmail, audience!)}
           >
             <span className="qualify-cta-text">{STRINGS[lang].picker_proceed_voice}</span>
           </button>
@@ -99,7 +135,7 @@ export function LanguagePicker({
               type="button"
               className="qualify-picker-text-fallback"
               disabled={!ready}
-              onClick={() => onProceed(lang, "text", trimmedName, trimmedEmail)}
+              onClick={() => onProceed(lang, "text", trimmedName, trimmedEmail, audience!)}
             >
               {STRINGS[lang].picker_text_fallback}
             </button>

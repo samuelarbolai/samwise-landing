@@ -159,6 +159,47 @@
   background: var(--gold);
 }
 
+/* Audience selector — user vs therapist. Stacked hairline options (the labels
+   are sentences), gold underline on the selected one. Same register as the
+   language buttons. */
+.qualify-picker-audience {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.qualify-picker-aud {
+  position: relative;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--ink-mute);
+  font-family: 'Fraunces', Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.qualify-picker-aud::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+.qualify-picker-aud:hover,
+.qualify-picker-aud.is-selected {
+  color: var(--ink);
+}
+.qualify-picker-aud.is-selected::after {
+  width: 28px;
+}
+
 /* Post-language block — hidden until a language is picked.
    Recreates the parent's 3rem column gap for its own children, and
    fades / rises in softly when first mounted so the layout doesn't jump. */

@@ -16,6 +16,10 @@ export default async function BookPage({
   const { lang, type } = await searchParams
   const resolvedLang = lang === "es" ? "es" : "en"
   const meetingType: MeetingType =
-    type === "therapist" ? "therapist" : "breakthrough"
+    type === "therapist"
+      ? "therapist"
+      : type === "therapist-demo"
+        ? "therapist-demo"
+        : "breakthrough"
   return <BookRoot lang={resolvedLang} meetingType={meetingType} />
 }

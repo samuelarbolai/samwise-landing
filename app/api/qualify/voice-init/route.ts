@@ -28,11 +28,16 @@ function samwiseAppBase(): string {
 }
 
 export async function POST(req: Request) {
-  const { language, name, email } = (await req.json()) as {
+  const { language, name, email, audience } = (await req.json()) as {
     language: "es" | "en"
     name: string
     email: string
+    audience?: "user" | "therapist"
   }
+  // Therapists run the mirrored `qualification-therapist` flow (different
+  // opener + 4 questions + always-books close); everyone else runs the
+  // default user qualification.
+  const isTherapist = audience === "therapist"
   if (language !== "es" && language !== "en") {
     return Response.json({ error: "invalid language" }, { status: 400 })
   }
@@ -80,13 +85,22 @@ export async function POST(req: Request) {
     LIVEKIT_API_SECRET,
   )
   await dispatch.createDispatch(roomName, AGENT_NAME, {
-    metadata: JSON.stringify({
-      flow: "qualification",
-      language,
-      persona: "nova",
-      prospect_name,
-      prospect_email,
-    }),
+    metadata: JSON.stringify(
+      isTherapist
+        ? {
+            flow: "qualification-therapist",
+            language,
+            prospect_name,
+            prospect_email,
+          }
+        : {
+            flow: "qualification",
+            language,
+            persona: "nova",
+            prospect_name,
+            prospect_email,
+          },
+    ),
   })
 
   // Ensure the notify request is flushed before the serverless function

@@ -9,6 +9,7 @@ import {
 } from "livekit-client"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { STRINGS, type Lang } from "@/lib/qualify/strings"
+import type { Audience } from "./language-picker"
 import type { Outcome } from "./components/final-screen"
 import {
   VariablesPanel,
@@ -25,6 +26,11 @@ const VALID_VARIABLE_KEYS: Set<string> = new Set<VariableKey>([
   "core_motivation",
   "problem_duration_self_reported",
   "life_stage_context",
+  // Therapist audience (the four questions).
+  "patient_addiction_type",
+  "last_patient_occurrence",
+  "helped_patient_attempts",
+  "why_attempts_failed",
 ])
 
 type MicState = "idle" | "armed" | "speaking-hold" | "speaking-toggle"
@@ -57,11 +63,13 @@ export function VoiceRoom({
   lang,
   name,
   email,
+  audience,
   onOutcome,
 }: {
   lang: Lang
   name: string
   email: string
+  audience: Audience
   onOutcome: (outcome: Outcome) => void
 }) {
   const s = STRINGS[lang]
@@ -317,7 +325,7 @@ export function VoiceRoom({
         const resp = await fetch("/api/qualify/voice-init", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ language: lang, name, email }),
+          body: JSON.stringify({ language: lang, name, email, audience }),
         })
         qlog("voice-init status", resp.status)
         if (!resp.ok) throw new Error(`voice-init failed: ${resp.status}`)

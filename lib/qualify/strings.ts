@@ -47,6 +47,13 @@ export const STRINGS = {
     notes_label_symbolic_anchor_description: "De dónde sacas fuerza",
     notes_label_alternatives_tried: "Lo que has intentado",
     notes_label_why_alternatives_failed: "Lo que faltó",
+    notes_label_patient_addiction_type: "La adicción",
+    notes_label_last_patient_occurrence: "La última vez",
+    notes_label_helped_patient_attempts: "Lo que has intentado",
+    notes_label_why_attempts_failed: "Por qué no funcionó",
+    picker_audience_label: "¿Quién eres?",
+    picker_audience_user: "Quiero cambiar algo en mí",
+    picker_audience_therapist: "Soy terapeuta",
   },
   en: {
     picker_heading: "How would you like to talk?",
@@ -90,6 +97,13 @@ export const STRINGS = {
     notes_label_symbolic_anchor_description: "What you draw on",
     notes_label_alternatives_tried: "What you've tried",
     notes_label_why_alternatives_failed: "What was missing",
+    notes_label_patient_addiction_type: "The addiction",
+    notes_label_last_patient_occurrence: "Last time",
+    notes_label_helped_patient_attempts: "What you've tried",
+    notes_label_why_attempts_failed: "Why it failed",
+    picker_audience_label: "Who are you?",
+    picker_audience_user: "I want to change something in myself",
+    picker_audience_therapist: "I'm a therapist",
   },
 } as const
 
