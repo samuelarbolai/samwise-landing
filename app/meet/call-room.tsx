@@ -240,7 +240,7 @@ export function MeetCallRoom({ init }: { init: MeetInitResponse }) {
         aria-label={s.notes_label}
       >
         {isTherapistDemo ? (
-          <TherapistDemoStory stage={therapistStage} />
+          <TherapistDemoStory lang={lang} stage={therapistStage} />
         ) : (
           <RitualStory lang={lang} stage={storyStage} variables={variables} />
         )}
