@@ -1,0 +1,735 @@
+/* Framework blueprint — scoped under .framework-root */
+
+.framework-root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --ink-soft: #1a1a1a;
+  --ink-mute: #555555;
+  --ink-faint: #8a8a8a;
+  --rule: #e0e0e0;
+  --gold: #d4a85a;
+  --accent: #1f3023;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Manrope", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  min-height: 100dvh;
+  padding: 48px 24px 120px;
+}
+
+.framework-root *,
+.framework-root *::before,
+.framework-root *::after {
+  box-sizing: border-box;
+}
+
+.framework-container {
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+/* Header */
+.framework-header {
+  margin-bottom: 56px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 24px;
+}
+
+.framework-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.framework-brand {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 22px;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.005em;
+}
+
+.framework-brand-star {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 10px;
+  margin-left: 2px;
+  vertical-align: super;
+}
+
+.framework-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.15;
+  margin: 24px 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.framework-meta {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+/* Legend */
+.framework-legend {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--rule);
+  background: #fafafa;
+}
+
+.framework-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+
+.framework-legend-swatch {
+  flex-shrink: 0;
+  width: 32px;
+  height: 16px;
+  display: inline-block;
+}
+
+.legend-capture {
+  border-bottom: 2px solid var(--gold);
+  height: 1px;
+  margin-top: 7px;
+}
+
+.legend-agent-slot {
+  border: 1px dashed var(--gold);
+}
+
+.legend-subphase {
+  border-left: 2px solid var(--gold);
+  margin-left: 6px;
+  width: 26px;
+}
+
+/* Phase card */
+.phase-card {
+  margin-top: 48px;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  padding: 24px 28px;
+  position: relative;
+}
+
+.phase-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.phase-num {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--gold);
+  min-width: 56px;
+}
+
+.phase-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.phase-duration {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  white-space: nowrap;
+}
+
+.phase-goal {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+  border-left: 2px solid var(--gold);
+  padding-left: 14px;
+}
+
+/* Variables block */
+.phase-vars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1px solid var(--rule);
+}
+
+.phase-vars-col h4 {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 8px;
+}
+
+.phase-vars-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: "Manrope", sans-serif;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  color: var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.phase-vars-list li {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.phase-vars-list.is-out li {
+  border-color: var(--gold);
+  border-bottom-width: 2px;
+}
+
+.phase-vars-empty {
+  font-family: "Manrope", sans-serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* Beats */
+.phase-beats {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.phase-beats li {
+  position: relative;
+  padding-left: 18px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.phase-beats li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+}
+
+/* Sub-phase */
+.subphase {
+  border-left: 2px solid var(--gold);
+  margin: 20px 0;
+  padding: 14px 18px;
+  background: #fcfcfa;
+}
+
+.subphase-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+}
+
+.subphase .phase-beats li {
+  font-size: 12.5px;
+}
+
+.subphase-out {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--ink-mute);
+  margin-top: 6px;
+}
+
+/* Agent slot */
+.agent-slot {
+  margin-top: 20px;
+  border: 1px dashed var(--gold);
+  padding: 14px 16px;
+  background: #fffdf7;
+}
+
+.agent-slot-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.agent-slot-status {
+  color: var(--ink-mute);
+  font-size: 10px;
+}
+
+.agent-slot-textarea {
+  width: 100%;
+  min-height: 64px;
+  background: transparent;
+  border: none;
+  resize: vertical;
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  padding: 0;
+  outline: none;
+}
+
+.agent-slot-textarea::placeholder {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* Methodology diagrams */
+.methodology-block {
+  margin-top: 24px;
+  border-top: 1px solid var(--rule);
+  padding-top: 24px;
+}
+
+.methodology-eyebrow {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 14px;
+}
+
+.methodology-diagram {
+  margin: 0 0 32px;
+}
+
+.methodology-diagram-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  margin: 0 0 14px;
+}
+
+.methodology-diagram-note {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-mute);
+  margin: 8px 0 0;
+}
+
+/* Daily practice — bookended 5 min with surrender inside BEFORE */
+.practice-flow {
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr 24px 1fr;
+  gap: 0;
+  align-items: stretch;
+}
+
+.practice-col {
+  border: 1px solid var(--rule);
+  padding: 14px 16px;
+  background: var(--bg);
+}
+
+.practice-col--lists {
+  background: #fafafa;
+}
+
+.practice-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--gold);
+}
+
+.practice-tag {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 10px;
+}
+
+.practice-step {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+}
+
+.practice-step--quote {
+  color: var(--ink);
+}
+
+.practice-ref {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 4px 0 0;
+}
+
+.practice-surrender {
+  margin: 6px 0 12px;
+  border-left: 2px solid var(--gold);
+  padding: 4px 0 4px 12px;
+}
+
+.practice-surrender-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 8px;
+}
+
+.practice-surrender-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.practice-surrender-lines li {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  column-gap: 6px;
+  row-gap: 2px;
+}
+
+.practice-surrender-num {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--gold);
+  grid-row: 1;
+}
+
+.practice-surrender-text {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.practice-surrender-source {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10px;
+  color: var(--ink-mute);
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* Agency cycle */
+.cycle-wrap {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: center;
+}
+
+.cycle-svg {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  display: block;
+}
+
+.cycle-node-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--ink);
+}
+
+.cycle-step-num {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  fill: var(--gold);
+}
+
+.cycle-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.cycle-legend li {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.cycle-legend-num {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-right: 8px;
+}
+
+/* The climb · 5 rungs */
+.climb-intro {
+  margin: 0 0 18px;
+}
+
+.climb-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.climb-rung {
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--gold);
+  padding: 14px 18px;
+}
+
+.climb-rung-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.climb-rung-num {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--gold);
+}
+
+.climb-rung-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.climb-rung-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0 0 10px;
+}
+
+.climb-rung-when {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule);
+}
+
+.climb-rung-when-label {
+  font-family: "Manrope", sans-serif;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Rebounds card */
+.rebounds-card {
+  margin-top: 48px;
+  border: 1px solid var(--rule);
+  padding: 24px 28px;
+}
+
+.rebounds-summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rebounds-summary::-webkit-details-marker {
+  display: none;
+}
+
+.rebounds-summary::before {
+  content: "+";
+  color: var(--gold);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.rebounds-card[open] .rebounds-summary::before {
+  content: "−";
+}
+
+.rebounds-list {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+}
+
+.rebounds-list li {
+  border-top: 1px solid var(--rule);
+  padding: 12px 0;
+}
+
+.rebound-id {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--gold);
+  margin-right: 10px;
+}
+
+.rebound-parent {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-right: 8px;
+}
+
+.rebound-topic {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.rebound-when {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-mute);
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  .framework-root {
+    padding: 32px 16px 80px;
+  }
+
+  .phase-card,
+  .rebounds-card {
+    padding: 20px 18px;
+  }
+
+  .phase-num {
+    font-size: 32px;
+    min-width: 0;
+  }
+
+  .phase-title {
+    font-size: 18px;
+  }
+
+  .phase-vars {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .practice-arrow {
+    transform: rotate(90deg);
+    padding: 6px 0;
+  }
+
+  .cycle-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .climb-rung {
+    padding: 12px 14px;
+  }
+
+  .cycle-svg {
+    margin: 0 auto;
+  }
+}
