@@ -7,6 +7,17 @@ import "./styles.css"
 
 type Lang = "en" | "es"
 
+// Cross-origin destination for the inverted onboarding flow (added
+// 2026-06-29). Reads NEXT_PUBLIC_SAMWISE_APP_URL (already in active
+// use across landing — see /book, /meet, /api/qualify/voice-init).
+// `?from=transition` is the signal flag — the app's /start route reads
+// it on mount and runs its own opacity fade-in to mask the cross-
+// origin white flash. The gold-star transition overlay lives in this
+// document and cannot survive cross-origin navigation; this is the
+// best web platforms allow.
+const APP_URL = process.env.NEXT_PUBLIC_SAMWISE_APP_URL ?? "http://localhost:3000"
+const startUrl = () => `${APP_URL}/start?from=transition`
+
 const copy = {
   en: {
     eyebrow: "Samwise",
@@ -322,13 +333,13 @@ export default function EditorialHome() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      router.push("/qualify")
+      window.location.href = startUrl()
       return
     }
 
     const starEl = document.querySelector(".nav-star") as HTMLElement | null
     if (!starEl) {
-      router.push("/qualify")
+      window.location.href = startUrl()
       return
     }
 
@@ -336,18 +347,16 @@ export default function EditorialHome() {
     const cx = rect.left + rect.width / 2
     const cy = rect.top + rect.height / 2
 
-    // Tell /qualify it's arriving via this transition, so it starts at
-    // opacity 0 and fades in after the gold has covered the screen.
-    try {
-      sessionStorage.setItem("samwise:qualify-transition", "1")
-    } catch {
-      // sessionStorage may be unavailable (private mode, iframe).
-      // No-op: /qualify will just appear without fading.
-    }
+    // sessionStorage flag retired 2026-06-29 — cross-origin navigation
+    // to app.samwise.life means the receiving app can't read this
+    // origin's storage. Signal moved to the `?from=transition` URL
+    // param the app reads on mount to fade itself in.
 
-    // Hero fade-out + glow expansion run in parallel. The /qualify
-    // fade-in, however, is strictly gated on the glow's FULL cycle
-    // completion (poll for overlay removal in /qualify's useEffect).
+    // Hero fade-out + glow expansion run in parallel. Cross-origin
+    // navigation at t=525ms = gold's peak. App's /start route reads
+    // ?from=transition and runs its own opacity fade-in to mask the
+    // cross-origin white flash (the overlay element lives in this
+    // document and cannot survive cross-origin nav).
     setIsLeaving(true)
 
     const GLOW_DURATION_MS = 1500
@@ -382,10 +391,12 @@ export default function EditorialHome() {
       { duration: GLOW_DURATION_MS, easing: "ease-in-out", fill: "forwards" },
     )
 
-    // Navigate at the glow's peak so /qualify mounts behind full gold.
-    // /qualify polls for the overlay's removal and only fades itself in
-    // after the glow's full cycle completes.
-    setTimeout(() => router.push("/qualify"), GLOW_DURATION_MS * 0.35)
+    // Navigate at the glow's peak so the cross-origin white flash
+    // happens while the gold is at full coverage. window.location.href
+    // (NOT router.push) because we're crossing origins.
+    setTimeout(() => {
+      window.location.href = startUrl()
+    }, GLOW_DURATION_MS * 0.35)
 
     animation.finished
       .then(() => overlay.remove())
@@ -452,7 +463,7 @@ export default function EditorialHome() {
             </span>
           </a>
           <div className="nav-right">
-            <a href="/qualify" className="nav-link" onClick={handleStartClick}>{t.navStartNow}</a>
+            <a href={startUrl()} className="nav-link" onClick={handleStartClick}>{t.navStartNow}</a>
             <a href="#us" className="nav-link">{t.navUs}</a>
             <a href="#try" className="nav-link">{t.navTry}</a>
             <a href="/scientific-evidence" className="nav-link">{t.navValidation} →</a>
@@ -477,7 +488,7 @@ export default function EditorialHome() {
             <div className="eyebrow">{t.eyebrow}</div>
             <h1 className="editorial-hero-statement">{t.heroH1}</h1>
             <div className="dual-cta-row">
-              <a className="cta cta--primary" href="/qualify" onClick={handleStartClick}>
+              <a className="cta cta--primary" href={startUrl()} onClick={handleStartClick}>
                 <span className="cta-text">{t.dualCtaStart}</span>
               </a>
               <a
@@ -585,7 +596,8 @@ export default function EditorialHome() {
                 <p className="cta-action">
                   <a
                     className="cta cta--primary"
-                    href="/qualify"
+                    href={startUrl()}
+                    onClick={handleStartClick}
                   >
                     <span className="cta-text">{t.ctaButton}</span>
                   </a>

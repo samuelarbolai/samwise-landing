@@ -40,6 +40,13 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Warm the cross-origin handshake to app.samwise.life so the
+            inverted-onboarding Start Now click has a faster nav. The
+            gold-star transition runs on this origin but the destination
+            is cross-origin — every saved ms of TLS/DNS reduces the
+            white flash between the gold peak and app /start mounting. */}
+        <link rel="preconnect" href="https://app.samwise.life" />
+        <link rel="dns-prefetch" href="https://app.samwise.life" />
         <link
           href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Manrope:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
