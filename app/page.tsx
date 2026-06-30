@@ -380,7 +380,15 @@ export default function EditorialHome() {
       // hint of a bounding shape.
       background: `radial-gradient(circle at ${cx}px ${cy}px, #D4A85A 0%, rgba(212, 168, 90, 0.85) 14%, rgba(212, 168, 90, 0.55) 32%, rgba(212, 168, 90, 0.25) 55%, rgba(212, 168, 90, 0) 80%)`,
       transformOrigin: `${cx}px ${cy}px`,
-      filter: "blur(80px)",
+      // 40px instead of 80px (reduced 2026-06-29) — same reason as the
+      // destination-side GoldArrivalOverlay on samwise-app: Chrome's
+      // Skia backend re-blurs the full-viewport gradient every frame
+      // during the scale animation, which was visibly laggy on
+      // memory-pressured Chrome. Visually almost identical (the
+      // gradient's 5 soft stops do the heavy lifting on edge softness)
+      // but halves the per-frame GPU cost. Keep landing + app overlay
+      // values in sync — they're meant to look continuous.
+      filter: "blur(40px)",
       willChange: "transform, opacity, filter",
       opacity: "0",
       transform: "scale(0.05)",
