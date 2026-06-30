@@ -359,7 +359,13 @@ export default function EditorialHome() {
     // document and cannot survive cross-origin nav).
     setIsLeaving(true)
 
-    const GLOW_DURATION_MS = 1500
+    // Shortened from 1500ms (was: 525 expand → 300 peak → 675 contract,
+    // navigation interrupting at 525ms). Per user direction 2026-06-29
+    // the navigation now waits for the FULL cycle so the glow finishes
+    // visibly on the landing side; total wait must stay reasonable, so
+    // each phase is tightened (350 expand → 200 peak → 350 contract =
+    // 900ms total).
+    const GLOW_DURATION_MS = 900
 
     const overlay = document.createElement("div")
     overlay.setAttribute("data-qualify-transition-overlay", "")
@@ -381,26 +387,32 @@ export default function EditorialHome() {
     } as Partial<CSSStyleDeclaration>)
     document.body.appendChild(overlay)
 
+    // 350ms expand (0 → 0.39) → 200ms peak hold (0.39 → 0.61) →
+    // 350ms contract (0.61 → 1.0). The contract phase fades the glow
+    // BACK into the nav-star so the landing's gesture completes
+    // visibly before we cross origins.
     const animation = overlay.animate(
       [
         { transform: "scale(0.05)", opacity: 0, offset: 0 },
-        { transform: "scale(1.4)", opacity: 1, offset: 0.35 },
-        { transform: "scale(1.4)", opacity: 1, offset: 0.55 },
+        { transform: "scale(1.4)", opacity: 1, offset: 0.39 },
+        { transform: "scale(1.4)", opacity: 1, offset: 0.61 },
         { transform: "scale(0.05)", opacity: 0, offset: 1 },
       ],
       { duration: GLOW_DURATION_MS, easing: "ease-in-out", fill: "forwards" },
     )
 
-    // Navigate at the glow's peak so the cross-origin white flash
-    // happens while the gold is at full coverage. window.location.href
-    // (NOT router.push) because we're crossing origins.
-    setTimeout(() => {
+    // Navigate AT THE END of the animation (revised 2026-06-29 — was
+    // mid-cycle, which interrupted the contract and read as glitchy).
+    // The destination side mounts its own glow that emerges from-and-
+    // returns to the sidebar's gold star, so the cross-origin gap
+    // brackets gold on both sides instead of cutting it off.
+    const navigate = () => {
+      try { overlay.remove() } catch {}
       window.location.href = startUrl()
-    }, GLOW_DURATION_MS * 0.35)
-
+    }
     animation.finished
-      .then(() => overlay.remove())
-      .catch(() => overlay.remove())
+      .then(navigate)
+      .catch(navigate)
   }
 
   const handleDiscoverClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
