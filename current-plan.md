@@ -1,144 +1,157 @@
-# current-plan.md — `/framework` variant (2026-06-25)
+# current-plan.md — Samwise v2 launch: account app at `/v2` + new canonical landing (2026-09-12)
 
-> Neurotic-implementer rules: ask before deducing; nothing below ships until
-> signed off. Supersedes the prior `/lekatchila` plan (shipped).
+> Supersedes the `/goals` plan (shipped). Status: **implemented, awaiting `DATABASE_URL`
+> to verify the database paths end-to-end.**
 
-## Task (user 2026-06-25)
-A private internal blueprint for Samuel. NOT a public/recruiting surface. The
-user wants to **visualize the Onboarding framework in order, as a mind map**,
-so he can plan the **automation of each step with multiple AI agents**.
+## Task (user 2026-09-12)
+Three pieces, all inside `samwise-landing`:
+1. Build the "Ritual Calls" account app (signup / login / settings / read-only call history)
+   against the existing Neon Postgres, served at `/v2`.
+2. Move the current editorial landing to `/v1`, unchanged.
+3. Ship a new canonical landing at `/` — simpler, aggressive on the sale, high-end
+   e-commerce register — to convert cold Meta-ads traffic. No paywall (open beta).
 
-Two jobs the page does:
-1. **Hold the whole framework on one scrollable canvas** — phase by phase,
-   variable lineage explicit, the new "build the practice" sub-structure
-   (agency cycle + escalation ladder + pairing protocol) drawn as its own
-   diagram.
-2. **Reserve a labeled slot per phase for "the agent that runs this step"** —
-   empty today; filled in as Samuel assigns agents. The page becomes the
-   working surface for the automation plan.
+## Answered decisions (from user)
+1. **Location:** inside `samwise-landing` at `app/v2/` — one Vercel project, one deploy, no
+   rewrites, and the landing → signup link stays internal.
+2. **Language:** EN default + ES toggle, for both the landing and the v2 app.
+3. **CTA target:** straight to `/v2/signup`. `/qualify` is not in this funnel.
+4. **Register:** high-end DTC product page. Explicitly approved departures from the editorial
+   doctrine: filled CTA buttons, repeated CTAs + sticky mobile bar, denser rhythm, full-bleed
+   bands, announce bar.
 
-## Naming + access
-- **Route:** `/framework` (proposal — short, self-explanatory, not user-facing).
-- **Access:** unindexed (`robots: noindex, nofollow` in metadata). No nav link
-  from canonical. Samuel reaches it by typing the URL.
-- **Lang:** English only.
-
-## Hard rules (per skill)
-- It's a variant. Lives under `app/framework/`. Self-contained. Never touch
-  canonical or other variants.
-- **Editorial register stays** for visual consistency, but the page is
-  MORE diagrammatic than other variants — blueprint, not journey. Allowed:
-  hairline grid, monospace for variable names (Manrope tabular nums), gold
-  dashed boxes for "agent slot" placeholders, gold connecting lines for
-  variable flow.
-- Reuse story beats where they fit (`DailyLoop`, `CycleMap`) by importing
-  from `app/meet/story/` like `/therapists` and `/lekatchila` do. No fork.
-- Brand tokens local in `framework.css`. Literal Fraunces/Manrope stacks
-  (per the rejected-list note — `var(--font-fraunces)` resolves empty).
-- Mobile-first at 375px (Samuel reads this on phone too). Phase cards
-  collapse to single column under 720px; the agency-cycle diagram becomes
-  a vertical list under 720px.
-
-## File tree
-
+## Plan Architecture (Flow)
 ```
-app/framework/
-├── page.tsx                  server, thin. Metadata: noindex/nofollow.
-├── framework-blueprint.tsx   client orchestrator. Renders the spine of phase
-│                             cards + the methodology diagrams + the legend.
-│                             motion `whileInView` reveals + useReducedMotion().
-├── phase-card.tsx            one card per onboarding phase. Layout:
-│                             [num | title | goal] · [vars in → vars out] ·
-│                             [spoken-beats summary, collapsible] ·
-│                             [AGENT SLOT — dashed gold rectangle, empty]
-├── methodology-diagrams.tsx  the new "build the practice" visuals:
-│                             - three-beat surrender (3 stacked frase cards)
-│                             - agency cycle (4-beat loop drawn as a circle
-│                               with arrows; nested escalation ladder of 5
-│                               rungs to the right; pairing-protocol bookends
-│                               above and below)
-├── variable-lineage.tsx      a small static SVG showing which variables flow
-│                             where (unsettling_reality → frase 1, mantra →
-│                             frase 2, lists → escalator, etc.). Optional —
-│                             include if it doesn't clutter; otherwise drop.
-├── framework-data.ts         source of truth — the 14 phases with their goal,
-│                             vars_in, vars_out, beat_summaries, and an
-│                             AGENT_SLOT field (string | null) for the future
-│                             agent assignment. Currently all null.
-└── framework.css             scoped under .framework-root. Brand tokens,
-                              phase-card layout, agent-slot dashed-box,
-                              cycle/ladder/pairing SVG styles.
+Meta ad → /  (sw-root DTC landing, EN/ES)
+            → /v2/signup  → POST /api/v2/auth/signup → users + first call_schedules row
+                          → session cookie → /v2/settings
+         → /v2/login      → POST /api/v2/auth/login  → session cookie → /v2/settings
+
+/v2/settings (server-gated) → profile PATCH /api/v2/me
+                            → schedules  GET/POST /api/v2/schedules, PATCH/DELETE /:id
+                            → history    read-only from call_logs
+
+n8n (separate, not this app) reads users + active call_schedules daily, places the calls,
+writes call_logs.
 ```
 
-## Page structure (top → bottom)
+## Plan Structure (Directories and files)
+```
+NEW  app/page.tsx            server shell + metadata  (was the editorial landing)
+NEW  app/home.tsx            client DTC landing
+NEW  app/home-copy.ts        EN/ES copy, explicitly typed
+NEW  app/home.css            `.sw-*`, scoped under `.sw-root`
+MOVE app/v1/page.tsx         the old canonical, verbatim (git mv)
+NEW  app/v1/layout.tsx       noindex metadata
+NEW  app/v2/**               layout · page · login · signup · settings · strings · v2.css
+                             _components/{brand,lang,timezone-select,login-form,
+                                          signup-form,dashboard}
+NEW  app/api/v2/**           auth/{signup,login,logout} · me · schedules · schedules/[id]
+                             · call-history
+NEW  lib/v2/**               db · queries · session · validate · http
+DEPS @neondatabase/serverless · bcryptjs · jose
+```
 
-1. **Header** — Fraunces italic *"Framework blueprint"* + Manrope small-caps
-   *"Onboarding · 14 phases · 90 min · 1 clinician → N agents"*. Header
-   wordmark links to `/`.
-2. **Legend** (small, top-right or below header) — what the visual conventions
-   mean:
-   - solid gold dash = capture moment
-   - dashed gold box = AGENT SLOT (empty = unassigned)
-   - hairline gold line = variable flow between phases
-3. **Phase spine** — Phases 1 → 14 as cards in natural vertical flow. Each
-   card has the layout described above. Sub-phases (4a, 7a, 7b, 10a, 12a-d)
-   nest visually inside their parent.
-4. **The methodology diagrams** — rendered INSIDE Phase 12's card (since
-   that's where the new "build the practice" lives). Three diagrams stacked:
-   - the three-beat surrender
-   - the agency cycle (+ ladder + pairing bookends)
-   - the community-witness step pattern
-5. **The variable lineage** (if included) — a single static SVG at the
-   bottom showing the full variable-flow graph across phases.
-6. **Phase 15 — REBOUNDS (collapsed)** — listed as a single card with the 8
-   rebounds inside, since they're opt-in, not part of the linear automation.
+## Modifications — what shipped
 
-## What goes in each phase card (source of truth = `framework-data.ts`)
+### Phase 1 — data + auth layer (`lib/v2/`)
+- `db.ts` — lazy `neon()` singleton (missing env fails at request time, not build time),
+  `query(text, params)`, and `buildSetClause` for dynamic UPDATEs. Column names come from our
+  own literal whitelist; every value is bound.
+- `queries.ts` — all DB access. bcrypt cost 12. `password_hash` is read only inside
+  `verifyCredentials` and destructured off before returning. Every schedules/logs query carries
+  `WHERE user_id = $n`; PATCH/DELETE put ownership in the WHERE so a foreign row 404s.
+- `session.ts` — `jose` HS256 JWT in an httpOnly / sameSite=lax cookie `samwise_v2_session`,
+  30-day expiry, `SESSION_SECRET`.
+- `validate.ts` — E.164 `/^\+[1-9]\d{7,14}$/`, 24h `HH:MM`, IANA via `Intl` try/catch,
+  `toPgTime` (`HH:MM` → `HH:MM:SS`) and `toHHMM`.
+- **Should NOT be modified:** the table/column names. The schema is owned by the n8n side.
 
-For each phase (built from the v0.3 Onboarding script that's already in
-samwise-script-work):
-- `num` — phase number (1, 2, … 14)
-- `title` — e.g. "Open and reflect"
-- `duration_min` — 5
-- `goal` — one line
-- `vars_in` — variables this phase reads (pre-session or earlier phase)
-- `vars_out` — variables this phase captures
-- `beat_summaries` — array of one-line summaries of each SAY beat (NOT the
-  full SAY text — the card stays scannable)
-- `agent_slot` — `null` initially. Future: `{ name, model, prompt_ref, notes }`.
-- `subphases` — optional array of the same shape (4a, 7a, 7b, 10a, 12a-d)
+### Phase 2 — API routes (`app/api/v2/`)
+Mirrors the requested REST contract under a `/api/v2` prefix. Login returns one message for
+both unknown-email and wrong-password (no account enumeration). `handleError` maps
+`UnauthorizedError` → 401 and logs everything else server-side without leaking internals.
 
-## Aesthetic decisions to confirm
+### Phase 3 — v2 UI (`app/v2/`)
+Server components gate the session and redirect before any protected UI renders; client
+components own forms and language. Timezone is a from-scratch searchable combobox over
+`Intl.supportedValuesOf('timeZone')` with GMT offsets — no new dependency. Signup defaults the
+zone from `Intl.DateTimeFormat().resolvedOptions().timeZone`.
 
-- **Phase card width:** 720px max on desktop, full bleed (with 24px gutters)
-  on mobile. One card per row, not a 2-col grid (the variable flow lines
-  need vertical space).
-- **AGENT SLOT placeholder:** dashed gold rectangle (1px dashed `--gold`),
-  Manrope small-caps label *"AGENT: unassigned"*, ~60px tall, full card
-  width. Click reveals a textarea where Samuel can type the agent assignment
-  (saved to localStorage for v1; no backend).
-- **Variable flow lines:** off by default (visual noise). Toggle button at
-  the top right: *"Show variable flow"* draws hairline gold lines between
-  variable mentions across phase cards.
-- **The agency cycle diagram:** a 4-beat circular loop (Aprender → Idear →
-  Decidir → Intentar → back to Aprender). Each beat is a labeled node;
-  arrows between them. The escalation ladder draws as 5 horizontal rungs
-  to the right of the cycle (Rung 1 = "just the two lists" → Rung 5 =
-  "decisions with real cost"). The pairing protocol shows as two small
-  cards above and below the cycle (Before 60s / After 30s).
+### Phase 4 — `/v1` move
+`git mv app/page.tsx app/v1/page.tsx`; CSS import `./styles.css` → `../styles.css`; brand
+wordmark `href="/"` → `/v1`; added `app/v1/layout.tsx` with `robots: { index: false }`.
+`app/styles.css` was NOT touched, so every other route is unaffected.
 
-## Open questions before I write code
+### Phase 5 — new canonical landing
+See `context-for-code-agent.md` → "`/` — Samwise v2 landing" for the section order, the call
+card, and the held-vs-departed brand rules.
 
-1. **Route name** — `/framework` OK, or do you prefer `/blueprint` / `/map` /
-   `/plan` / something else?
-2. **Variable flow toggle** — worth building, or skip the SVG and just rely
-   on `vars_in`/`vars_out` columns on each card?
-3. **Agent slot persistence** — localStorage is fine for v1, or do you want
-   a Firestore write so the assignments survive across devices?
-4. **Include Phase 15 (rebounds)** as a collapsed card, or omit entirely?
-   (They're opt-in for the clinician, may not need an agent slot.)
-5. **Methodology diagrams** — do you want the three diagrams I described
-   (three-beat surrender / agency cycle+ladder+pairing / community-witness
-   ladder), or a different visual decomposition?
+### Phase 6 — Support Contacts (added 2026-09-12, after n8n shipped the outreach side)
+- `lib/v2/queries.ts` — `SupportContact` type + `listContacts` / `createContact` /
+  `updateContact` / `deleteContact`. Same ownership-in-the-WHERE rule as schedules.
+- `app/api/v2/contacts/route.ts` (GET, POST) and `contacts/[id]/route.ts` (PATCH, DELETE).
+  `user_id` always from the session. `active` is not accepted on insert — the column defaults
+  true and the REST contract's POST body is `{ name, phone, relationship? }`.
+- `ContactsSection` in `dashboard.tsx` — list with inline row-expand editing + an add form.
+- **House patterns pulled from samwise-app `/outreach` + `/trip`:** click-to-cycle status chip
+  (dashed pill replaces the pause/resume button, applied to schedules too), optimistic-first
+  mutations with revert, and the `--moss` / `--ash` status palette.
+- **Landing updated** — the support section badge changed from "Rolling out during the open
+  beta" to "New — live now in the open beta" (EN) / "Nuevo — ya disponible…" (ES), and FAQ #3
+  moved from future to present tense in both languages.
+- **Should NOT be modified:** the `support_contacts` column names, and the "you will not
+  receive this call" framing in `contactsSub` — that is the sentence that prevents users
+  misreading the feature as more calls to themselves.
 
-Answer these and I'll commit the file tree.
+### Phase 7 — Call language (added 2026-09-12)
+- `lib/v2/validate.ts` — `SUPPORTED_LANGUAGES = ["es","en","he"]` + `isLanguage`; anything else
+  is rejected with a 400 on all four write endpoints.
+- `language` threaded through `POST /auth/signup`, `PATCH /me`, `POST /contacts`,
+  `PATCH /contacts/:id`; new **public** `GET /api/v2/language-agents/active`.
+- `app/v2/_components/language-select.tsx` — segmented 3-option selector, `languageName`,
+  `useActiveAgentLanguages`, and the non-blocking `AgentComingSoon` notice.
+- Wired into signup, the settings profile, and contact add/edit; contact rows show the language
+  with a gold ring when its agent is pending, and the contacts section shows an aggregate
+  notice listing every contact still waiting.
+- **Should NOT be modified:** the "Call language" label and its *"Separate from the language of
+  this page"* help text — without them the Hebrew option reads as a UI-language switch. And
+  never write to `language_agents`.
+
+## Testing phase
+- **Local test — DONE.** `tsc --noEmit` clean for all new files (pre-existing errors remain in
+  `held-aurora`, `held-chamber`, `frodo-*`). Verified in-browser at 1440×900 and 375×812:
+  landing renders end-to-end with no console errors; EN↔ES toggle swaps every string;
+  `/v2/signup` and `/v2/login` render; timezone combobox filters ("madrid" → Europe/Madrid
+  GMT+2) and shows offsets; `/v1` still renders with its gold-dash CTAs intact.
+  Support Contacts verified via a throwaway `app/v2/dash-test` harness (since `/v2/settings`
+  needs a DB): list renders EN + ES, inline edit opens prefilled, the click-to-cycle chip flips
+  optimistically and **reverts on a 401** — which also confirmed the API refuses unauthenticated
+  writes. Harness deleted; build output confirms no stray `/v2/dash-test` route.
+- **Integration test — DONE 2026-09-12, 35/35 against the real Neon database.** Script kept at
+  the session scratchpad (`itest.sh`): signup (+201, no `password_hash` in body), duplicate
+  email 409, non-E.164 400, bad timezone 400, GET/PATCH `/me`, schedules CRUD with
+  `07:30 → 07:30:00` and `22:45 → 22:45:00` verified **unconverted**, contacts CRUD with
+  `active` defaulting true, call-history read, full session lifecycle, and a second user
+  proving cross-user isolation (404 on PATCH/DELETE of the other user's schedule AND contact,
+  empty contact list, victim row verified unmodified afterwards).
+  Test rows were deleted afterwards; the DB is back to its pre-test state (2 users,
+  3 schedules, 0 contacts, 0 logs). **Bugs this pass caught — see
+  `context-for-code-agent.md` for detail:** the `bigint`-as-string session bug (every
+  authenticated request 401'd), `goal_achieved` mistyped as text when it is boolean, the
+  unhandled `23505` unique-violation race on signup, and the undiscovered
+  `call_type` / `contact_id` columns.
+- **Call language — 10/10 against Neon (2026-09-12).** `GET /language-agents/active` public and
+  returning `["es","en","he"]`; signup with `language:"he"` persisted; `fr`, `de`, `klingon` and
+  a missing language all rejected 400 on signup, `PATCH /me`, `POST /contacts` and
+  `PATCH /contacts/:id`. The "coming soon" notice was verified through a throwaway
+  `app/v2/lang-test` harness forcing `activeLanguages=["es"]` (deleted after) — **not** by
+  editing `language_agents`, which this app must never write to. Both languages render the
+  spec copy verbatim, and picking an active language hides the notice reactively.
+  Test rows deleted; DB back to 2 users / 3 schedules / 0 contacts, `language_agents` untouched.
+- **Update README:** n/a (landing has none).
+
+## After implementation
+- `context-for-code-agent.md` — updated (Module Overview reframed for `/v1`; new `/` and `/v2`
+  sections appended).
+- Mark the task DONE in the master Vibe doc Projects tab — manual user step.

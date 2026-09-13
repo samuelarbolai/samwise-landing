@@ -1,0 +1,459 @@
+/* ─── Samwise v2 — account surface. Plain and functional, brand-consistent. ─── */
+
+.v2-root {
+  --bg: #ffffff;
+  --panel: #fafafa;
+  --ink: #000000;
+  --ink-mute: #555555;
+  --ink-faint: #8a8a8a;
+  --rule: #e0e0e0;
+  --gold: #d4a85a;
+  --accent: #1f3023;
+  --danger: #9a2f2f;
+  /* Status semantics borrowed from the paper-module palette in samwise-app
+     (/outreach, /trip) so active/paused reads the same across Samwise tools. */
+  --moss: #2d5a3d;
+  --ash: #b5afa1;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.v2-root * { box-sizing: border-box; }
+.v2-root p, .v2-root h1, .v2-root h2, .v2-root h3, .v2-root ul, .v2-root li { margin: 0; padding: 0; }
+.v2-root ul { list-style: none; }
+
+/* ── header ── */
+.v2-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.v2-brand {
+  position: relative;
+  display: inline-block;
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "opsz" 36;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.v2-brand__star {
+  position: absolute;
+  top: -3px;
+  right: -12px;
+  width: 8px;
+  height: 8px;
+  color: var(--gold);
+}
+
+.v2-header-right { display: flex; align-items: center; gap: 18px; }
+
+.v2-headerlink {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.v2-headerlink:hover { color: var(--ink); }
+
+/* ── language toggle ── */
+.v2-lang { display: inline-flex; gap: 6px; align-items: center; }
+.v2-lang button {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.v2-lang button[aria-pressed="true"] { color: var(--ink); border-bottom: 1px solid var(--gold); }
+.v2-lang span { color: var(--rule); font-size: 11px; }
+
+/* ── layout ── */
+.v2-main { max-width: 980px; margin: 0 auto; padding: 56px 24px 120px; }
+.v2-main--narrow { max-width: 420px; }
+
+.v2-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "opsz" 72;
+  font-size: clamp(30px, 5vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.v2-sub { margin-top: 10px; color: var(--ink-mute); font-size: 14px; }
+
+/* ── sections ── */
+.v2-section { margin-top: 56px; }
+.v2-section:first-of-type { margin-top: 40px; }
+
+.v2-section-head { margin-bottom: 20px; }
+
+.v2-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.v2-section-sub { margin-top: 6px; font-size: 13px; color: var(--ink-mute); max-width: 56ch; }
+
+.v2-panel { border: 1px solid var(--rule); border-radius: 10px; padding: 22px; background: var(--bg); }
+
+/* ── forms ── */
+.v2-field { margin-bottom: 18px; }
+.v2-field:last-child { margin-bottom: 0; }
+
+.v2-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 7px;
+}
+
+.v2-input {
+  width: 100%;
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.v2-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 168, 90, 0.16); }
+.v2-input::placeholder { color: var(--ink-faint); }
+
+.v2-help { margin-top: 6px; font-size: 12px; color: var(--ink-faint); }
+
+.v2-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.v2-row > * { flex: 1 1 160px; }
+.v2-row > .v2-shrink { flex: 0 0 auto; }
+
+/* ── buttons ── */
+.v2-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 22px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 7px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.v2-btn:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+.v2-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.v2-btn--ghost {
+  width: auto;
+  color: var(--ink);
+  background: transparent;
+  border-color: var(--rule);
+}
+.v2-btn--ghost:hover:not(:disabled) { background: transparent; border-color: var(--ink); color: var(--ink); }
+
+.v2-btn--sm { width: auto; padding: 9px 15px; font-size: 11px; }
+
+.v2-textbtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-mute);
+  cursor: pointer;
+  text-decoration: none;
+}
+.v2-textbtn:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.v2-textbtn--danger:hover { color: var(--danger); }
+
+/* ── messages ── */
+.v2-error {
+  margin-bottom: 16px;
+  padding: 10px 13px;
+  border: 1px solid rgba(154, 47, 47, 0.3);
+  border-radius: 7px;
+  background: rgba(154, 47, 47, 0.05);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.v2-ok { font-size: 12px; font-weight: 600; color: var(--accent); }
+
+.v2-altline { margin-top: 24px; text-align: center; font-size: 13px; color: var(--ink-mute); }
+.v2-altline a { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── timezone combobox ── */
+.v2-tz { position: relative; }
+.v2-tz-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.22);
+}
+.v2-tz-list li { padding: 0; }
+.v2-tz-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 13px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.v2-tz-option:hover, .v2-tz-option[data-active="true"] { background: var(--panel); }
+.v2-tz-offset { color: var(--ink-faint); font-size: 12px; margin-left: 6px; }
+.v2-tz-empty { padding: 12px 13px; font-size: 13px; color: var(--ink-faint); }
+
+/* ── schedules ── */
+.v2-sched { border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.v2-sched-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.v2-sched-item:last-child { border-bottom: none; }
+.v2-sched-item[data-active="false"] .v2-sched-time { color: var(--ink-faint); }
+
+/* Width is auto so locale formats that append AM/PM (or "a. m." in es-CO)
+   are not clipped; `width` on a time input does not shrink-to-fit. */
+.v2-sched-time {
+  font-family: "Fraunces", Georgia, serif;
+  font-variation-settings: "opsz" 36;
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* Click-to-cycle status chip (the /trip pattern): the dashed border is the
+   tell that the chip itself is the control — no separate pause/resume button. */
+.v2-badge {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 99px;
+  border: 1px dashed var(--ash);
+  background: none;
+  color: var(--ink-mute);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.v2-badge[data-on="true"] { border-color: var(--moss); color: var(--moss); }
+.v2-badge[data-on="false"] { border-color: var(--ash); color: var(--ash); }
+.v2-badge:hover { border-style: solid; }
+.v2-badge:disabled { cursor: default; opacity: 0.6; }
+
+.v2-sched-actions { margin-left: auto; display: flex; gap: 14px; align-items: center; }
+
+.v2-sched-empty { padding: 22px 18px; font-size: 13px; color: var(--ink-faint); }
+
+.v2-sched-add { display: flex; gap: 12px; align-items: flex-end; margin-top: 16px; flex-wrap: wrap; }
+.v2-sched-add .v2-field { margin-bottom: 0; }
+
+/* ── call-language selector ── */
+.v2-langrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.v2-langopt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.v2-langopt:hover { border-color: var(--ink-mute); }
+.v2-langopt[data-on="true"] { border-color: var(--gold); color: var(--ink); }
+.v2-langopt[data-on="false"] { color: var(--ink-mute); }
+.v2-langopt input { accent-color: var(--gold); margin: 0; }
+
+/* Non-blocking: the choice still saves, the backend queues the agent. */
+.v2-soon {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--gold);
+  border-radius: 7px;
+  background: rgba(212, 168, 90, 0.07);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.v2-soon__title {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.v2-soon ul { margin-top: 7px; }
+.v2-soon li { font-size: 13px; color: var(--ink-mute); }
+
+/* ── support contacts ── */
+.v2-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.v2-contact-item:last-child { border-bottom: none; }
+.v2-contact-item[data-active="false"] .v2-contact-name { color: var(--ink-faint); }
+
+.v2-contact-main { min-width: 180px; }
+
+.v2-contact-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-variation-settings: "opsz" 36;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.v2-contact-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 3px; font-size: 13px; }
+.v2-contact-phone { color: var(--ink-mute); font-variant-numeric: tabular-nums; }
+.v2-contact-rel { color: var(--ink-faint); }
+
+.v2-contact-edit { width: 100%; }
+.v2-contact-edit-actions { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
+
+.v2-contact-add { margin-top: 20px; }
+.v2-contact-add-heading {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 14px;
+}
+.v2-contact-add .v2-field { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .v2-contact-main { min-width: 0; flex: 1 1 100%; }
+}
+
+/* ── call history ── */
+.v2-call {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+}
+.v2-call-top { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+
+.v2-call-when {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-variation-settings: "opsz" 36;
+  font-size: 17px;
+}
+
+.v2-call-result { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; }
+.v2-call-result[data-ok="true"] { color: var(--accent); }
+.v2-call-result[data-ok="false"] { color: var(--danger); }
+
+/* Outreach placed on the user's behalf — distinct from a call they received. */
+.v2-call-kind {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--gold);
+  color: var(--accent);
+}
+
+.v2-call-meta { margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--ink-mute); }
+.v2-call-meta dt { display: inline; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; font-size: 10px; color: var(--ink-faint); }
+.v2-call-meta dd { display: inline; margin: 0 0 0 5px; }
+
+.v2-call-summary { margin-top: 12px; font-size: 14px; color: var(--ink); line-height: 1.6; }
+
+.v2-skeleton { color: var(--ink-faint); font-size: 13px; padding: 18px 0; }
+
+/* ── mobile ── */
+@media (max-width: 640px) {
+  .v2-main { padding: 36px 18px 96px; }
+  .v2-header { padding: 16px 18px; }
+  .v2-sched-actions { margin-left: 0; width: 100%; }
+  .v2-sched-time { font-size: 22px; min-width: 76px; }
+}
+
+/* Call language on a contact row — gold ring while its agent is still pending. */
+.v2-contact-lang {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  border: 1px solid transparent;
+  border-radius: 99px;
+  padding: 1px 7px;
+}
+.v2-contact-lang[data-pending="true"] { border-color: var(--gold); color: var(--accent); }

@@ -21,7 +21,17 @@ The parent project (`arbor`) is Samwise: a system that helps users overcome beha
 - `samuel-2026/` — sandbox / personal scratch space.
 
 ## Module Overview — samwise-landing
-Public landing page for Samwise. The canonical page (`app/page.tsx`) uses a multi-scene scroll choreography. Structure (promoted through `/tease` → `/vingilot` → `/quiet-cta` → `/dual-cta`):
+
+**As of 2026-09-12 (Samwise v2 launch) the canonical page changed.** `app/page.tsx` is now a
+high-end DTC product page built to convert cold Meta-ads traffic into free open-beta signups.
+The previous editorial landing was moved verbatim to **`/v1`** (`app/v1/page.tsx`, `noindex`),
+and the account app lives at **`/v2`**. See the `/` (v2 landing) and `/v2` sections below.
+
+Everything in the rest of this Module Overview describes the **`/v1`** page, which is unchanged
+apart from its CSS import path (`../styles.css`) and its brand wordmark now linking to `/v1`.
+
+### `/v1` — the preserved editorial landing
+Multi-scene scroll choreography. Structure (promoted through `/tease` → `/vingilot` → `/quiet-cta` → `/dual-cta`):
 
 - **Collapse-to-star navbar.** 4 links in this order: `Start now` (→ `/qualify`, neutral color — emphasis from position not color) / `Us` (#us) / `Try` (#try) / `Scientific Evidence` (→ `/scientific-evidence`). Plus EN/ES toggle. `Advisors` was removed in the dual-cta promotion.
 - **Hero (FixedScene).** Eyebrow `SAMWISE` + h1 + a stacked, left-aligned `.dual-cta-row` directly below the h1 with two `.cta--primary` anchors: `Start now` (→ `/qualify`, fires the gold-star transition — see below) and `Discover Samwise` (`href="#voice"`, intercepted with `handleDiscoverClick` to soft-scroll one viewport + pulse the bottom-edge `.discover-glow`). Both CTAs are sized to match the eyebrow above (Manrope 11px / weight 600 / 0.22em letter-spacing).
@@ -250,3 +260,190 @@ A standalone English journey for a Lekatchila organizer (the Charedi first-year-
 - **Aesthetic identical to `/therapists`** — gallery white, Fraunces + Manrope literal stacks (NO `var(--font-fraunces)`), warm-gold accent, hairline rules, `.l-cta` gold-dash-collapse (mirrors `.t-cta` / `.cta--primary`). Eyebrow *"FOR LEKATCHILA"*, h1 *"The first year, *made daily.*"* with italic-forest emphasis. Header is canonical Samwise wordmark only — Lekatchila is named in eyebrow + body copy, NOT co-branded.
 - **Metadata** (`page.tsx`): *"Samwise for Lekatchila — a variant for the first year of marriage"* + matching openGraph. App-root `opengraph-image.tsx` auto-applies the canonical brand-mark card.
 - **Verified at 1280px + 375px** (no horizontal overflow at 375). All four story beats render with strokes resolving to gold/ink via the `story.css` import.
+
+## `/goals` — private printable monthly goal board (first-class route, added 2026-08-01)
+
+A personal utility for Samuel, NOT a marketing/public surface — same unindexed treatment as `/framework` (`robots: { index: false, follow: false }`, no nav link, English only, reached by typing the URL). Lets him type 4 goal names (1 northstar + 3 others), pick a month, and print a blank calendar-style grid (goal rows × day columns) to physically log progress on a real board by hand — the page's only job is to produce a clean print-ready template, not to track anything itself.
+
+- **Route structure** (`app/goals/`): `page.tsx` (server, thin, noindex metadata) → `goals-board.tsx` (client: 4 text inputs, a native `<input type="month">`, an orientation toggle, a Print button calling `window.print()`, and the live grid preview) → `goals.css` (scoped `.goals-root`, literal Fraunces/Manrope stacks, `@media print` rules).
+- **No backend.** State (`northstar`/`goal2`/`goal3`/`goal4`/`month`/`orientation`) round-trips to `localStorage` under `samwise:goals-board` so goal names persist across visits without retyping — consistent with landing having no Firestore access.
+- **Grid mechanics.** Day count is computed from the picked month (`new Date(year, month, 0).getDate()`), so it correctly renders 28–31 columns. Weekend columns get a faint `rgba(0,0,0,0.035)` tint for scannability. Every goal×day cell is deliberately blank (no placeholder content) — sized for a physical sticker/token. Row labels get `padding-left: 14px` so goal names don't sit flush against the table's left border.
+- **Northstar row is visually featured** — taller (68px vs 44px), larger Fraunces italic label with a gold ✦ marker, and set apart from the other 3 rows by a `var(--gold)` rule instead of the default hairline `var(--rule)`.
+- **Print is the browser's native dialog** — no PDF library, no server rendering. `.goals-controls` (header + form) is hidden via `@media print`; only `.goals-grid` remains.
+- **Print-column width bug (fixed 2026-08-01).** The first shipped version used `table-layout: fixed; width: 100%` with `width: auto` on all 31 day columns — Chrome's print rasterizer dropped hairline vertical borders on most columns (only ~5 of 31 kept their divider lines; a real printed PDF confirmed it, screenshots didn't catch it). Root cause: `width: auto` forces the browser to divide remaining space across many columns at layout time, and print-DPI rounding on that computed fractional width makes borders vanish unpredictably. **Fix: every column gets an identical explicit width** (currently `1.9in` label / `0.25in` per day column — see next bullet for why label grew) instead of `auto` — removes the rounding ambiguity entirely. `.goals-grid { border: 1px solid var(--rule) }` also closes the outer box edges.
+- **Orientation toggle + portrait-rotation clipping bug (both 2026-08-01).** A Landscape/Portrait control next to Print, persisted in state. Portrait is a literal 90° rotation of the SAME landscape-shaped grid (user's explicit call — not a transposed goals-as-columns/days-as-rows layout). The `@page` rule is no longer static in `goals.css`; it's injected via an inline `<style>` tag in `goals-board.tsx` (`@page { size: letter ${orientation}; margin: 12mm }`) so it can react to the toggle.
+  - **First rotation attempt** used `position: fixed; top/left: 50%; transform: translate(-50%,-50%) rotate(90deg)` on `.goals-grid-wrap`. A real printed PDF showed goal-name text missing from the START of the label (e.g. "Main Push Night" → "Push Night") — that's physical clipping against the page edge, not CSS `text-overflow: ellipsis` (which only ever truncates the end). Root cause: percentage `top`/`left` on a `position: fixed` element resolve against the page's initial containing block, and that resolution isn't reliable once a `transform` is layered on in Chrome's print pipeline.
+  - **Fix:** center via normal document flow instead of `position: fixed` + percentage math — `.goals-orientation-portrait .goals-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }` plus a plain `.goals-orientation-portrait .goals-grid-wrap { transform: rotate(90deg); transform-origin: center center; }`. Flexbox centers the pre-rotation box via ordinary layout; rotating around its own center never moves that centerpoint, so there's no containing-block ambiguity left to get wrong.
+  - **Label width grew from 1.5in → 1.9in** (day columns shrank 0.26in → 0.25in to keep the total within budget) once the clipping was fixed, so real goal names ("Main Push Morning") render in full instead of hitting ellipsis immediately — only genuinely long names still truncate.
+  - On-screen preview uses the same rotate approach (no fixed-position) via `.goals-grid-wrap--rotated` for a rough live preview.
+  - **Follow-up bug: the northstar row still truncated its label after the fix above.** `.goals-grid-row--northstar .goals-grid-rowlabel { font-size: 18px }` (a base, non-print rule, 2-class specificity) outranks the plain `.goals-grid-rowlabel { font-size: 13px }` print override (1-class specificity) regardless of source order or media context — specificity always wins ties like this. So the northstar label kept rendering at the screen-only 18px in print, overflowed the identical 1.9in column harder than the other rows, and hit the ellipsis sooner (a real printed PDF caught this too, same 1.9in-fits-fine result the other three rows got wasn't shared by northstar). **Fix:** added `.goals-grid-row--northstar .goals-grid-rowlabel { font-size: 13px }` inside `@media print` — matching specificity, later in the cascade, wins. The featured look for northstar still comes through in print via the ✦ marker, the taller row, and the gold underline; it doesn't need a bigger font too.
+- **Verification method: real headless-printed PDFs, not screenshots.** Both bugs above were invisible in the dev-server screenshot/preview and only showed up in an actual printed PDF — the same lesson as the OG-image work elsewhere in this file. Reproduce with `google-chrome --headless=new --disable-gpu --no-sandbox --print-to-pdf=<path> --print-to-pdf-no-header --run-all-compositor-stages-before-draw --virtual-time-budget=5000 <url>`, then read the PDF back (Read tool renders PDF pages as images). To test specific goal names/orientation without clicking through the UI in headless mode, temporarily hardcode the values into `defaultState()`, print, verify, then revert — localStorage doesn't carry over into a fresh headless Chrome profile.
+
+## `/` — Samwise v2 landing (canonical since 2026-09-12)
+
+The conversion surface for the paid Meta-ads operation. Replaces the editorial landing, which
+now lives at `/v1`.
+
+**Files**
+```
+app/page.tsx        server component — owns metadata (title/description/canonical/OG/twitter)
+app/home.tsx        "use client" — the whole page; EN/ES state + motion reveals
+app/home-copy.ts    HOME_COPY: Record<Lang, HomeCopy>, explicitly typed (no `as const`)
+app/home.css        scoped under `.sw-root`, all classes `.sw-*`
+```
+
+**Register — a deliberate departure from the editorial doctrine, approved by the user
+2026-09-12.** Held from the brand system: Fraunces *italic* wordmark + the 8px gold ✦ (same
+sparkle path as the navbar/OG star), gallery white / ink / `#555` mute / `#E0E0E0` rule /
+forest `#1F3023` / gold `#D4A85A`, Fraunces display + Manrope UI on literal font stacks, no
+emoji, no gradients-as-decoration, no testimonials. **Departures (do not "fix" these back):**
+filled black CTA buttons, the CTA repeated 4× plus a sticky mobile bar, ~96–120px section
+rhythm instead of the editorial 160–180px, full-bleed forest and ink bands, and a top announce
+bar. These are scoped to `.sw-root` only — `app/styles.css` and every other route are untouched.
+
+**Section order:** announce bar → sticky nav → hero (h1 + the call card) → forest band (the
+loop) → 3 numbered steps → the daily call + spec list → forest band (support group) → clinical
+credibility → FAQ (`<details>`, no JS) → ink band final CTA → footer → sticky mobile CTA.
+
+- **The call card** is the one memorable object: hairline card, gold ✦ with two CSS `sw-ping`
+  rings on a 2.8s stagger, "Samwise / calling… / 07:00 / Your time. Every day." It states the
+  whole product in one glance, which is what cold paid traffic needs in two seconds.
+- **Every CTA points at `/v2/signup`** (`?lang=es` when Spanish). `/qualify` is NOT in this
+  funnel — the v2 product has no qualification gate during the open beta.
+- **The support-group section is badged "Rolling out during the open beta."** The feature is
+  not built. Do not remove the badge or upgrade the copy to present tense until it ships —
+  it is both honest and a Meta-ads claims liability.
+- **Language** is EN default + ES toggle, persisted to `localStorage["samwise:v2-lang"]` —
+  the SAME key the `/v2` app reads, so the choice carries from the landing into signup.
+- `.sw-root` deliberately does NOT set `overflow-x: hidden` — that would break the sticky nav
+  (the same trap documented for `.editorial-root` in the landing skill).
+
+## `/v2` — account app for Ritual Calls (added 2026-09-12)
+
+Login / signup / settings for the scheduled AI phone-call service. A separate n8n automation
+reads `users` + active `call_schedules` daily and places the calls; this app never calls anyone
+and never writes `call_logs`.
+
+**Files**
+```
+app/v2/layout.tsx              noindex metadata + `.v2-root` wrapper + v2.css
+app/v2/page.tsx                session? → /v2/settings : /v2/login
+app/v2/{login,signup}/page.tsx server session gate → client form
+app/v2/settings/page.tsx       server gate; loads user + schedules + logs, passes to <Dashboard>
+app/v2/strings.ts              V2_STRINGS EN/ES (no `as const` — literals break Record<Lang,…>)
+app/v2/v2.css                  scoped under `.v2-root`
+app/v2/_components/            brand · lang · timezone-select · login-form · signup-form · dashboard
+app/api/v2/…                   auth/{signup,login,logout} · me · schedules · schedules/[id]
+                               · contacts · contacts/[id] · call-history
+lib/v2/                        db · queries · session · validate · http
+```
+
+**Schema is fixed and external — never invent or rename tables/columns.** `users`
+(id identity, name, phone, email, password_hash, timezone), `call_schedules`
+(id, user_id, call_time `time`, active), `support_contacts` (id identity, user_id, name,
+phone, relationship nullable, active default true), `call_logs` (READ-ONLY here).
+
+**Non-negotiables encoded in the code:**
+- `call_schedules.call_time` is the user's **local wall clock, stored verbatim** (`HH:MM` →
+  `HH:MM:SS`). No UTC conversion on the way in or out, ever — the n8n automation reads each
+  user's `timezone` and converts itself. `called_at` (timestamptz) IS rendered in the user's
+  timezone via `Intl.DateTimeFormat`.
+- Passwords: bcryptjs, cost 12. `password_hash` is selected only inside `verifyCredentials`
+  and is destructured off before the row leaves that function. No endpoint returns it.
+- Every `call_schedules` / `call_logs` query carries `WHERE user_id = $n`. Schedule PATCH and
+  DELETE put ownership in the WHERE clause, so another user's row matches nothing and the
+  route returns 404 — indistinguishable from missing.
+- Parameterised queries only. `buildSetClause` interpolates **column names from our own literal
+  whitelist**, never request data; values are always bound.
+- Session is a `jose` HS256 JWT in an httpOnly / sameSite=lax cookie (`samwise_v2_session`,
+  30 days), signed with `SESSION_SECRET`. Logout sends a clearing `Set-Cookie` (empty value,
+  1970 expiry). Note the stateless-JWT tradeoff: logout clears the browser cookie but does not
+  revoke the token server-side. Fine here; revisit if sessions ever need remote kill.
+
+**`bigint` reads back as a STRING — coerce it (cost a full debugging pass, 2026-09-12).**
+Postgres `int8` exceeds `Number.MAX_SAFE_INTEGER`, so the driver returns it as a string to
+preserve precision. Every `id` in this schema is `bigint`. Symptom: signup and login returned
+200 but *every* authenticated request 401'd — `createSession` had signed `uid: "5"` and
+`getSessionUserId`'s `typeof uid === "number"` check rejected it. Nothing in the type system
+catches this; the row is cast `as PublicUser` and TypeScript believes it.
+- The fix is `asUser` / `asSchedule` / `asContact` / `asCallLog` in `queries.ts` — every read
+  passes through one, so `id: number` is true at runtime.
+- **Do NOT try to fix this via the driver's `types` option.** `neon()` destructures a fixed
+  option list (`arrayMode`, `fullResults`, `fetchOptions`, `isolationLevel`, `readOnly`,
+  `deferrable`, `authToken`, `disableWarningInBrowsers`) and silently ignores `types` at
+  construction — it is per-query only. I tried; it no-ops with no error.
+- Same applies to `numeric`: `call_logs.score` and `tts_ttfb` arrive as strings. `score` is
+  typed `string | number | null`; `tts_ttfb` is rendered through `Number(...)`.
+- Any NEW column of type `bigint` or `numeric` needs the same treatment.
+
+**Schema drift the n8n side introduced (found 2026-09-12).** `call_logs` gained `call_type`
+(text NOT NULL, default `'ritual'`) and `contact_id` (bigint, nullable). `'ritual'` = we called
+the user; anything else is outreach placed on their behalf, with `contact_id` naming the
+support contact phoned. `listCallLogs` LEFT JOINs `support_contacts` — **scoped to the same
+`user_id` as the log row**, so a contact can never resolve across accounts — and the history UI
+badges non-ritual rows "Support call to {name}". Showing these is deliberate: it is the
+landing's "your people get called" promise made visible. Also note `goal_achieved` is a
+**boolean**, not text, and `users.email` / `password_hash` are nullable (rows 1 and 2 were
+created directly by n8n with NULL emails and cannot log in until they have a password).
+
+**Env vars required:** `DATABASE_URL` (Neon) and `SESSION_SECRET`. Both must be set in Vercel
+for Production, Preview and Development.
+
+### Support Contacts (added 2026-09-12, same day)
+People the service may phone when the user misses or struggles with their calls — the outreach
+goes to the contact, never back to the user, and the settings copy says so explicitly in both
+languages. `user_id` is always taken from the session; a client-supplied one is ignored. The
+`POST /contacts` body is `{ name, phone, relationship? }` — `active` is deliberately NOT
+accepted on insert (the column defaults true), matching the REST contract; it is only settable
+via PATCH.
+
+**Patterns adopted from samwise-app's `/outreach` + `/trip` (see those skills):**
+- **Click-to-cycle status chip.** The Active/Paused pill IS the control — dashed border as the
+  affordance, solid on hover. There is no separate pause/resume button. Applied to BOTH support
+  contacts and call schedules so the two lists behave identically. The chip's accessible name
+  comes from `title` ("Pause this contact"), since "Active" alone would not convey the action.
+- **Optimistic-first mutations.** `toggleActive` flips local state, then reverts if the server
+  disagrees. Verified against a 401.
+- **Status palette.** `--moss #2D5A3D` (active) and `--ash #B5AFA1` (paused), borrowed from the
+  paper-module tokens so status reads the same across Samwise tools.
+
+**What was deliberately NOT adopted:** the paper-module aesthetic itself (warm `#FAF6EE` paper,
+Geist Mono, dBase boxes, no motion) and the right-rail `EditPanel`. Those primitives live in
+`samwise-app/app/outreach/_components/` — a different repo, so they cannot be imported — and
+the register belongs to Samuel's operator tools. `/v2` is the consumer surface at the end of a
+paid-ads funnel and stays on the landing's brand system. Contact editing is an inline row
+expand rather than a right rail, because the rail is awkward on mobile and this list is short.
+
+### Call language (added 2026-09-12)
+`users.language` and `support_contacts.language` are NOT NULL ISO 639-1 codes (both default
+`'es'` in the DB), restricted app-side to **`es` | `en` | `he`** via `SUPPORTED_LANGUAGES` in
+`lib/v2/validate.ts`. A contact's language is independent of the user's. Selectors live on
+signup, the settings profile, and the contact add/edit forms; codes are stored, friendly
+localized names are displayed.
+
+- **It is labelled "Call language", never just "Language".** The app already has an EN/ES
+  *interface* toggle in the header. Unqualified "Language" made testers read the Hebrew option
+  as "switch the UI to Hebrew". The help text says so outright: *"Separate from the language of
+  this page."* The UI itself stays EN/ES — Hebrew is a call language only, so no RTL work.
+- `language_agents` is **READ-ONLY**. `listActiveAgentLanguages()` is the only query against it
+  and there is no INSERT/UPDATE/DELETE anywhere in `app/` or `lib/`.
+- `GET /api/v2/language-agents/active` is **public** (no session) — the signup form needs it
+  before a session exists, and it leaks nothing but which languages have a live agent.
+- The "agent coming soon" notice is non-blocking: the choice still saves and the backend
+  queues the agent. `useActiveAgentLanguages()` returns `null` while loading and **callers must
+  not render the notice until it resolves**, or every language flashes as unsupported on first
+  paint. A failed lookup falls back to "all supported" — a false alarm is worse than a missing
+  hint.
+
+**⚠️ The notice cannot currently fire.** As of 2026-09-12 all three `language_agents` rows have
+`active = true` (the column defaults to true), but `en` and `he` hold placeholder agent ids
+(`REPLACE_ritual_en`, `REPLACE_support_he`, …) — only `es` has real ones
+(`agent_vyUHSK69o2kCmfsrYBNYYh` / `agent_yYNnKy3K8CfmsCZUa996tr`). The app implements the agreed
+contract (`SELECT active … WHERE language = $1 AND active`) exactly, so English and Hebrew read
+as ready and will be dispatched against placeholder ids. The fix belongs on the n8n side —
+set `active = false` until the real agent ids land. Do NOT add `REPLACE_%` string-matching
+app-side; that invents a convention on data this app does not own.
+
+**Known debt (mirrors `/outreach`):** delete still uses `window.confirm()`.
+
+**Deferred:** password reset, email verification, account deletion.
