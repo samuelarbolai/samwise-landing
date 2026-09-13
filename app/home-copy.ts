@@ -86,8 +86,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     steps: [
       {
         n: "01",
-        title: "We learn your pattern.",
-        body: "A first conversation maps how the loop actually runs in you — the triggers, the enablers, the moments it wins. Not a generic habit tracker. Your specific mechanism, written down.",
+        title: "We measure your pattern.",
+        body: "Every call takes a reading — where you are, what is pulling, what held. Over days it becomes a picture of the loop you can actually read. So can your therapist, if you have one.",
       },
       {
         n: "02",
@@ -193,8 +193,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     steps: [
       {
         n: "01",
-        title: "Aprendemos tu patrón.",
-        body: "Una primera conversación mapea cómo funciona el ciclo en ti — los detonantes, los facilitadores, los momentos en que gana. No es un tracker de hábitos genérico. Es tu mecanismo específico, por escrito.",
+        title: "Medimos tu patrón.",
+        body: "Cada llamada toma una lectura — dónde estás, qué te está empujando, qué se sostuvo. Con los días se vuelve una imagen del ciclo que de verdad puedes leer. Y tu terapeuta también, si tienes uno.",
       },
       {
         n: "02",

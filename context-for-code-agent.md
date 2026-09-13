@@ -317,6 +317,23 @@ credibility → FAQ (`<details>`, no JS) → ink band final CTA → footer → s
   the SAME key the `/v2` app reads, so the choice carries from the landing into signup.
 - `.sw-root` deliberately does NOT set `overflow-x: hidden` — that would break the sticky nav
   (the same trap documented for `.editorial-root` in the landing skill).
+- **Step 01 is "We measure your pattern."** (2026-09-13). The v2 pitch is that every call takes a
+  reading and the readings become a picture the user, or their therapist, can read. NOT "a first
+  conversation maps the loop" — that framing is v1's onboarding session and stays on `/v1` and
+  the older assets untouched. The hero sub still says Samwise "learns" your pattern, which is
+  compatible with measuring; it was left as-is.
+
+**Mobile + a11y audit, 2026-09-13 (measured at 375×812, not read from code).** Four P1s fixed:
+`--ink-faint` moved `#8a8a8a` → `#767676` (3.45:1 → 4.54:1, the AA floor); `.v2-input` moved
+15px → 16px (iOS Safari auto-zooms any input under 16px on focus — the classic mobile-form bug,
+and it was on the signup page); tap targets extended to 44px via an invisible `::before` on
+text buttons, chips, header links and the EN/ES toggle (20 sub-44px targets on settings → 0,
+6 on the landing → 0) without changing the visual; and `:focus-visible` gold rings added to both
+roots (none existed). Also: `role="alert"` on every `.v2-error`, and the status chips now use
+`aria-label` with the visible text leading ("Paused. Resume this call") for WCAG 2.5.3 Label in
+Name. **Deferred, deliberately:** migrating Google Fonts from the root-layout `<link>` to
+`next/font` (Caveat is fetched on every route and unused on `/` and `/v2`; no metric-matched
+fallback) — it touches the root layout every route shares, so it's a separate pass.
 
 ## `/v2` — account app for Ritual Calls (added 2026-09-12)
 

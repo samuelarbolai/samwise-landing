@@ -1,0 +1,381 @@
+/* Goal board — scoped under .goals-root */
+
+.goals-root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --ink-mute: #555555;
+  --ink-faint: #8a8a8a;
+  --rule: #e0e0e0;
+  --gold: #d4a85a;
+  --accent: #1f3023;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Manrope", system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  padding: 40px 24px 80px;
+}
+
+.goals-root *,
+.goals-root *::before,
+.goals-root *::after {
+  box-sizing: border-box;
+}
+
+.goals-container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Header (screen only) */
+.goals-header {
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 20px;
+}
+
+.goals-brand {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.goals-brand-star {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 9px;
+  margin-left: 2px;
+  vertical-align: super;
+}
+
+.goals-title {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.15;
+  margin: 16px 0 4px;
+}
+
+.goals-sub {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0;
+}
+
+/* Form (screen only) */
+.goals-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 20px 28px;
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.goals-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goals-field label {
+  font-family: "Manrope", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.goals-field input {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  padding: 4px 0;
+  min-width: 180px;
+  color: var(--ink);
+}
+
+.goals-field input:focus {
+  outline: none;
+  border-bottom-color: var(--gold);
+}
+
+.goals-field--month input {
+  font-family: "Manrope", sans-serif;
+  font-style: normal;
+  font-size: 13px;
+  min-width: 140px;
+}
+
+.goals-print-btn {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  padding: 8px 18px;
+  cursor: pointer;
+  color: var(--ink);
+  align-self: flex-end;
+}
+
+.goals-print-btn:hover {
+  color: var(--gold);
+}
+
+.goals-orientation-toggle {
+  display: flex;
+  gap: 2px;
+}
+
+.goals-orientation-toggle button {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--ink-mute);
+}
+
+.goals-orientation-toggle button.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--gold);
+}
+
+/* Grid */
+.goals-grid-wrap {
+  overflow-x: auto;
+}
+
+/*
+ * On-screen preview of portrait mode: a plain rotate to mirror what print
+ * will do. Layout space is still reserved by the pre-rotation box, so this
+ * leaves extra blank space around it on screen — acceptable for a preview,
+ * the print output (below) is the thing that fits precisely.
+ */
+.goals-grid-wrap--rotated {
+  transform: rotate(90deg);
+  transform-origin: center center;
+  margin: 120px auto;
+  width: fit-content;
+}
+
+.goals-grid-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin: 0 0 12px;
+}
+
+.goals-grid {
+  border-collapse: collapse;
+  border: 1px solid var(--rule);
+  width: max-content;
+  min-width: 100%;
+}
+
+.goals-grid-corner {
+  border: none;
+}
+
+.goals-grid-rowlabel {
+  text-align: left;
+  vertical-align: middle;
+  padding: 4px 16px 4px 14px;
+  min-width: 160px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.goals-grid-rowlabel--placeholder {
+  color: var(--ink-faint);
+}
+
+.goals-grid-star {
+  display: inline-block;
+  color: var(--gold);
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.goals-grid-day {
+  padding: 4px 2px;
+  min-width: 30px;
+  width: 30px;
+  border-bottom: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+  text-align: center;
+  vertical-align: bottom;
+  font-family: "Manrope", sans-serif;
+}
+
+.goals-grid-day-num {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.goals-grid-day-dow {
+  display: block;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.goals-grid-day--weekend {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.goals-grid-row td,
+.goals-grid-row th {
+  height: 44px;
+}
+
+.goals-grid-row--northstar td,
+.goals-grid-row--northstar th {
+  height: 68px;
+}
+
+.goals-grid-row--northstar .goals-grid-rowlabel {
+  font-size: 18px;
+  border-bottom: 1px solid var(--gold);
+}
+
+.goals-grid-row--northstar .goals-grid-cell {
+  border-bottom: 1px solid var(--gold);
+}
+
+.goals-grid-cell {
+  border-bottom: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+
+.goals-grid-cell--weekend {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+/* Print — @page itself is injected dynamically by goals-board.tsx (size
+   depends on the orientation toggle), so only @media print rules live here. */
+@media print {
+  .goals-root {
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .goals-controls {
+    display: none !important;
+  }
+
+  .goals-grid-wrap {
+    overflow: visible;
+  }
+
+  /*
+   * table-layout:fixed + width:auto columns forces Chrome to divide the
+   * remaining width across 31 columns at layout time; the print rasterizer
+   * then drops hairline borders on columns whose computed width doesn't
+   * land on a clean device pixel (observed: only the first ~5 columns kept
+   * their vertical rules). Giving every column an identical, explicit
+   * width removes that rounding ambiguity entirely.
+   */
+  .goals-grid {
+    table-layout: fixed;
+    width: auto;
+  }
+
+  .goals-grid-rowlabel {
+    width: 1.9in;
+    min-width: 0;
+    max-width: 1.9in;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+  }
+
+  /*
+   * .goals-grid-row--northstar .goals-grid-rowlabel (base rule, 2 classes)
+   * outranks the plain .goals-grid-rowlabel print override above (1 class)
+   * on specificity alone — the northstar row kept rendering at the
+   * screen-only 18px in print regardless of media query, overflowed the
+   * same 1.9in column harder than the other rows, and truncated more
+   * aggressively. The featured look already comes from the ✦ marker, the
+   * taller row, and the gold underline — match its print size to the
+   * other rows too so it fits the identical column budget.
+   */
+  .goals-grid-row--northstar .goals-grid-rowlabel {
+    font-size: 13px;
+  }
+
+  .goals-grid-day,
+  .goals-grid-cell {
+    width: 0.25in;
+    min-width: 0.25in;
+    max-width: 0.25in;
+  }
+
+  /*
+   * Portrait = the exact same landscape-shaped grid, rotated 90° and
+   * centered on the page — not a transposed layout.
+   *
+   * FIRST ATTEMPT used position:fixed + top/left:50% + translate(-50%,-50%)
+   * rotate(90deg) — this clipped goal-name text against the page edge in a
+   * real printed PDF (confirmed by a user screenshot: text was missing
+   * from the START of the label, which plain CSS ellipsis never does —
+   * only physical clipping does that). Root cause: percentages on a
+   * position:fixed element resolve against the page's initial containing
+   * block, which is inconsistent across Chrome's print pipeline once a
+   * transform is layered on top — the centering math doesn't reliably
+   * hold.
+   *
+   * FIX: center via normal document flow (flexbox) instead of
+   * position:fixed + percentage math. The parent is centered by ordinary
+   * layout; rotate() then spins the child around its own center, which
+   * never moves the centerpoint regardless of the child's pre-rotation
+   * width/height. No containing-block ambiguity, no clipping.
+   */
+  .goals-orientation-portrait .goals-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .goals-orientation-portrait .goals-grid-wrap {
+    transform: rotate(90deg);
+    transform-origin: center center;
+  }
+}

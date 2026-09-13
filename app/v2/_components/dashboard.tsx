@@ -121,7 +121,7 @@ function ProfileSection({
       </div>
 
       <form className="v2-panel" onSubmit={save}>
-        {error && <p className="v2-error">{error}</p>}
+        {error && <p className="v2-error" role="alert">{error}</p>}
 
         <div className="v2-field">
           <label className="v2-label" htmlFor="p-name">
@@ -267,7 +267,7 @@ function SchedulesSection({ s, initial }: { s: V2Strings; initial: Schedule[] })
         <p className="v2-section-sub">{s.schedulesSub}</p>
       </div>
 
-      {error && <p className="v2-error">{error}</p>}
+      {error && <p className="v2-error" role="alert">{error}</p>}
 
       <ul className="v2-sched">
         {sorted.length === 0 && <li className="v2-sched-empty">{s.schedulesEmpty}</li>}
@@ -287,7 +287,7 @@ function SchedulesSection({ s, initial }: { s: V2Strings; initial: Schedule[] })
               className="v2-badge"
               type="button"
               data-on={row.active}
-              title={row.active ? s.toggleToPause : s.toggleToResume}
+              aria-label={`${row.active ? s.activeOn : s.activeOff}. ${row.active ? s.toggleToPause : s.toggleToResume}`}
               onClick={() => toggleActive(row)}
             >
               {row.active ? s.activeOn : s.activeOff}
@@ -460,7 +460,7 @@ function ContactsSection({
         <p className="v2-section-sub">{s.contactsSub}</p>
       </div>
 
-      {error && <p className="v2-error">{error}</p>}
+      {error && <p className="v2-error" role="alert">{error}</p>}
 
       {pendingContacts.length > 0 && (
         <div className="v2-soon" role="status" style={{ marginBottom: 16 }}>
@@ -565,7 +565,7 @@ function ContactsSection({
                 className="v2-badge"
                 type="button"
                 data-on={c.active}
-                title={c.active ? s.contactPause : s.contactResume}
+                aria-label={`${c.active ? s.activeOn : s.activeOff}. ${c.active ? s.contactPause : s.contactResume}`}
                 onClick={() => toggleActive(c)}
               >
                 {c.active ? s.activeOn : s.activeOff}

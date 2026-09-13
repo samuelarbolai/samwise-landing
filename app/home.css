@@ -8,7 +8,7 @@
   --bg: #ffffff;
   --ink: #000000;
   --ink-mute: #555555;
-  --ink-faint: #8a8a8a;
+  --ink-faint: #767676; /* 4.54:1 on white — #8a8a8a measured 3.45:1, under AA */
   --rule: #e0e0e0;
   --accent: #1f3023;
   --gold: #d4a85a;
@@ -243,7 +243,7 @@
 .sw-band--forest .sw-body { color: rgba(255, 255, 255, 0.78); }
 .sw-band--ink { background: var(--ink); color: #fff; text-align: center; }
 .sw-band--ink .sw-body { color: rgba(255, 255, 255, 0.72); margin: 22px auto 0; }
-.sw-band--ink .sw-micro { color: rgba(255, 255, 255, 0.45); }
+.sw-band--ink .sw-micro { color: rgba(255, 255, 255, 0.58); }
 
 .sw-band-h2 { margin-top: 18px; max-width: 20ch; }
 .sw-band--ink .sw-band-h2 { max-width: none; }
@@ -415,3 +415,24 @@
   .sw-call-ring::before, .sw-call-ring::after { animation: none; opacity: 0; }
   .sw-btn:hover { transform: none; }
 }
+
+/* ── tap targets + keyboard focus (audit 2026-09-13) ── */
+.sw-lang button, .sw-nav-link, .sw-brand, .sw-footer a { position: relative; }
+.sw-lang button::before, .sw-nav-link::before, .sw-brand::before, .sw-footer a::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
+}
+.sw-btn--sm { min-height: 44px; }
+.sw-lang button::before { left: -12px; right: -12px; }
+
+.sw-root :is(a, button, summary):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.sw-band--forest :is(a, button):focus-visible,
+.sw-band--ink :is(a, button):focus-visible { outline-color: var(--gold); }

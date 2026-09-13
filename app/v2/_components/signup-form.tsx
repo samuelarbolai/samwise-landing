@@ -79,7 +79,7 @@ export function SignupForm() {
         <p className="v2-sub">{s.signupSub}</p>
 
         <form onSubmit={submit} style={{ marginTop: 32 }}>
-          {error && <p className="v2-error">{error}</p>}
+          {error && <p className="v2-error" role="alert">{error}</p>}
 
           <div className="v2-field">
             <label className="v2-label" htmlFor="name">

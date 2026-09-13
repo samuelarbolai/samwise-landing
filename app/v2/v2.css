@@ -5,7 +5,7 @@
   --panel: #fafafa;
   --ink: #000000;
   --ink-mute: #555555;
-  --ink-faint: #8a8a8a;
+  --ink-faint: #767676; /* 4.54:1 on white — #8a8a8a measured 3.45:1, under AA */
   --rule: #e0e0e0;
   --gold: #d4a85a;
   --accent: #1f3023;
@@ -145,7 +145,7 @@
   width: 100%;
   padding: 11px 13px;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px; /* not 15 — iOS Safari auto-zooms the page on focus below 16px */
   color: var(--ink);
   background: var(--bg);
   border: 1px solid var(--rule);
@@ -457,3 +457,29 @@
   padding: 1px 7px;
 }
 .v2-contact-lang[data-pending="true"] { border-color: var(--gold); color: var(--accent); }
+
+/* ── tap targets + keyboard focus (audit 2026-09-13) ──
+   Text buttons, chips, header links and the language toggle measured 19–26px
+   tall on a phone. Extend the hit area to 44px with an invisible pseudo-
+   element so the visual stays as designed. */
+.v2-textbtn, .v2-badge, .v2-lang button, .v2-headerlink, .v2-brand { position: relative; }
+.v2-textbtn::before, .v2-badge::before, .v2-lang button::before, .v2-headerlink::before, .v2-brand::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
+}
+.v2-btn--sm { min-height: 44px; }
+.v2-sched-time { min-height: 44px; }
+
+.v2-root :is(a, button, input, select, textarea, [role="combobox"], summary):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.v2-root .v2-input:focus-visible { outline: none; } /* the box-shadow ring already covers it */
+/* "Edit" and the EN/ES toggle are only 23–24px wide; widen their hit area to clear 44. */
+.v2-textbtn::before, .v2-lang button::before { left: -12px; right: -12px; }
