@@ -1,7 +1,7 @@
 import { listContacts, createContact } from "@/lib/v2/queries"
 import { requireSessionUserId } from "@/lib/v2/session"
 import { ok, fail, readJson, handleError } from "@/lib/v2/http"
-import { isE164, isLanguage, isName } from "@/lib/v2/validate"
+import { isE164, isLanguage, isName, toOptionalEmail } from "@/lib/v2/validate"
 
 const MAX_RELATIONSHIP = 60
 
@@ -17,7 +17,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const userId = await requireSessionUserId()
-    const { name, phone, relationship, language } = await readJson(req)
+    const { name, phone, relationship, language, email } = await readJson(req)
 
     if (!isName(name)) return fail("Enter the contact's name")
     if (!isE164(phone)) return fail("Phone must be in E.164 format, e.g. +573001234567")
@@ -31,8 +31,18 @@ export async function POST(req: Request) {
       rel = relationship.trim()
     }
 
+    // Optional — blank means "no email fallback", stored as NULL (never "").
+    const mail = toOptionalEmail(email)
+    if (mail === false) return fail("Enter a valid email")
+
     // user_id comes from the session — a client-supplied one is ignored.
-    const contact = await createContact(userId, { name, phone, relationship: rel, language })
+    const contact = await createContact(userId, {
+      name,
+      phone,
+      relationship: rel,
+      language,
+      email: mail,
+    })
     return ok({ contact }, 201)
   } catch (err) {
     return handleError(err)

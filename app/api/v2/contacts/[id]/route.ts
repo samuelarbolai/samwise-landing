@@ -1,7 +1,7 @@
 import { updateContact, deleteContact } from "@/lib/v2/queries"
 import { requireSessionUserId } from "@/lib/v2/session"
 import { ok, fail, readJson, handleError } from "@/lib/v2/http"
-import { isE164, isLanguage, isName } from "@/lib/v2/validate"
+import { isE164, isLanguage, isName, toOptionalEmail } from "@/lib/v2/validate"
 
 const MAX_RELATIONSHIP = 60
 
@@ -18,13 +18,14 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const id = parseId((await params).id)
     if (id === null) return fail("Not found", 404)
 
-    const { name, phone, relationship, active, language } = await readJson(req)
+    const { name, phone, relationship, active, language, email } = await readJson(req)
     const fields: {
       name?: string
       phone?: string
       relationship?: string | null
       active?: boolean
       language?: string
+      email?: string | null
     } = {}
 
     if (name !== undefined) {
@@ -51,6 +52,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
     if (language !== undefined) {
       if (!isLanguage(language)) return fail("Select a supported call language")
       fields.language = language
+    }
+    // `null` (or blank) removes it.
+    if (email !== undefined) {
+      const mail = toOptionalEmail(email)
+      if (mail === false) return fail("Enter a valid email")
+      fields.email = mail
     }
 
     const contact = await updateContact(userId, id, fields)

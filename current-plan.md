@@ -118,6 +118,15 @@ card, and the held-vs-departed brand rules.
   this page"* help text — without them the Hebrew option reads as a UI-language switch. And
   never write to `language_agents`.
 
+### Phase 8 — Support-contact email (2026-10-06)
+- `toOptionalEmail` (validate.ts) → used by `POST /contacts`, `PATCH /contacts/:id`, and both
+  dashboard forms. Blank → `NULL`, trim + lowercase, invalid → 400 / inline error.
+- `email` returned on every contact (`GET`/`POST`/`PATCH`). Shown in the list when present.
+- **Should NOT be modified:** the helper copy *"If they don't answer Samwise's call, we'll send
+  them a short email instead."*
+- **Tested:** 17/17 API (normalisation, NULL storage, PATCH null-clear, cross-user 404,
+  client `user_id` ignored) + UI (inline error blocks save, edit prefill, clear → NULL).
+
 ## Testing phase
 - **Local test — DONE.** `tsc --noEmit` clean for all new files (pre-existing errors remain in
   `held-aurora`, `held-chamber`, `frodo-*`). Verified in-browser at 1440×900 and 375×812:

@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { CallLog, PublicUser, Schedule, SupportContact } from "@/lib/v2/queries"
-import { toHHMM } from "@/lib/v2/validate"
+import { toHHMM, toOptionalEmail } from "@/lib/v2/validate"
 import { Brand } from "./brand"
 import { LangToggle, useLang } from "./lang"
 import { TimezoneSelect } from "./timezone-select"
@@ -335,9 +335,16 @@ type ContactDraft = {
   phone: string
   relationship: string
   language: LanguageCode
+  email: string
 }
 
-const EMPTY_DRAFT: ContactDraft = { name: "", phone: "", relationship: "", language: "es" }
+const EMPTY_DRAFT: ContactDraft = {
+  name: "",
+  phone: "",
+  relationship: "",
+  language: "es",
+  email: "",
+}
 
 function ContactsSection({
   s,
@@ -354,6 +361,9 @@ function ContactsSection({
   const [editDraft, setEditDraft] = useState<ContactDraft>(EMPTY_DRAFT)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Inline, per-form — an invalid email blocks the save before any request.
+  const [addEmailError, setAddEmailError] = useState<string | null>(null)
+  const [editEmailError, setEditEmailError] = useState<string | null>(null)
 
   async function call(path: string, init: RequestInit): Promise<Record<string, unknown> | null> {
     setError(null)
@@ -376,6 +386,11 @@ function ContactsSection({
 
   async function add(e: React.FormEvent) {
     e.preventDefault()
+    const email = toOptionalEmail(draft.email)
+    if (email === false) {
+      setAddEmailError(s.contactEmailInvalid)
+      return
+    }
     setBusy(true)
     // `active` is omitted on purpose — the column defaults to true, and
     // user_id is taken from the session server-side.
@@ -386,6 +401,7 @@ function ContactsSection({
         phone: draft.phone,
         relationship: draft.relationship || null,
         language: draft.language,
+        email,
       }),
     })
     if (data) {
@@ -418,12 +434,18 @@ function ContactsSection({
 
   async function saveEdit(e: React.FormEvent, id: number) {
     e.preventDefault()
+    const email = toOptionalEmail(editDraft.email)
+    if (email === false) {
+      setEditEmailError(s.contactEmailInvalid)
+      return
+    }
     setBusy(true)
     const saved = await patch(id, {
       name: editDraft.name,
       phone: editDraft.phone,
       relationship: editDraft.relationship || null,
       language: editDraft.language,
+      email,
     })
     if (saved) setEditingId(null)
     setBusy(false)
@@ -449,7 +471,9 @@ function ContactsSection({
       phone: c.phone,
       relationship: c.relationship ?? "",
       language: c.language as LanguageCode,
+      email: c.email ?? "",
     })
+    setEditEmailError(null)
     setError(null)
   }
 
@@ -512,6 +536,38 @@ function ContactsSection({
                   />
                 </div>
                 <div className="v2-field">
+                  <label className="v2-label" htmlFor={`c-email-${c.id}`}>
+                    {s.contactEmail}
+                  </label>
+                  {/* type="text" + inputMode, not type="email": the native validity
+                      bubble would pre-empt the inline error below. */}
+                  <input
+                    id={`c-email-${c.id}`}
+                    className="v2-input"
+                    type="text"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder={s.contactEmailPh}
+                    aria-invalid={editEmailError ? true : undefined}
+                    aria-describedby={`c-email-help-${c.id}${editEmailError ? ` c-email-err-${c.id}` : ""}`}
+                    value={editDraft.email}
+                    onChange={(e) => {
+                      setEditDraft({ ...editDraft, email: e.target.value })
+                      setEditEmailError(null)
+                    }}
+                  />
+                  <p className="v2-help" id={`c-email-help-${c.id}`}>
+                    {s.contactEmailHelp}
+                  </p>
+                  {editEmailError && (
+                    <p className="v2-field-error" id={`c-email-err-${c.id}`} role="alert">
+                      {editEmailError}
+                    </p>
+                  )}
+                </div>
+                <div className="v2-field">
                   <label className="v2-label" htmlFor={`c-rel-${c.id}`}>
                     {s.contactRelationship}
                   </label>
@@ -539,7 +595,10 @@ function ContactsSection({
                   <button
                     className="v2-textbtn"
                     type="button"
-                    onClick={() => setEditingId(null)}
+                    onClick={() => {
+                      setEditingId(null)
+                      setEditEmailError(null)
+                    }}
                   >
                     {s.cancel}
                   </button>
@@ -555,6 +614,7 @@ function ContactsSection({
                   <span className="v2-contact-rel">
                     {c.relationship || s.contactNoRelationship}
                   </span>
+                  {c.email && <span className="v2-contact-email">{c.email}</span>}
                   <span className="v2-contact-lang" data-pending={isPending(c.language)}>
                     {languageName(c.language, s)}
                   </span>
@@ -633,6 +693,36 @@ function ContactsSection({
               onChange={(e) => setDraft({ ...draft, relationship: e.target.value })}
             />
           </div>
+        </div>
+        <div className="v2-field" style={{ marginTop: 16 }}>
+          <label className="v2-label" htmlFor="new-c-email">
+            {s.contactEmail}
+          </label>
+          <input
+            id="new-c-email"
+            className="v2-input"
+            type="text"
+            inputMode="email"
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder={s.contactEmailPh}
+            aria-invalid={addEmailError ? true : undefined}
+            aria-describedby={`new-c-email-help${addEmailError ? " new-c-email-err" : ""}`}
+            value={draft.email}
+            onChange={(e) => {
+              setDraft({ ...draft, email: e.target.value })
+              setAddEmailError(null)
+            }}
+          />
+          <p className="v2-help" id="new-c-email-help">
+            {s.contactEmailHelp}
+          </p>
+          {addEmailError && (
+            <p className="v2-field-error" id="new-c-email-err" role="alert">
+              {addEmailError}
+            </p>
+          )}
         </div>
         <div style={{ marginTop: 16 }}>
           <LanguageSelect

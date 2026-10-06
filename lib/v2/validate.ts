@@ -10,6 +10,18 @@ export function isEmail(v: unknown): v is string {
   return typeof v === "string" && v.length <= 254 && EMAIL.test(v)
 }
 
+/**
+ * Optional email (support contacts). Blank / null → `null` — never `""`.
+ * Otherwise trimmed + lowercased. `false` = present but invalid.
+ */
+export function toOptionalEmail(v: unknown): string | null | false {
+  if (v === null || v === undefined) return null
+  if (typeof v !== "string") return false
+  const e = v.trim().toLowerCase()
+  if (!e) return null
+  return isEmail(e) ? e : false
+}
+
 export function isHHMM(v: unknown): v is string {
   return typeof v === "string" && HHMM.test(v)
 }

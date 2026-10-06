@@ -358,7 +358,8 @@ lib/v2/                        db · queries · session · validate · http
 **Schema is fixed and external — never invent or rename tables/columns.** `users`
 (id identity, name, phone, email, password_hash, timezone), `call_schedules`
 (id, user_id, call_time `time`, active), `support_contacts` (id identity, user_id, name,
-phone, relationship nullable, active default true), `call_logs` (READ-ONLY here).
+phone, relationship nullable, active default true, language, email text nullable),
+`call_logs` (READ-ONLY here).
 
 **Non-negotiables encoded in the code:**
 - `call_schedules.call_time` is the user's **local wall clock, stored verbatim** (`HH:MM` →
@@ -430,6 +431,19 @@ Geist Mono, dBase boxes, no motion) and the right-rail `EditPanel`. Those primit
 the register belongs to Samuel's operator tools. `/v2` is the consumer surface at the end of a
 paid-ads funnel and stays on the landing's brand system. Contact editing is an inline row
 expand rather than a right rail, because the rail is awkward on mobile and this list is short.
+
+**Contact email (added 2026-10-03, finished 2026-10-06).** `support_contacts.email` is an
+optional fallback channel: if the contact doesn't answer Samwise's support call, they get a
+short email instead (the sending side lives outside this app). One normaliser,
+`toOptionalEmail` in `lib/v2/validate.ts`, is shared by POST, PATCH and the client: blank /
+whitespace / `null` → `NULL` (never `""`), otherwise trimmed + **lowercased**, and `false` when
+invalid (`"Enter a valid email"` 400). PATCH with `email: null` clears it; omitting the key
+leaves it. The forms validate before any request and show an inline `.v2-field-error`
+(`aria-invalid` + `aria-describedby`) under the field. The input is `type="text"
+inputMode="email"`, NOT `type="email"` — the native validity bubble would pre-empt the inline
+error. Label "Email (optional)", sits directly under Phone (edit form) / under the
+name-phone-relationship row (add form). 17/17 API checks + UI pass against Neon, test rows
+deleted.
 
 ### Call language (added 2026-09-12)
 `users.language` and `support_contacts.language` are NOT NULL ISO 639-1 codes (both default

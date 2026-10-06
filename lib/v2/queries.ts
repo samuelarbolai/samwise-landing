@@ -38,6 +38,8 @@ export type SupportContact = {
   active: boolean
   /** ISO 639-1 — independent of the user's own language. */
   language: string
+  /** Fallback channel: emailed a short note if they miss the support call. */
+  email: string | null
 }
 
 export type CallLog = {
@@ -212,7 +214,7 @@ export async function deleteSchedule(userId: number, id: number): Promise<boolea
 export async function listContacts(userId: number): Promise<SupportContact[]> {
   const sql = getSql()
   const rows = (await sql`
-    SELECT id, name, phone, relationship, active, language FROM support_contacts
+    SELECT id, name, phone, relationship, active, language, email FROM support_contacts
     WHERE user_id = ${userId} ORDER BY id ASC
   `) as SupportContact[]
   return rows.map(asContact)
@@ -220,13 +222,19 @@ export async function listContacts(userId: number): Promise<SupportContact[]> {
 
 export async function createContact(
   userId: number,
-  input: { name: string; phone: string; relationship?: string | null; language: string },
+  input: {
+    name: string
+    phone: string
+    relationship?: string | null
+    language: string
+    email?: string | null
+  },
 ): Promise<SupportContact> {
   const sql = getSql()
   const rows = (await sql`
-    INSERT INTO support_contacts (user_id, name, phone, relationship, language)
-    VALUES (${userId}, ${input.name.trim()}, ${input.phone}, ${input.relationship ?? null}, ${input.language})
-    RETURNING id, name, phone, relationship, active, language
+    INSERT INTO support_contacts (user_id, name, phone, relationship, language, email)
+    VALUES (${userId}, ${input.name.trim()}, ${input.phone}, ${input.relationship ?? null}, ${input.language}, ${input.email ?? null})
+    RETURNING id, name, phone, relationship, active, language, email
   `) as SupportContact[]
   return asContact(rows[0])
 }
@@ -240,6 +248,7 @@ export async function updateContact(
     relationship?: string | null
     active?: boolean
     language?: string
+    email?: string | null
   },
 ): Promise<SupportContact | null> {
   const clean: Record<string, unknown> = {}
@@ -248,9 +257,10 @@ export async function updateContact(
   if (fields.relationship !== undefined) clean.relationship = fields.relationship
   if (fields.active !== undefined) clean.active = fields.active
   if (fields.language !== undefined) clean.language = fields.language
+  if (fields.email !== undefined) clean.email = fields.email
   if (Object.keys(clean).length === 0) {
     const rows = await query<SupportContact>(
-      `SELECT id, name, phone, relationship, active, language FROM support_contacts
+      `SELECT id, name, phone, relationship, active, language, email FROM support_contacts
        WHERE id = $1 AND user_id = $2`,
       [id, userId],
     )
@@ -262,7 +272,7 @@ export async function updateContact(
   const rows = await query<SupportContact>(
     `UPDATE support_contacts SET ${clause}
      WHERE id = $${values.length + 1} AND user_id = $${values.length + 2}
-     RETURNING id, name, phone, relationship, active, language`,
+     RETURNING id, name, phone, relationship, active, language, email`,
     [...values, id, userId],
   )
   return rows[0] ? asContact(rows[0]) : null
