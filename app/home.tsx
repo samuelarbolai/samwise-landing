@@ -6,7 +6,7 @@ import { HOME_COPY, type HomeCopy, type Lang } from "./home-copy"
 import "./home.css"
 
 const SIGNUP = "/v2/signup"
-const LOGIN = "/v2/login"
+const WA_NUMBER = "15079201622"
 const LANG_KEY = "samwise:v2-lang"
 
 /** The house sparkle — same path as the navbar star and the OG card. */
@@ -47,7 +47,8 @@ export function Home() {
   }
 
   const signupHref = lang === "es" ? `${SIGNUP}?lang=es` : SIGNUP
-  const loginHref = lang === "es" ? `${LOGIN}?lang=es` : LOGIN
+  // Sign-up has no password, so returning users pick up the chat on WhatsApp.
+  const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(t.waMessage)}`
 
   return (
     <div className="sw-root" lang={lang}>
@@ -81,7 +82,7 @@ export function Home() {
       </main>
 
       <footer className="sw-foot">
-        {t.loginLead} <Link href={loginHref}>{t.login}</Link>
+        {t.loginLead} <a href={waHref}>{t.login}</a>
       </footer>
     </div>
   )
