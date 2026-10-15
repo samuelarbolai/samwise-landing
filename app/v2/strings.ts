@@ -48,6 +48,8 @@ export const V2_STRINGS = {
     firstCallOptional: "First call time (optional)",
     firstCallHelpWa: "If it's still ahead today, your first call is today. You can also choose it later in the chat.",
     haveAccount: "Already have an account?",
+    waHaveAccount: "Already signed up?",
+    waGoChat: "Write to Samwise on WhatsApp",
     goLogin: "Sign in",
 
     // fields
@@ -85,10 +87,10 @@ export const V2_STRINGS = {
     langEs: "Spanish",
     langEn: "English",
     langHe: "Hebrew",
-    agentSoonTitle: "Agent coming soon",
+    agentSoonTitle: "No agent in this language yet",
     agentSoonBody:
-      "We don't have a voice agent in {language} yet. We're creating one — it will be ready within 24 hours, and calls in this language will begin automatically once it's live.",
-    agentSoonContacts: "These support contacts are waiting on a voice agent:",
+      "We don't have a voice agent in {language} yet, so calls in this language can't be placed for now.",
+    agentSoonContacts: "These support contacts can't be called until there is an agent in their language:",
 
     contactsHeading: "Support contacts",
     contactsSub:
@@ -180,6 +182,8 @@ export const V2_STRINGS = {
     firstCallOptional: "Hora de la primera llamada (opcional)",
     firstCallHelpWa: "Si todavía no ha pasado hoy, tu primera llamada es hoy. También puedes elegirla después en el chat.",
     haveAccount: "¿Ya tienes cuenta?",
+    waHaveAccount: "¿Ya te registraste?",
+    waGoChat: "Escríbele a Samwise por WhatsApp",
     goLogin: "Entrar",
 
     name: "Nombre",
@@ -215,10 +219,10 @@ export const V2_STRINGS = {
     langEs: "Español",
     langEn: "Inglés",
     langHe: "Hebreo",
-    agentSoonTitle: "Agente en camino",
+    agentSoonTitle: "Aún no hay agente en este idioma",
     agentSoonBody:
-      "Todavía no tenemos un agente de voz en {language}. Estamos creando uno — estará listo en menos de 24 horas, y las llamadas en este idioma comenzarán automáticamente cuando esté activo.",
-    agentSoonContacts: "Estos contactos de apoyo están esperando un agente de voz:",
+      "Todavía no tenemos un agente de voz en {language}, así que por ahora no podemos hacer llamadas en este idioma.",
+    agentSoonContacts: "A estos contactos de apoyo no podemos llamarlos hasta que haya un agente en su idioma:",
 
     contactsHeading: "Contactos de apoyo",
     contactsSub:

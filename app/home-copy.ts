@@ -8,6 +8,7 @@ export type HomeCopy = {
   micro: string
   loginLead: string
   login: string
+  waMessage: string
   imageAlt: string
 }
 
@@ -19,7 +20,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     cta: "Sign up free",
     micro: "It takes a minute. Then we talk on WhatsApp.",
     loginLead: "Already signed up?",
-    login: "Log in",
+    login: "Write to Samwise on WhatsApp",
+    waMessage: "Hi Samwise",
     imageAlt: "Samwise looking up at a bright star in the night sky",
   },
   es: {
@@ -29,7 +31,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     cta: "Regístrate gratis",
     micro: "Toma un minuto. Luego hablamos por WhatsApp.",
     loginLead: "¿Ya te registraste?",
-    login: "Inicia sesión",
+    login: "Escríbele a Samwise por WhatsApp",
+    waMessage: "Hola Samwise",
     imageAlt: "Samwise mirando una estrella brillante en el cielo nocturno",
   },
 }

@@ -307,7 +307,7 @@ export function WhatsappSignup() {
             </form>
 
             <p className="v2-altline">
-              {s.haveAccount} <Link href="/v2/login">{s.goLogin}</Link>
+              {s.waHaveAccount} <a href={waLink}>{s.waGoChat}</a>
             </p>
           </>
         )}
