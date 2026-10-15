@@ -2,14 +2,14 @@ import type { Metadata } from "next"
 import { Home } from "./home"
 
 const DESCRIPTION =
-  "Samwise calls you every day at a time you choose, walks you through a ritual built around your pattern, and reaches your people the moment you are about to fall. Free during the open beta."
+  "Your daily ritual companion. Samwise helps you keep a daily ritual through WhatsApp and a short call each day, and reaches your people when you need them."
 
 export const metadata: Metadata = {
-  title: "Samwise — break the loop, one call a day",
+  title: "Samwise — your daily ritual companion",
   description: DESCRIPTION,
   alternates: { canonical: "https://samwise.life" },
   openGraph: {
-    title: "Samwise — break the loop, one call a day",
+    title: "Samwise — your daily ritual companion",
     description: DESCRIPTION,
     url: "https://samwise.life",
     siteName: "Samwise",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Samwise — break the loop, one call a day",
+    title: "Samwise — your daily ritual companion",
     description: DESCRIPTION,
   },
 }
