@@ -228,6 +228,15 @@
 .v2-altline { margin-top: 24px; text-align: center; font-size: 13px; color: var(--ink-mute); }
 .v2-altline a { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 
+/* ── sign-up: phone with country code, 6-box code ── */
+.v2-phone { display: flex; gap: 8px; }
+.v2-phone .v2-phone-country { flex: 0 0 auto; width: auto; padding-right: 8px; }
+.v2-phone .v2-input:not(.v2-phone-country) { flex: 1 1 auto; min-width: 0; }
+.v2-otp { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 360px; }
+.v2-otp-box { text-align: center; font-size: 22px; padding: 12px 0; font-variant-numeric: tabular-nums; }
+.v2-linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.v2-linkbtn:disabled { color: var(--ink-faint); cursor: default; }
+
 /* ── timezone combobox ── */
 .v2-tz { position: relative; }
 .v2-tz-list {
