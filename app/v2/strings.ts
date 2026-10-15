@@ -90,12 +90,12 @@ export const V2_STRINGS = {
     agentSoonTitle: "No agent in this language yet",
     agentSoonBody:
       "We don't have a voice agent in {language} yet, so calls in this language can't be placed for now.",
-    agentSoonContacts: "These support contacts can't be called until there is an agent in their language:",
+    agentSoonContacts: "These trusted people can't be called until there is an agent in their language:",
 
-    contactsHeading: "Support contacts",
+    contactsHeading: "Trusted people",
     contactsSub:
       "People we may phone if you miss your calls or the call hears you struggling. You will not receive this call — we reach out to them. Add people you actually trust to pick up.",
-    contactsEmpty: "No support contacts yet. Add the first person below.",
+    contactsEmpty: "No trusted people yet. Add the first person below.",
     contactName: "Name",
     contactNamePh: "Their name",
     contactPhone: "Phone",
@@ -107,11 +107,11 @@ export const V2_STRINGS = {
     contactEmailHelp: "If they don't answer Samwise's call, we'll send them a short email instead.",
     contactEmailInvalid: "Enter a valid email, e.g. name@example.com",
     contactAdd: "Add contact",
-    contactAddHeading: "Add a support contact",
+    contactAddHeading: "Add a trusted person",
     contactSave: "Save contact",
     contactPause: "Pause this contact",
     contactResume: "Resume this contact",
-    contactConfirmDelete: "Remove this support contact?",
+    contactConfirmDelete: "Remove this trusted person?",
     contactNoRelationship: "—",
 
     historyHeading: "Recent calls",
@@ -132,8 +132,8 @@ export const V2_STRINGS = {
     yes: "Yes",
     no: "No",
     callToYou: "Your call",
-    callToContact: "Support call",
-    callToContactNamed: "Support call to",
+    callToContact: "Call to a trusted person",
+    callToContactNamed: "Call to",
 
     genericError: "Something went wrong. Try again.",
   },
@@ -222,12 +222,12 @@ export const V2_STRINGS = {
     agentSoonTitle: "Aún no hay agente en este idioma",
     agentSoonBody:
       "Todavía no tenemos un agente de voz en {language}, así que por ahora no podemos hacer llamadas en este idioma.",
-    agentSoonContacts: "A estos contactos de apoyo no podemos llamarlos hasta que haya un agente en su idioma:",
+    agentSoonContacts: "A estas personas de confianza no podemos llamarlas hasta que haya un agente en su idioma:",
 
-    contactsHeading: "Contactos de apoyo",
+    contactsHeading: "Personas de confianza",
     contactsSub:
       "Personas a las que podemos llamar si pierdes tus llamadas o si la llamada nota que estás luchando. Tú no recibes esta llamada — los contactamos a ellos. Agrega personas en las que de verdad confíes para contestar.",
-    contactsEmpty: "Aún no tienes contactos de apoyo. Agrega a la primera persona abajo.",
+    contactsEmpty: "Aún no tienes personas de confianza. Agrega a la primera abajo.",
     contactName: "Nombre",
     contactNamePh: "Su nombre",
     contactPhone: "Teléfono",
@@ -239,11 +239,11 @@ export const V2_STRINGS = {
     contactEmailHelp: "Si no contestan la llamada de Samwise, les enviaremos un correo corto en su lugar.",
     contactEmailInvalid: "Ingresa un correo válido, p. ej. nombre@ejemplo.com",
     contactAdd: "Agregar contacto",
-    contactAddHeading: "Agregar un contacto de apoyo",
+    contactAddHeading: "Agregar una persona de confianza",
     contactSave: "Guardar contacto",
     contactPause: "Pausar este contacto",
     contactResume: "Reactivar este contacto",
-    contactConfirmDelete: "¿Eliminar este contacto de apoyo?",
+    contactConfirmDelete: "¿Eliminar a esta persona de confianza?",
     contactNoRelationship: "—",
 
     historyHeading: "Llamadas recientes",
@@ -264,8 +264,8 @@ export const V2_STRINGS = {
     yes: "Sí",
     no: "No",
     callToYou: "Tu llamada",
-    callToContact: "Llamada de apoyo",
-    callToContactNamed: "Llamada de apoyo a",
+    callToContact: "Llamada a una persona de confianza",
+    callToContactNamed: "Llamada a",
 
     genericError: "Algo salió mal. Inténtalo de nuevo.",
   },
