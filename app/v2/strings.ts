@@ -51,6 +51,11 @@ export const V2_STRINGS = {
     waHaveAccount: "Already signed up?",
     waGoChat: "Write to Samwise on WhatsApp",
     goLogin: "Sign in",
+    consentText:
+      "By continuing, you agree to get messages from Samwise about your ritual by WhatsApp or text (SMS). How often varies. Msg & data rates may apply. Reply STOP to stop, HELP for help. See our",
+    privacy: "Privacy Policy",
+    terms: "Terms",
+    and: "and",
 
     // fields
     name: "Name",
@@ -185,6 +190,11 @@ export const V2_STRINGS = {
     waHaveAccount: "¿Ya te registraste?",
     waGoChat: "Escríbele a Samwise por WhatsApp",
     goLogin: "Entrar",
+    consentText:
+      "Al continuar, aceptas recibir mensajes de Samwise sobre tu ritual por WhatsApp o mensaje de texto (SMS). La frecuencia varía. Pueden aplicar tarifas de mensajes y datos. Responde STOP para dejar de recibirlos y HELP para pedir ayuda. Lee nuestra",
+    privacy: "Política de privacidad",
+    terms: "Términos",
+    and: "y",
 
     name: "Nombre",
     namePh: "Tu nombre",

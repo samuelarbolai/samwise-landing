@@ -495,3 +495,12 @@
 .v2-root .v2-input:focus-visible { outline: none; } /* the box-shadow ring already covers it */
 /* "Edit" and the EN/ES toggle are only 23–24px wide; widen their hit area to clear 44. */
 .v2-textbtn::before, .v2-lang button::before { left: -12px; right: -12px; }
+
+/* Privacy policy and terms */
+.v2-legal { max-width: 680px; }
+.v2-legal h2 { margin-top: 36px; font-size: 17px; font-weight: 600; color: var(--ink); }
+.v2-legal p { margin-top: 12px; font-size: 15px; line-height: 1.6; color: var(--ink-mute); }
+.v2-legal ul { margin-top: 12px; padding-left: 20px; list-style: disc; }
+.v2-legal li { margin-top: 6px; font-size: 15px; line-height: 1.6; color: var(--ink-mute); }
+.v2-legal a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.v2-help a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
