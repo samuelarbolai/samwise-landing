@@ -304,6 +304,9 @@ export function WhatsappSignup() {
               <button className="v2-btn" type="submit" disabled={busy} style={{ marginTop: 26 }}>
                 {busy ? s.signupBusy : s.signupCta}
               </button>
+              <p className="v2-help" style={{ marginTop: 12 }}>
+                {s.consentText} <Link href="/privacy">{s.privacy}</Link> {s.and} <Link href="/terms">{s.terms}</Link>.
+              </p>
             </form>
 
             <p className="v2-altline">
