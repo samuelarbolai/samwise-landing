@@ -21,7 +21,6 @@ export function WhatsappSignup() {
   const [name, setName] = useState("")
   const [timezone, setTimezone] = useState("UTC")
   const [language, setLanguage] = useState<LanguageCode>("es")
-  const [callTime, setCallTime] = useState("")
   const [country, setCountry] = useState<CountryIso>("CO")
   const [number, setNumber] = useState("")
   const [busy, setBusy] = useState(false)
@@ -55,7 +54,7 @@ export function WhatsappSignup() {
       const res = await fetch("/api/v2/phone-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, timezone, language, call_time: callTime }),
+        body: JSON.stringify({ name, phone, timezone, language }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -286,20 +285,6 @@ export function WhatsappSignup() {
                 searchPlaceholder={s.tzSearch}
                 emptyLabel={s.tzNoResults}
               />
-
-              <div className="v2-field">
-                <label className="v2-label" htmlFor="call_time">
-                  {s.firstCallOptional}
-                </label>
-                <input
-                  id="call_time"
-                  className="v2-input"
-                  type="time"
-                  value={callTime}
-                  onChange={(e) => setCallTime(e.target.value)}
-                />
-                <p className="v2-help">{s.firstCallHelpWa}</p>
-              </div>
 
               <button className="v2-btn" type="submit" disabled={busy} style={{ marginTop: 26 }}>
                 {busy ? s.signupBusy : s.signupCta}
