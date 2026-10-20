@@ -23,6 +23,7 @@ export function WhatsappSignup() {
   const [language, setLanguage] = useState<LanguageCode>("es")
   const [country, setCountry] = useState<CountryIso>("CO")
   const [number, setNumber] = useState("")
+  const [smsConsent, setSmsConsent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [codeId, setCodeId] = useState<number | null>(null)
@@ -54,7 +55,7 @@ export function WhatsappSignup() {
       const res = await fetch("/api/v2/phone-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, timezone, language }),
+        body: JSON.stringify({ name, phone, timezone, language, sms_consent: smsConsent }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -285,6 +286,11 @@ export function WhatsappSignup() {
                 searchPlaceholder={s.tzSearch}
                 emptyLabel={s.tzNoResults}
               />
+
+              <label className="v2-check" style={{ marginTop: 22 }}>
+                <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} />
+                <span>{s.smsConsent}</span>
+              </label>
 
               <button className="v2-btn" type="submit" disabled={busy} style={{ marginTop: 26 }}>
                 {busy ? s.signupBusy : s.signupCta}

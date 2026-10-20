@@ -52,7 +52,9 @@ export const V2_STRINGS = {
     waGoChat: "Write to Samwise on WhatsApp",
     goLogin: "Sign in",
     consentText:
-      "By continuing, you agree to get messages from Samwise about your ritual by WhatsApp or text (SMS). How often varies. Msg & data rates may apply. Reply STOP to stop, HELP for help. See our",
+      "By continuing, you agree to get WhatsApp messages from Samwise about your ritual. See our",
+    smsConsent:
+      "Optional: also send me text messages (SMS) from Samwise about my ritual. How often varies. Msg & data rates may apply. Reply STOP to stop, HELP for help.",
     privacy: "Privacy Policy",
     terms: "Terms",
     and: "and",
@@ -191,7 +193,9 @@ export const V2_STRINGS = {
     waGoChat: "Escríbele a Samwise por WhatsApp",
     goLogin: "Entrar",
     consentText:
-      "Al continuar, aceptas recibir mensajes de Samwise sobre tu ritual por WhatsApp o mensaje de texto (SMS). La frecuencia varía. Pueden aplicar tarifas de mensajes y datos. Responde STOP para dejar de recibirlos y HELP para pedir ayuda. Lee nuestra",
+      "Al continuar, aceptas recibir mensajes de WhatsApp de Samwise sobre tu ritual. Lee nuestra",
+    smsConsent:
+      "Opcional: envíenme también mensajes de texto (SMS) de Samwise sobre mi ritual. La frecuencia varía. Pueden aplicar tarifas de mensajes y datos. Responde STOP para dejar de recibirlos y HELP para pedir ayuda.",
     privacy: "Política de privacidad",
     terms: "Términos",
     and: "y",
