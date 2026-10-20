@@ -157,6 +157,8 @@
 .v2-input::placeholder { color: var(--ink-faint); }
 
 .v2-help { margin-top: 6px; font-size: 12px; color: var(--ink-faint); }
+.v2-check { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; line-height: 1.5; color: var(--ink-faint); cursor: pointer; }
+.v2-check input { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; accent-color: var(--gold); }
 .v2-field-error { margin-top: 6px; font-size: 12px; color: var(--danger); }
 .v2-input[aria-invalid="true"] { border-color: var(--danger); }
 

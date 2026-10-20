@@ -10,7 +10,7 @@ import { isE164, isHHMM, isLanguage, isName, isTimezone, toPgTime } from "@/lib/
  */
 export async function POST(req: Request) {
   try {
-    const { name, phone, timezone, language, call_time } = await readJson(req)
+    const { name, phone, timezone, language, call_time, sms_consent } = await readJson(req)
 
     if (!isName(name)) return fail("Enter your name")
     if (!isE164(phone)) return fail("Enter a valid phone number")
@@ -32,9 +32,9 @@ export async function POST(req: Request) {
 
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0")
     const [row] = await query<{ id: string }>(
-      `INSERT INTO phone_codes (phone, code, name, language, timezone, call_time)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-      [phone, code, (name as string).trim(), language, timezone, time],
+      `INSERT INTO phone_codes (phone, code, name, language, timezone, call_time, sms_consent)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+      [phone, code, (name as string).trim(), language, timezone, time, sms_consent === true],
     )
 
     const res = await fetch(PHONE_CODE_HOOK, {
