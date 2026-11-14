@@ -65,7 +65,7 @@ export const LANDING_EN: LandingCopy = {
     title: "What stays yours",
     items: [
       "Samwise never shares what you write.",
-      "No streaks, no scores, no day counts.",
+      "No streaks.",
       "Works next to your meetings and your sponsor. It doesn’t replace them.",
     ],
   },
