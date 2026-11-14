@@ -5,9 +5,9 @@ export const metadata: Metadata = { title: "Privacy Policy — Samwise" }
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy" updated="October 16, 2026">
+    <LegalPage title="Privacy Policy" updated="November 14, 2026">
       <p>
-        Samwise is an AI companion that helps you keep a daily ritual through phone calls and messages. What you share
+        Samwise is an AI companion that helps you do a daily check-in through phone calls and messages. What you share
         with Samwise is personal, so we keep it to what the service needs and we never sell it.
       </p>
 
@@ -15,20 +15,20 @@ export default function PrivacyPage() {
       <ul>
         <li>Your name, phone number, email (if you give it), language, time zone and call times.</li>
         <li>What you say on Samwise calls and write in messages (WhatsApp, text messages and email), and short summaries of them.</li>
-        <li>The people you choose as your trusted contacts: their names and phone numbers, and whether they agreed to be contacted.</li>
-        <li>Photos you send of your written ritual, which we copy into your own ritual document.</li>
+        <li>The people you choose as your trusted people: their names and phone numbers, and whether they agreed to be contacted.</li>
+        <li>Photos you send of your journal, which we copy into your own journal document.</li>
       </ul>
 
       <h2>How we use it</h2>
       <ul>
-        <li>To place your ritual calls, answer your messages and remember your ritual from one call to the next.</li>
-        <li>To reach your trusted contacts when you ask us to, or when a call shows you may need support.</li>
-        <li>To improve how Samwise helps people keep their ritual.</li>
+        <li>To place your check-in calls, answer your messages and remember your journal from one call to the next.</li>
+        <li>To call your trusted people when you ask us to, or when a call shows you may need support.</li>
+        <li>To improve how Samwise helps people keep their daily check-in.</li>
       </ul>
 
       <h2>Text messages (SMS)</h2>
       <p>
-        If you agree to receive texts, Samwise texts you about your ritual and answers the texts you send. How often
+        If you agree to receive texts, Samwise texts you about your daily check-in and answers the texts you send. How often
         varies. Message and data rates may apply. Reply STOP at any time to stop, or HELP for help.
       </p>
       <p>

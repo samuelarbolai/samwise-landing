@@ -6,17 +6,17 @@ export const metadata: Metadata = { title: "Terms — Samwise" }
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms" updated="October 16, 2026">
+    <LegalPage title="Terms" updated="November 14, 2026">
       <p>
         By signing up for Samwise you agree to these terms. Samwise is an AI companion that calls you at the times you
-        choose and chats with you by WhatsApp, text message and email to help you keep a personal ritual.
+        choose and chats with you by WhatsApp, text message and email to help you keep a daily check-in.
       </p>
 
       <h2>Samwise messages (SMS program)</h2>
       <ul>
-        <li>Program: Samwise ritual messages. Samwise texts you about your ritual (reminders, check-ins and replies to your messages).</li>
+        <li>Program: Samwise check-in messages. Samwise texts you about your daily check-in (reminders, check-ins and replies to your messages).</li>
         <li>You opt in when you sign up at samwise.life and agree to receive messages, or when you text Samwise first.</li>
-        <li>How often: it varies with your ritual and how much you write.</li>
+        <li>How often: it varies with your check-in times and how much you write.</li>
         <li>Message and data rates may apply.</li>
         <li>Reply STOP to cancel at any time. You will get one message confirming you are unsubscribed.</li>
         <li>Reply HELP for help, or write to samuel@samwise.life.</li>
