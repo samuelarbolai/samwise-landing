@@ -287,17 +287,16 @@ export function WhatsappSignup() {
                 emptyLabel={s.tzNoResults}
               />
 
-              <label className="v2-check" style={{ marginTop: 22 }}>
-                <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} />
-                <span>{s.smsConsent}</span>
-              </label>
-
               <button className="v2-btn" type="submit" disabled={busy} style={{ marginTop: 26 }}>
                 {busy ? s.signupBusy : s.signupCta}
               </button>
               <p className="v2-help" style={{ marginTop: 12 }}>
                 {s.consentText} <Link href="/privacy">{s.privacy}</Link> {s.and} <Link href="/terms">{s.terms}</Link>.
               </p>
+              <label className="v2-check" style={{ marginTop: 10 }}>
+                <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} />
+                <span>{s.smsConsent}</span>
+              </label>
             </form>
 
             <p className="v2-altline">
