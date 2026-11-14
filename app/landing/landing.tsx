@@ -127,7 +127,7 @@ export function Landing({ t = LANDING_EN }: { t?: LandingCopy }) {
         </section>
 
         {/* 4. What stays yours */}
-        <section aria-labelledby="yours-h" className="ld-section ld-section--night">
+        <section aria-labelledby="yours-h" className="ld-section ld-section--rule">
           <div className="ld-wrap ld-yours">
             <h2 id="yours-h" className="ld-h2">{t.yours.title}</h2>
             <ul className="ld-yours__list">
@@ -163,7 +163,7 @@ export function Landing({ t = LANDING_EN }: { t?: LandingCopy }) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="ld-close__art" src="/samwise-night.png" alt="" width={120} height={120} />
               <h2 id="close-h" className="ld-h2">{t.close.title}</h2>
-              <a className="ld-btn ld-btn--gold" href={signup}>
+              <a className="ld-btn" href={signup}>
                 {t.close.cta} <Arrow />
               </a>
               <p className="ld-micro">{t.close.under}</p>
