@@ -14,9 +14,9 @@ export type HomeCopy = {
 
 export const HOME_COPY: Record<Lang, HomeCopy> = {
   en: {
-    title: "Your daily ritual companion.",
+    title: "Your daily check-in companion.",
     titleEm: "One step at a time, and never alone.",
-    body: "Samwise helps you keep a daily ritual through WhatsApp and a short call each day, and reaches your people when you need them.",
+    body: "Samwise helps you do a daily check-in through WhatsApp and a short call each day, and calls your trusted people when you need them.",
     cta: "Sign up free",
     micro: "It takes a minute. Then we talk on WhatsApp.",
     loginLead: "Already signed up?",
@@ -25,9 +25,9 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
     imageAlt: "Samwise looking up at a bright star in the night sky",
   },
   es: {
-    title: "Tu compañero para el ritual diario.",
+    title: "Tu compañero para el chequeo diario.",
     titleEm: "Paso a paso, y nunca solo.",
-    body: "Samwise te ayuda a mantener un ritual diario por WhatsApp y con una llamada corta cada día, y avisa a tu gente cuando la necesitas.",
+    body: "Samwise te ayuda a hacer un chequeo diario por WhatsApp y con una llamada corta cada día, y llama a tus personas de confianza cuando las necesitas.",
     cta: "Regístrate gratis",
     micro: "Toma un minuto. Luego hablamos por WhatsApp.",
     loginLead: "¿Ya te registraste?",
