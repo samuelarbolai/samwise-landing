@@ -35,6 +35,9 @@ type Report = {
   zero: boolean
 }
 
+// Spanish word for "slip": one place. Glossary default "desliz" until Samuel picks (desliz or recaída).
+const ES_SLIP = { one: "Desliz", many: "Deslices" }
+
 const T: Record<Lang, Record<string, string | string[]>> = {
   en: {
     title: "Your week of check-ins", of: "of", done: "check-ins done",
@@ -49,9 +52,9 @@ const T: Record<Lang, Record<string, string | string[]>> = {
     title: "Tu semana de chequeos", of: "de", done: "chequeos hechos",
     days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
     morning: "Mañana", midday: "Mediodía", night: "Noche", checkin: "Chequeo",
-    written: "Entrada del cuaderno", oncall: "Hecho en la llamada", notdone: "No hecho", slip: "Caída",
+    written: "Entrada del cuaderno", oncall: "Hecho en la llamada", notdone: "No hecho", slip: ES_SLIP.one,
     calls: "Llamadas de chequeo contestadas", trend: "Chequeos hechos, últimas 4 semanas",
-    slips: "Caídas que le contaste a Samwise", alerts: "Veces que Samwise llamó a tus personas de confianza",
+    slips: `${ES_SLIP.many} que le contaste a Samwise`, alerts: "Veces que Samwise llamó a tus personas de confianza",
     zero: "Esta semana no quedó ningún chequeo registrado. Con uno basta para volver a empezar.",
   },
 }
