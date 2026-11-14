@@ -2,10 +2,10 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { query } from "@/lib/v2/db"
 
-// Opened from the "See my week" button of the WhatsApp template samwise_weekly_report.
+// Opened from the "See my week" button of the WhatsApp template samwise_weekly_checkins.
 // Shows the image from /api/report-image/<token>. The token is the only key; 14-day expiry.
 export const dynamic = "force-dynamic"
-export const metadata: Metadata = { title: "Your ritual week · Samwise", robots: { index: false, follow: false } }
+export const metadata: Metadata = { title: "Your week of check-ins · Samwise", robots: { index: false, follow: false } }
 
 export default async function ReportPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -21,7 +21,7 @@ export default async function ReportPage({ params }: { params: Promise<{ token: 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`/api/report-image/${token}`}
-        alt={es ? "Tu semana de ritual" : "Your ritual week"}
+        alt={es ? "Tu semana de chequeos" : "Your week of check-ins"}
         style={{ width: "100%", maxWidth: 540, height: "auto", borderRadius: 12 }}
       />
       <p style={{ color: "#6b665e", fontSize: 15, maxWidth: 540, marginTop: 16, textAlign: "center" }}>

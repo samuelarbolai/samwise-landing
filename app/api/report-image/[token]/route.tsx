@@ -1,11 +1,11 @@
 import { ImageResponse } from "next/og"
 import { query } from "@/lib/v2/db"
 
-// Weekly ritual report image, sent as the header of the WhatsApp template
-// samwise_weekly_report. n8n "Samwise Weekly Ritual Report" computes each user's week,
+// Weekly check-in report image, opened from the "See my week" button of the WhatsApp
+// template samwise_weekly_checkins (via /report/<token>). n8n "Samwise Weekly Ritual Report" computes each user's week,
 // stores it in Neon weekly_reports with a random token, and sends this URL to Telnyx.
 // The token is the only key (no user id or data in the URL) and expires after 14 days.
-// Design follows "Samuel's ritual month" graph, cut to one week.
+// Design follows "Samuel's ritual month" graph, cut to one week. Words follow the plain-wording glossary (2026-11-14).
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -22,7 +22,7 @@ type Report = {
   lang: Lang
   range: string
   first_name?: string
-  pushes: string[] // "morning" | "midday" | "night" | "ritual"
+  pushes: string[] // "morning" | "midday" | "night" | "checkin" (or an HH:MM label)
   grid: number[][] // [push][day 0..6]: 0 none, 1 written, 2 done on a call
   slips: [number, number][] // [push, day]
   calls: [number, number][] // [placed, answered] per day
@@ -37,22 +37,22 @@ type Report = {
 
 const T: Record<Lang, Record<string, string | string[]>> = {
   en: {
-    title: "Your ritual week", of: "of", done: "rituals done",
+    title: "Your week of check-ins", of: "of", done: "check-ins done",
     days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    morning: "Morning", midday: "Midday", night: "Night", ritual: "Ritual",
-    written: "Written", oncall: "Done on a call", notdone: "Not done", slip: "Slip",
-    calls: "Ritual calls answered", trend: "Rituals done, last 4 weeks",
-    slips: "Slips you told Samwise", alerts: "Times your trusted people were alerted",
-    zero: "No rituals logged this week. One is enough to start again.",
+    morning: "Morning", midday: "Midday", night: "Night", checkin: "Check-in",
+    written: "Journal entry", oncall: "Done on a call", notdone: "Not done", slip: "Slip",
+    calls: "Check-in calls answered", trend: "Check-ins done, last 4 weeks",
+    slips: "Slips you told Samwise", alerts: "Times Samwise called your trusted people",
+    zero: "No check-ins logged this week. One is enough to start again.",
   },
   es: {
-    title: "Tu semana de ritual", of: "de", done: "rituales hechos",
+    title: "Tu semana de chequeos", of: "de", done: "chequeos hechos",
     days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-    morning: "Mañana", midday: "Mediodía", night: "Noche", ritual: "Ritual",
-    written: "Escrito", oncall: "Hecho en la llamada", notdone: "No hecho", slip: "Caída",
-    calls: "Llamadas de ritual contestadas", trend: "Rituales hechos, últimas 4 semanas",
-    slips: "Caídas que le contaste a Samwise", alerts: "Veces que se avisó a tus personas de confianza",
-    zero: "Esta semana no quedó ningún ritual registrado. Con uno basta para volver a empezar.",
+    morning: "Mañana", midday: "Mediodía", night: "Noche", checkin: "Chequeo",
+    written: "Entrada del cuaderno", oncall: "Hecho en la llamada", notdone: "No hecho", slip: "Caída",
+    calls: "Llamadas de chequeo contestadas", trend: "Chequeos hechos, últimas 4 semanas",
+    slips: "Caídas que le contaste a Samwise", alerts: "Veces que Samwise llamó a tus personas de confianza",
+    zero: "Esta semana no quedó ningún chequeo registrado. Con uno basta para volver a empezar.",
   },
 }
 
@@ -114,7 +114,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
         </div>
         {r.grid.map((row, p) => (
           <div key={p} style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
-            <div style={{ width: 158, fontSize: 26, color: C.mu }}>{t[r.pushes[p]] as string}</div>
+            <div style={{ width: 158, fontSize: 26, color: C.mu }}>{(t[r.pushes[p]] as string | undefined) ?? r.pushes[p]}</div>
             {row.map((v, d) => (
               <div key={d} style={{ width: 96, height: rowH, marginRight: 8, borderRadius: 10, background: cellColor(v), display: "flex", justifyContent: "flex-end", padding: 8 }}>
                 {r.slips.some(([sp, sd]) => sp === p && sd === d) ? (
