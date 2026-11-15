@@ -44,7 +44,7 @@ export const LANDING_EN: LandingCopy = {
     steps: [
       {
         title: "Check in every day.",
-        body: "A short call with two questions: “Am I at risk today?” and “Have I slipped since my last check-in?”",
+        body: "A short call that asks: “Any slip since your last check-in?” Your journal starts with “Am I at risk today?” and “Have I slipped since my last check-in?”",
       },
       {
         title: "Write it down.",
