@@ -9,6 +9,7 @@ import { LanguageSelect, useActiveAgentLanguages } from "./language-select"
 import type { LanguageCode } from "@/lib/v2/validate"
 import { COUNTRIES, countryFromTimezone, toE164, type CountryIso } from "@/lib/v2/phone"
 import { SRC_KEY, cleanSrc } from "@/lib/v2/src-tag"
+import type { PlanInvite } from "@/lib/v2/plan"
 
 // Samwise's WhatsApp number (Telnyx). After verifying, the person says hi there and setup starts.
 const WA_NUMBER = "15079201622"
@@ -16,7 +17,16 @@ const RESEND_SECONDS = 30
 
 type Step = "details" | "code" | "done"
 
-export function WhatsappSignup() {
+type Props = {
+  /** A clinician signing up to write plans for their patients. */
+  role?: "clinician"
+  /** The plan a clinician invited this person to (samwise.life/p/<code>). */
+  plan?: PlanInvite
+  /** The invite link's code matched no active plan. Sign-up still works without it. */
+  planMissing?: boolean
+}
+
+export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
   const { lang, setLang, s } = useLang()
   const [step, setStep] = useState<Step>("details")
   const [name, setName] = useState("")
@@ -30,7 +40,7 @@ export function WhatsappSignup() {
   const [codeId, setCodeId] = useState<number | null>(null)
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""))
   const [resendIn, setResendIn] = useState(0)
-  const [done, setDone] = useState<{ name: string; existing: boolean } | null>(null)
+  const [done, setDone] = useState<{ name: string; existing: boolean; role?: string } | null>(null)
   const boxes = useRef<(HTMLInputElement | null)[]>([])
   const activeLanguages = useActiveAgentLanguages()
   // Where the person came from (?src=, e.g. "landing"), kept for this tab so it survives a reload.
@@ -69,7 +79,7 @@ export function WhatsappSignup() {
       const res = await fetch("/api/v2/phone-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, timezone, language, sms_consent: smsConsent, src }),
+        body: JSON.stringify({ name, phone, timezone, language, sms_consent: smsConsent, src, role, plan_code: plan?.code }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -103,7 +113,7 @@ export function WhatsappSignup() {
         setDigits(Array(6).fill(""))
         setTimeout(() => boxes.current[0]?.focus(), 50)
       } else {
-        setDone({ name: data.name, existing: data.existing })
+        setDone({ name: data.name, existing: data.existing, role: data.role })
         setStep("done")
       }
     } catch {
@@ -154,7 +164,8 @@ export function WhatsappSignup() {
         {step === "done" && done ? (
           <>
             <h1 className="v2-title">{(done.existing ? s.doneExisting : s.doneTitle).replace("NAME", done.name)}</h1>
-            {!done.existing && <p className="v2-sub">{s.doneSub}</p>}
+            {!done.existing && <p className="v2-sub">{done.role === "clinician" ? s.clinicianDoneSub : s.doneSub}</p>}
+            {plan && done.role !== "clinician" && <p className="v2-sub">{s.planDone.replace("CLINICIAN", plan.clinician)}</p>}
             <a className="v2-btn" href={waLink} style={{ marginTop: 32, display: "block", textAlign: "center" }}>
               {s.waOpen}
             </a>
@@ -221,8 +232,26 @@ export function WhatsappSignup() {
           </>
         ) : (
           <>
-            <h1 className="v2-title">{s.signupTitle}</h1>
-            <p className="v2-sub">{s.signupSub}</p>
+            <h1 className="v2-title">{role === "clinician" ? s.clinicianTitle : s.signupTitle}</h1>
+            <p className="v2-sub">{role === "clinician" ? s.clinicianSub : s.signupSub}</p>
+
+            {plan && (
+              <section className="v2-plan" aria-label={plan.name}>
+                <p className="v2-plan-lead">{s.planInvite.replace("CLINICIAN", plan.clinician).replace("PLAN", plan.name)}</p>
+                {plan.questions.length > 0 && (
+                  <>
+                    <p className="v2-plan-label">{s.planQuestions}</p>
+                    <ul className="v2-plan-list">
+                      {plan.questions.map((q) => (
+                        <li key={q}>{q}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <p className="v2-plan-note">{s.planYours.replace("CLINICIAN", plan.clinician)}</p>
+              </section>
+            )}
+            {planMissing && <p className="v2-help" style={{ marginTop: 16 }}>{s.planMissing}</p>}
 
             <form
               onSubmit={(e) => {
