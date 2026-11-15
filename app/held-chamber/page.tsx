@@ -1,4 +1,4 @@
-import { Cinzel, EB_Garamond, JetBrains_Mono } from "next/font/google"
+import { Cinzel, EB_Garamond, JetBrains_Mono, HeldFonts } from "@/lib/held-fonts"
 import Script from "next/script"
 import type { Metadata } from "next"
 import Chamber from "./Chamber"
@@ -34,6 +34,7 @@ export const metadata: Metadata = {
 export default function HeldChamberPage() {
   return (
     <>
+      <HeldFonts />
       <Script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js" strategy="afterInteractive" />
       <Script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js" strategy="afterInteractive" />
       <Script src="https://unpkg.com/lenis@1.3.15/dist/lenis.min.js" strategy="afterInteractive" />
