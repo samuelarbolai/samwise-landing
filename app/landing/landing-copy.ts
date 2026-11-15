@@ -73,7 +73,7 @@ export const LANDING_EN: LandingCopy = {
     title: "Questions",
     items: [
       { q: "Do I need an app?", a: "No. A phone call, WhatsApp, and your notebook or Google Doc." },
-      { q: "Who reads my journal?", a: "You, and whoever you show it to." },
+      { q: "Who reads my journal?", a: "You, whoever you show it to, and Samwise, so it can follow your steps. Your trusted people only hear that you wrote an entry, never what it says." },
       { q: "What if I miss a call?", a: "Call Samwise yourself within 30 minutes and nobody is told." },
     ],
   },
