@@ -22,3 +22,7 @@ With Samuel's OK for one call: trigger only through the product path (set a chec
 - Cartesia has no connector: read agents/prompts through n8n HTTP nodes with credential "Cartesia API v2026-08-14"; never change "Cartesia API (Samuel G)".
 - Call Ended Handler waits 5 min before writing; don't judge a call earlier.
 - Support calls go to Samuel's family (Spanish agents). A test that ends a ritual call badly can call them. Never simulate a bad call.
+- Before 2026-11-14 17:23 UTC a voicemail often ended as `agent_hangup` and was stored `call_success = true`; 71 such rows were corrected to false on 2026-11-15. Judge reach by `call_success AND duration_seconds >= 30` or `direction = 'inbound'`, never by `status = 'completed'`.
+- Answered is not the same as reached: read the first transcript line. "grabe su mensaje" / "contestador" is the carrier voicemail.
+- Ritual Call Dispatch executions wait from 00:01 Bogota and finish on the workflow version they started with. A Dispatch change published during the day takes effect on the next day's calls.
+- Health Check rules for calls: scheduled_call_missing, result_not_saved, bad_call_not_handled, support_false_alarm, callback_not_placed, user_unreachable, voicemail_agent_spoke, slip_answer_rate_low.
