@@ -3,6 +3,7 @@ import { query } from "@/lib/v2/db"
 import { ok, fail, readJson, handleError } from "@/lib/v2/http"
 import { PHONE_CODE_HOOK } from "@/lib/v2/phone"
 import { cleanSrc } from "@/lib/v2/src-tag"
+import { cleanPlanCode } from "@/lib/v2/plan"
 import { isE164, isHHMM, isLanguage, isName, isTimezone, toPgTime } from "@/lib/v2/validate"
 
 /**
@@ -11,7 +12,7 @@ import { isE164, isHHMM, isLanguage, isName, isTimezone, toPgTime } from "@/lib/
  */
 export async function POST(req: Request) {
   try {
-    const { name, phone, timezone, language, call_time, sms_consent, src } = await readJson(req)
+    const { name, phone, timezone, language, call_time, sms_consent, src, role, plan_code } = await readJson(req)
 
     if (!isName(name)) return fail("Enter your name")
     if (!isE164(phone)) return fail("Enter a valid phone number")
@@ -34,10 +35,13 @@ export async function POST(req: Request) {
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0")
     const values = [phone, code, (name as string).trim(), language, timezone, time, sms_consent === true]
     // src = where the sign-up came from (?src= on the link, e.g. "landing"); null when untagged.
+    // role = "clinician" for a clinician signing up to write plans; plan_code = the invite link a patient came from.
     const [row] = await query<{ id: string }>(
-      `INSERT INTO phone_codes (phone, code, name, language, timezone, call_time, sms_consent, src)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-      [...values, cleanSrc(src)],
+      `INSERT INTO phone_codes (phone, code, name, language, timezone, call_time, sms_consent, src, role, plan_code)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9,
+               (SELECT code FROM clinician_plans WHERE code = $10 AND status = 'active'))
+       RETURNING id`,
+      [...values, cleanSrc(src), role === "clinician" ? "clinician" : null, cleanPlanCode(plan_code)],
     ).catch(async (err: { code?: string }) => {
       // Until phone_codes.src exists (42703 = undefined column), sign-up still works without the tag.
       if (err?.code !== "42703") throw err

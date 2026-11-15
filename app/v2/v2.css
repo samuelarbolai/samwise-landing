@@ -506,3 +506,11 @@
 .v2-legal li { margin-top: 6px; font-size: 15px; line-height: 1.6; color: var(--ink-mute); }
 .v2-legal a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .v2-help a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+
+/* Clinician plan invite (samwise.life/p/<code>) */
+.v2-plan { margin-top: 24px; padding: 16px 18px; border: 1px solid var(--rule); border-radius: 8px; }
+.v2-plan-lead { font-size: 15px; color: var(--ink); }
+.v2-plan-label { margin-top: 12px; font-size: 13px; color: var(--ink-mute); }
+.v2-plan-list { margin: 8px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink); }
+.v2-plan-list li { margin-top: 4px; }
+.v2-plan-note { margin-top: 12px; font-size: 13px; color: var(--ink-mute); }

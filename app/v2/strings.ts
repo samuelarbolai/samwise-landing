@@ -28,6 +28,17 @@ export const V2_STRINGS = {
     signupSub: "One minute. No card, no password. We send a code to your WhatsApp, and Samwise takes it from there.",
     signupCta: "Send code",
     signupBusy: "Sending…",
+    clinicianTitle: "Set up a check-in for your patients.",
+    clinicianSub:
+      "One minute. We send a code to your WhatsApp. Then you tell Samwise your questions in the chat and get a link to send your patient.",
+    clinicianDoneSub:
+      "Last step: open WhatsApp and say hi. Samwise asks for your questions there and gives you a link for your patient.",
+    planInvite: "CLINICIAN invited you to “PLAN”.",
+    planQuestions: "They would like your check-in call to also ask:",
+    planYours:
+      "You decide in the chat: add, reword or skip each question. CLINICIAN sees nothing unless you choose to send it.",
+    planDone: "Samwise will show you CLINICIAN's questions in the chat. You choose which ones to keep.",
+    planMissing: "This invite link is no longer active. You can still sign up, and add your clinician's questions later in the chat.",
     waPhone: "WhatsApp number",
     waPhonePh: "300 123 4567",
     waPhoneHelp: "We send your code here on WhatsApp. This is also the number Samwise calls.",
@@ -169,6 +180,17 @@ export const V2_STRINGS = {
     signupSub: "Un minuto. Sin tarjeta, sin contraseña. Te enviamos un código a tu WhatsApp y Samwise sigue contigo desde ahí.",
     signupCta: "Enviar código",
     signupBusy: "Enviando…",
+    clinicianTitle: "Configura un chequeo para tus pacientes.",
+    clinicianSub:
+      "Un minuto. Te enviamos un código a tu WhatsApp. Luego le dices a Samwise tus preguntas en el chat y recibes un enlace para enviarle a tu paciente.",
+    clinicianDoneSub:
+      "Último paso: abre WhatsApp y saluda. Samwise te pide tus preguntas ahí y te da un enlace para tu paciente.",
+    planInvite: "CLINICIAN te invitó a «PLAN».",
+    planQuestions: "Le gustaría que tu llamada de chequeo también pregunte:",
+    planYours:
+      "Tú decides en el chat: agregar, cambiar o saltar cada pregunta. CLINICIAN no ve nada a menos que tú decidas enviarlo.",
+    planDone: "Samwise te muestra las preguntas de CLINICIAN en el chat. Tú eliges cuáles se quedan.",
+    planMissing: "Este enlace de invitación ya no está activo. Igual puedes registrarte y agregar las preguntas de tu especialista después en el chat.",
     waPhone: "Número de WhatsApp",
     waPhonePh: "300 123 4567",
     waPhoneHelp: "Aquí te enviamos el código por WhatsApp. También es el número al que te llama Samwise.",

@@ -15,17 +15,20 @@ export async function POST(req: Request) {
       return fail("Enter the 6-digit code")
     }
 
-    const [row] = await query<{ phone: string; code: string; name: string; language: string; timezone: string }>(
+    const [row] = await query<{
+      phone: string; code: string; name: string; language: string; timezone: string
+      role: string | null; plan_code: string | null
+    }>(
       `UPDATE phone_codes SET attempts = attempts + 1
        WHERE id = $1 AND verified_at IS NULL AND expires_at > now() AND attempts < 5
-       RETURNING phone, code, name, language, timezone`,
+       RETURNING phone, code, name, language, timezone, role, plan_code`,
       [id],
     )
     if (!row) return fail("This code expired. Ask for a new one.", 410)
     if (row.code !== code) return fail("That code is not right. Check it and try again.", 401)
 
-    const [existing] = await query<{ id: string; name: string }>(
-      `SELECT id, name FROM users WHERE regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace($1, '[^0-9]', '', 'g') LIMIT 1`,
+    const [existing] = await query<{ id: string; name: string; role: string }>(
+      `SELECT id, name, role FROM users WHERE regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace($1, '[^0-9]', '', 'g') LIMIT 1`,
       [row.phone],
     )
 
@@ -35,6 +38,19 @@ export async function POST(req: Request) {
       userId = toId(existing.id)
       name = existing.name
       await query(`UPDATE phone_codes SET verified_at = now(), user_id = $2, setup_done_at = now() WHERE id = $1`, [id, userId])
+    } else if (row.role === "clinician") {
+      // A clinician writes plans in the chat. No check-in calls, so no setup row and no first call time.
+      const [created] = await query<{ id: string }>(
+        `WITH u AS (
+           INSERT INTO users (name, phone, timezone, language, role) VALUES ($1, $2, $3, $4, 'clinician') RETURNING id
+         ), mark AS (
+           UPDATE phone_codes SET verified_at = now(), user_id = (SELECT id FROM u), setup_done_at = now() WHERE id = $5
+         )
+         SELECT id FROM u`,
+        [row.name, row.phone, row.timezone, row.language, id],
+      )
+      userId = toId(created.id)
+      name = row.name
     } else {
       const [created] = await query<{ id: string }>(
         `WITH u AS (
@@ -58,8 +74,22 @@ export async function POST(req: Request) {
       }).catch(() => null)
     }
 
+    // One role per number: an existing account keeps the role it has.
+    const role = existing ? existing.role : row.role === "clinician" ? "clinician" : "user"
+
+    // Came from a clinician's invite link: the plan is offered in the chat, where the person
+    // accepts, rewords or skips each question. Nothing is active until they say so.
+    if (row.plan_code && role !== "clinician") {
+      await query(
+        `INSERT INTO plan_enrollments (plan_id, patient_id)
+         SELECT id, $2 FROM clinician_plans WHERE code = $1 AND status = 'active'
+         ON CONFLICT (plan_id, patient_id) DO NOTHING`,
+        [row.plan_code, userId],
+      )
+    }
+
     await createSession(userId)
-    return ok({ name, existing: !!existing })
+    return ok({ name, existing: !!existing, role })
   } catch (err) {
     return handleError(err)
   }
