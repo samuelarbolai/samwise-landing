@@ -1,4 +1,4 @@
-import { Cormorant_Garamond, JetBrains_Mono } from "next/font/google"
+import { Cormorant_Garamond, JetBrains_Mono, HeldFonts } from "@/lib/held-fonts"
 import type { Metadata } from "next"
 
 const serif = Cormorant_Garamond({
@@ -79,6 +79,7 @@ const star = (
 export default function HeldPage() {
   return (
     <>
+      <HeldFonts />
       <style>{`
         html, body { background: ${bg}; }
         @keyframes breathe-in {
