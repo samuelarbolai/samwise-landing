@@ -8,6 +8,7 @@ import { TimezoneSelect, detectTimezone } from "./timezone-select"
 import { LanguageSelect, useActiveAgentLanguages } from "./language-select"
 import type { LanguageCode } from "@/lib/v2/validate"
 import { COUNTRIES, countryFromTimezone, toE164, type CountryIso } from "@/lib/v2/phone"
+import { SRC_KEY, cleanSrc } from "@/lib/v2/src-tag"
 
 // Samwise's WhatsApp number (Telnyx). After verifying, the person says hi there and setup starts.
 const WA_NUMBER = "15079201622"
@@ -32,6 +33,19 @@ export function WhatsappSignup() {
   const [done, setDone] = useState<{ name: string; existing: boolean } | null>(null)
   const boxes = useRef<(HTMLInputElement | null)[]>([])
   const activeLanguages = useActiveAgentLanguages()
+  // Where the person came from (?src=, e.g. "landing"), kept for this tab so it survives a reload.
+  const [src, setSrc] = useState<string | null>(null)
+
+  useEffect(() => {
+    let tag = cleanSrc(new URLSearchParams(window.location.search).get("src"))
+    try {
+      if (tag) window.sessionStorage.setItem(SRC_KEY, tag)
+      else tag = cleanSrc(window.sessionStorage.getItem(SRC_KEY))
+    } catch {
+      // Storage blocked — the tag from the URL still applies.
+    }
+    setSrc(tag)
+  }, [])
 
   useEffect(() => {
     const tz = detectTimezone()
@@ -55,7 +69,7 @@ export function WhatsappSignup() {
       const res = await fetch("/api/v2/phone-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, timezone, language, sms_consent: smsConsent }),
+        body: JSON.stringify({ name, phone, timezone, language, sms_consent: smsConsent, src }),
       })
       const data = await res.json()
       if (!res.ok) {

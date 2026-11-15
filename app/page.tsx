@@ -1,15 +1,16 @@
 import type { Metadata } from "next"
-import { Home } from "./home"
+import { Landing } from "./landing/landing"
 
+const TITLE = "Samwise — turn every slip into something you can work on"
 const DESCRIPTION =
-  "Your daily check-in companion. Samwise helps you do a daily check-in through WhatsApp and a short call each day, and calls your trusted people when you need them."
+  "Samwise calls you every day to check in. When you slip, you write what happened, in your own journal, ready for your sponsor."
 
 export const metadata: Metadata = {
-  title: "Samwise — your daily check-in companion",
+  title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: "https://samwise.life" },
   openGraph: {
-    title: "Samwise — your daily check-in companion",
+    title: TITLE,
     description: DESCRIPTION,
     url: "https://samwise.life",
     siteName: "Samwise",
@@ -17,11 +18,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Samwise — your daily check-in companion",
+    title: TITLE,
     description: DESCRIPTION,
   },
 }
 
 export default function Page() {
-  return <Home />
+  return <Landing />
 }
