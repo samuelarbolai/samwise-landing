@@ -19,7 +19,7 @@ export async function getPlanInvite(code: unknown): Promise<PlanInvite | null> {
   if (!c) return null
   const [row] = await query<{ code: string; name: string; clinician: string; questions: string[] | null }>(
     `SELECT p.code, p.name, u.name AS clinician,
-            (SELECT array_agg(q.text ORDER BY q.position) FROM clinician_plan_questions q WHERE q.plan_id = p.id) AS questions
+            (SELECT array_agg(q.text ORDER BY q.position) FROM clinician_plan_questions q WHERE q.plan_id = p.id AND q.active) AS questions
      FROM clinician_plans p JOIN users u ON u.id = p.clinician_id
      WHERE p.code = $1 AND p.status = 'active'`,
     [c],
