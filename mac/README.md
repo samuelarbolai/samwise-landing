@@ -104,11 +104,22 @@ browser on a Mac through the steps page, `terminal` the curl line, `check` our o
 Health Check rule `mac_downloads_not_connecting` compares a week of `steps` downloads with the Macs that
 connected, to notice people who download and do not get through.
 
-`scripts/first-open.sh` (workflow "Mac first open") walks this path on a real Mac: it marks the disk image the
-way Safari does, opens the app, clicks through Privacy & Security and takes a picture of every step. Its outputs
-go to the `mac-first-open-check` branch, and the pictures on `/mac/open` (`public/mac/open-*.png`) are cut from
-them (cropped only, never retouched). Run it again when a new macOS changes the dialogs, and update the page
-from what it shows.
+`scripts/first-open.sh` (workflow "Mac first open") walks this path on a real Mac. It first reads the live
+`/mac/open` the way Safari on a Mac gets it (the redirect from `/download/mac`, the download starting by itself,
+the trust sentence, every picture served). Then it marks the disk image the way Safari does, opens the app,
+clicks through Privacy & Security, takes a picture of every step and checks that the page quotes the words macOS
+shows. Its outputs go to the `mac-first-open-check` branch, and the pictures on `/mac/open`
+(`public/mac/open-*.png`) are cut from them (cropped only, never retouched). Run it again when a new macOS
+changes the dialogs, and update the page from what it shows.
+
+The last step is the one thing it cannot do on GitHub's Macs. macOS asks for an administrator's name and
+password there, and it does not accept them from a script: the run makes an administrator for itself, checks
+that the keys arrive exactly as typed, and tries a second way through accessibility, and the window stays up.
+The run then says `NOT CHECKED` for the app opening and counts it in its last line (`0 failed, 1 not checked`).
+That is the script falling short and says nothing about the app; a person types that password, and the first
+real install (2026-11-16) went through all four steps. A window that closes without the app opening is still a
+`FAIL`. What macOS wrote down last is kept in `first-open-auth-log.txt` (the last 80 lines only, so it may not
+reach back to the try).
 
 Notarizing the app would remove the dialog for everyone. It needs an Apple Developer account: a Developer ID
 Application certificate and an App Store Connect API key as repository secrets, then `codesign --options runtime`
