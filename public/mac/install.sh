@@ -32,6 +32,8 @@ main() {
   }
   trap cleanup EXIT
 
+  # Fetched this way, macOS asks no question on first open, so the script says it instead.
+  echo "Samwise for Mac is a beta that Apple has not checked yet. Install it only if you trust Samwise."
   echo "Downloading Samwise for Mac..."
   curl -fsSL "$URL" -o "$TMP/Samwise.dmg"
   mkdir -p "$MNT"

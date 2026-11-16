@@ -1,13 +1,14 @@
 import type { Metadata } from "next"
 import { MAC_RELEASE } from "@/lib/mac/release"
+import type { ReactNode } from "react"
 import { CopyLine } from "./copy-line"
+import { Arrow, DOWNLOAD_HREF, INSTALL, OPEN_HREF, Star } from "./parts"
 import "../landing/landing.css"
 import "./mac.css"
 
 const TITLE = "Samwise for Mac: a check-in alarm you cannot miss"
 const DESCRIPTION =
   "One minute before your check-in, Samwise takes over every screen of your Mac and rings. To get your screen back, you type one line."
-const INSTALL = "curl -fsSL https://www.samwise.life/mac/install.sh | bash"
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -15,23 +16,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://samwise.life/mac" },
   openGraph: { title: TITLE, description: DESCRIPTION, url: "https://samwise.life/mac", siteName: "Samwise", type: "website" },
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
-}
-
-/** The house sparkle, same path as the landing page. */
-function Star({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 0 Q13 11, 24 12 Q13 13, 12 24 Q11 13, 0 12 Q11 11, 12 0 Z" />
-    </svg>
-  )
-}
-
-function Arrow() {
-  return (
-    <svg className="ld-btn__arrow" width="13" height="9" viewBox="0 0 13 9" aria-hidden="true">
-      <path d="M0 4.5h11M8 1l3.5 3.5L8 8" stroke="currentColor" strokeWidth="1.4" fill="none" />
-    </svg>
-  )
 }
 
 const STEPS = [
@@ -64,7 +48,7 @@ const CHARGE = [
   },
 ]
 
-const QUESTIONS = [
+const QUESTIONS: { q: string; a: ReactNode }[] = [
   {
     q: "Do I need a Samwise account?",
     a: "No. Without one it rings at 16:00 on your Mac’s clock, and you can set other times. Connected to your account, it follows your real check-in times.",
@@ -82,8 +66,18 @@ const QUESTIONS = [
     a: "A sleeping Mac or a closed lid cannot ring. So from 30 minutes before a check-in, Samwise keeps an open Mac from falling asleep on its own. You can turn that off in Settings. If the Mac was asleep anyway, open it within four hours of the check-in and the alarm comes up then. Your check-in call from Samwise does not depend on your Mac.",
   },
   {
-    q: "Why does macOS warn me the first time?",
-    a: "Samwise for Mac is not signed with an Apple developer certificate yet, so macOS asks you to confirm once. The steps are above.",
+    q: "Why does macOS say it could not verify Samwise?",
+    a: (
+      <>
+        Because that is true. Samwise for Mac is a beta and is not signed with an Apple developer certificate yet,
+        so Apple has not checked it, and macOS will not open it until you allow it once in System Settings. Only do
+        that if you trust Samwise.{" "}
+        <a className="mac-link" href={OPEN_HREF}>
+          The steps, with pictures
+        </a>
+        .
+      </>
+    ),
   },
   {
     q: "How do I remove it?",
@@ -106,7 +100,7 @@ export default function MacPage() {
             <a href="#how">How it works</a>
             <a href="#install">Install</a>
             <a href="#faq">Questions</a>
-            <a className="ld-btn ld-btn--small" href="/download/mac">
+            <a className="ld-btn ld-btn--small" href={DOWNLOAD_HREF}>
               Download
             </a>
           </div>
@@ -117,7 +111,7 @@ export default function MacPage() {
         <section id="top" className="ld-hero">
           <div className="ld-wrap ld-hero__grid">
             <div className="ld-hero__text">
-              <p className="mac-eyebrow">Samwise for Mac</p>
+              <p className="mac-eyebrow">Samwise for Mac · Beta</p>
               <h1 className="ld-h1">A check-in alarm you cannot miss.</h1>
               <p className="ld-lead mac-lead">
                 One minute before your check-in, Samwise takes over every screen of your Mac and rings. To get your
@@ -127,13 +121,18 @@ export default function MacPage() {
                 I am doing my check-in now
               </p>
               <div className="ld-cta">
-                <a className="ld-btn" href="/download/mac">
+                <a className="ld-btn" href={DOWNLOAD_HREF}>
                   Download for Mac <Arrow />
                 </a>
                 <p className="ld-micro">
-                  Free. Version {r.version}, {r.sizeMb} MB. macOS {r.minMacOS} or newer, Apple silicon and Intel.{" "}
-                  <a className="mac-link" href="#install">
-                    How to open it
+                  Free, in beta. Version {r.version}, {r.sizeMb} MB. macOS {r.minMacOS} or newer, Apple silicon and
+                  Intel.
+                </p>
+                <p className="mac-beta">
+                  Apple has not checked this beta yet, so your Mac stops it the first time and you allow it once, by
+                  hand. Only do that if you trust Samwise.{" "}
+                  <a className="mac-link" href={OPEN_HREF}>
+                    See the steps
                   </a>
                 </p>
               </div>
@@ -196,26 +195,34 @@ export default function MacPage() {
             <div className="mac-install">
               <div className="mac-way">
                 <h3 className="ld-h3">Download and open</h3>
+                <p className="mac-way__p">
+                  Samwise for Mac is a beta that Apple has not checked yet, so macOS stops it the first time and you
+                  allow it once. Only do that if you trust Samwise.
+                </p>
                 <ol className="mac-steps">
                   <li>
-                    <a className="mac-link" href="/download/mac">
+                    <a className="mac-link" href={DOWNLOAD_HREF}>
                       Download Samwise for Mac
                     </a>
                     , open the file, and drag Samwise to Applications.
                   </li>
                   <li>
-                    Open Samwise from Applications. macOS says it could not verify the app. Click <b>Done</b>.
+                    Open Samwise from Applications. macOS says <b>“Samwise” Not Opened</b>. Click <b>Done</b>.
                   </li>
                   <li>
-                    Open <b>System Settings</b>, then <b>Privacy &amp; Security</b>. Scroll down to Security, click{" "}
-                    <b>Open Anyway</b> next to Samwise, and confirm with your password or Touch ID.
+                    Open <b>System Settings</b>, then <b>Privacy &amp; Security</b>. Scroll down to Security and click{" "}
+                    <b>Open Anyway</b> next to Samwise.
                   </li>
                   <li>
-                    Samwise opens with a short welcome. Press <b>Test the alarm now</b> to see it once.
+                    Click <b>Open Anyway</b> once more and confirm with your password or Touch ID. Samwise opens with a
+                    short welcome. Press <b>Test the alarm now</b> to see it once.
                   </li>
                 </ol>
                 <p className="ld-micro">
-                  On macOS 14 or older: right-click Samwise in Applications, choose Open, then Open again.
+                  <a className="mac-link" href={OPEN_HREF}>
+                    See each step with a picture
+                  </a>
+                  . On macOS 14 or older: right-click Samwise in Applications, choose Open, then Open again.
                 </p>
               </div>
 
@@ -228,7 +235,8 @@ export default function MacPage() {
                 <CopyLine text={INSTALL} />
                 <p className="ld-micro">
                   It asks for no password and installs nothing else. macOS shows no warning this way, because it only
-                  checks apps downloaded with a browser. You can{" "}
+                  checks what a browser downloads. It is the same beta, so the same goes: only if you trust Samwise.
+                  You can{" "}
                   <a className="mac-link" href="/mac/install.sh">
                     read the script
                   </a>{" "}
@@ -304,7 +312,7 @@ export default function MacPage() {
               <h2 id="close-h" className="ld-h2">
                 The part of the day you chose to protect.
               </h2>
-              <a className="ld-btn" href="/download/mac">
+              <a className="ld-btn" href={DOWNLOAD_HREF}>
                 Download for Mac <Arrow />
               </a>
               <p className="ld-micro">

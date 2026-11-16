@@ -187,7 +187,96 @@ end run
 AS
 dump() { osascript "$WORK/dump.applescript" "$1" 2>&1; }
 press() { osascript "$WORK/press.applescript" "$@" 2>&1; }
-running() { ps -axo pid=,stat=,etime=,command= | grep "[S]amwise.app/Contents/MacOS/Samwise" | awk '{ print $1 " " $2 " " $3 }' | tr '\n' ';'; }
+# answer <process> <administrator> <password>: fills in the question macOS asks before it lets the app open.
+cat > "$WORK/answer.applescript" <<'AS'
+on run argv
+  set procName to item 1 of argv
+  set adminName to item 2 of argv
+  set pw to item 3 of argv
+  set said to ""
+  tell application "System Events"
+    if not (exists process procName) then return "no process " & procName
+    tell process procName
+      try
+        set frontmost to true
+      end try
+      set nameField to missing value
+      set pwField to missing value
+      set okButton to missing value
+      set plain to {}
+      repeat with w in windows
+        set els to {}
+        try
+          set els to entire contents of w
+        end try
+        repeat with e in els
+          set el to contents of e
+          set r to ""
+          set sr to ""
+          try
+            set r to role of el as text
+          end try
+          try
+            set sr to subrole of el as text
+          end try
+          if r is "AXSecureTextField" or sr is "AXSecureTextField" then
+            set pwField to el
+          else if r is "AXTextField" then
+            set end of plain to el
+          else if r is "AXButton" then
+            try
+              if (name of el as text) is "OK" then set okButton to el
+            end try
+          end if
+        end repeat
+      end repeat
+      if pwField is missing value and (count of plain) > 1 then
+        set pwField to item 2 of plain
+      end if
+      if (count of plain) > 0 then set nameField to item 1 of plain
+      if pwField is missing value then return "no password field found (" & (count of plain) & " text fields)"
+      if nameField is not missing value then
+        try
+          set value of nameField to adminName
+        end try
+        delay 0.4
+        set got to ""
+        try
+          set got to value of nameField as text
+        end try
+        if got is adminName then
+          set said to "name set, "
+        else
+          try
+            set focused of nameField to true
+          end try
+          delay 0.4
+          keystroke "a" using command down
+          keystroke adminName
+          set said to "name typed, "
+        end if
+      end if
+      try
+        set focused of pwField to true
+      end try
+      delay 0.5
+      keystroke pw
+      delay 0.8
+      if okButton is not missing value then
+        click okButton
+        return said & "password typed, OK clicked"
+      end if
+      key code 36
+      return said & "password typed, Return pressed"
+    end tell
+  end tell
+end run
+AS
+answer() { osascript "$WORK/answer.applescript" "$@" 2>&1 | tr '\n' ' ' | sed "s/$PW/(the password)/g"; }
+# Every Samwise process with its state. A copy macOS is still holding back is there, but stopped (state T).
+processes() { ps -axo pid=,stat=,etime=,command= | grep "[S]amwise.app/Contents/MacOS/Samwise" | awk '{ print $1 " " $2 " " $3 }' | tr '\n' ';'; }
+# Only a copy that really runs counts as open.
+running() { ps -axo pid=,stat=,command= | grep "[S]amwise.app/Contents/MacOS/Samwise" | awk '$2 !~ /^T/ { print $1 " " $2 }' | tr '\n' ';'; }
 
 say "== First open of a browser download: $(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion)) =="
 note "gatekeeper: $(spctl --status 2>&1 | tr '\n' ' ')"
@@ -210,7 +299,7 @@ fi
 
 # ───────────────────────── 1. The download ─────────────────────────
 say "== 1. The download =="
-DL="$(curl -fsSL -o "$WORK/Samwise.dmg" -w "%{http_code} %{size_download}" --max-time 120 "$BASE/download/mac" 2>/dev/null)"
+DL="$(curl -fsSL -o "$WORK/Samwise.dmg" -w "%{http_code} %{size_download}" --max-time 120 "$BASE/download/mac?check=1" 2>/dev/null)"
 if [ "${DL%% *}" = "200" ]; then pass "the disk image downloads from $BASE ($DL)"; else fail "the disk image did not download: $DL"; fi
 # A browser marks what it downloads, curl does not. This is the mark Safari leaves.
 MARK="0083;$(printf '%x' "$(date +%s)");Safari;$(uuidgen)"
@@ -242,7 +331,7 @@ say "== 2. Opening it, as a double-click does =="
 sleep 8
 shot 50-not-opened
 say "windows:"; windows | tee -a "$RES"
-note "Samwise process while the dialog is up: $(running)"
+note "Samwise process while the dialog is up (T = held back by macOS): $(processes)"
 D1="$(dump CoreServicesUIAgent)"
 echo "$D1" > "$OUT/first-open-dialog.txt"
 echo "$D1" | head -40 | tee -a "$RES"
@@ -255,8 +344,8 @@ winshot CoreServicesUIAgent 50-not-opened-window
 
 note "Done: $(press CoreServicesUIAgent Done click)"
 sleep 4
-note "Samwise process after Done: $(running)"
-if [ -z "$(running)" ]; then pass "after Done, Samwise is not running"; else fail "Samwise is running although macOS said Not Opened"; fi
+note "Samwise process after Done: $(processes)"
+if [ -z "$(processes)" ]; then pass "after Done, Samwise is not running"; else fail "a Samwise process is left although macOS said Not Opened"; fi
 
 # ───────────────────────── 3. Privacy & Security ─────────────────────────
 say "== 3. System Settings > Privacy & Security =="
@@ -290,31 +379,70 @@ echo "$D3" | head -30 | tee -a "$RES"
 ASKER=""
 if echo "$D3" | grep -q "^AXButton | Open Anyway "; then ASKER="CoreServicesUIAgent"; elif echo "$D3S" | grep -q "^AXButton | Open Anyway "; then ASKER="System Settings"; fi
 if [ -n "$ASKER" ]; then pass "macOS asks once more, with an Open Anyway button ($ASKER)"; else fail "no second question with Open Anyway"; fi
+# The words the page quotes for this step.
+if echo "$D3$D3S" | grep -q "Open “Samwise”?"; then pass "the question is: Open “Samwise”?"; else fail "the question is not worded Open “Samwise”?"; fi
+if echo "$D3$D3S" | grep -q "^AXButton | Move to Trash "; then pass "Move to Trash is offered again there"; else note "no Move to Trash in the second question"; fi
 [ "$ASKER" = "CoreServicesUIAgent" ] && winshot CoreServicesUIAgent 53-open-anyway-question-window
 if [ -n "$ASKER" ]; then
   note "click: $(press "$ASKER" "Open Anyway" click)"
-  sleep 5
+  # macOS now asks for an administrator's name and password, in a window of its own.
+  ASKPW=""
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    for who in coreautha SecurityAgent LocalAuthenticationRemoteService; do
+      if windows | grep -q "$(printf '\t%s\t' "$who")"; then ASKPW="$who"; break 2; fi
+    done
+    sleep 1
+  done
+  sleep 2
   shot 54-password
   say "windows:"; windows | tee -a "$RES"
-  { for who in SecurityAgent coreautha "System Settings" CoreServicesUIAgent; do echo "--- $who"; dump "$who"; done; } > "$OUT/first-open-password.txt" 2>&1 || true
-  grep -v "^AXStaticText | $" "$OUT/first-open-password.txt" | head -40 | tee -a "$RES"
-  winshot SecurityAgent 54-password-window || true
-  if windows | grep -q -E $'\t(SecurityAgent|coreautha|LocalAuthenticationRemoteService)\t'; then pass "macOS then asks for an administrator's password"; else note "no password window was seen"; fi
+  { for who in coreautha SecurityAgent "System Settings" CoreServicesUIAgent; do echo "--- $who"; dump "$who"; done; } > "$OUT/first-open-password.txt" 2>&1 || true
+  grep -v "^AXStaticText | $" "$OUT/first-open-password.txt" | head -16 | tee -a "$RES"
+  if [ -n "$ASKPW" ]; then
+    pass "macOS then asks for an administrator's name and password ($ASKPW)"
+    winshot "$ASKPW" 54-password-window || true
+  else
+    note "no password window was seen"
+  fi
+  note "Samwise process before the answer (T = held back by macOS): $(processes)"
   if [ -n "$(running)" ]; then
     note "Samwise opened without a password question"
-  elif [ "$ADMIN" = "$USER" ]; then
-    osascript -e 'on run argv' -e 'tell application "System Events"' -e 'keystroke (item 1 of argv)' -e 'delay 0.6' -e 'key code 36' -e 'end tell' -e 'end run' "$PW" >/dev/null 2>&1 || note "the password could not be typed"
-  elif [ -n "$ADMIN" ]; then
-    # Another administrator answers: back to the name field, replace the name, then the password.
-    osascript -e 'on run argv' -e 'tell application "System Events"' -e 'key code 48 using shift down' -e 'delay 0.4' -e 'keystroke "a" using command down' -e 'keystroke (item 1 of argv)' -e 'delay 0.4' -e 'key code 48' -e 'delay 0.4' -e 'keystroke (item 2 of argv)' -e 'delay 0.6' -e 'key code 36' -e 'end tell' -e 'end run' "$ADMIN" "$PW" >/dev/null 2>&1 || note "the name and password could not be typed"
+  elif [ -z "$ADMIN" ]; then
+    note "no administrator password is known on this build machine, so the question stays unanswered"
+  else
+    note "answer: $(answer "${ASKPW:-coreautha}" "$ADMIN" "$PW")"
   fi
-  for _ in 1 2 3 4 5 6 7 8 9 10; do [ -n "$(running)" ] && break; sleep 2; done
-  sleep 3
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do [ -n "$(running)" ] && break; sleep 2; done
+  sleep 4
   shot 55-opened
   say "windows:"; windows | tee -a "$RES"
-  note "Samwise process at the end: $(running)"
-  if [ -n "$(running)" ]; then pass "after Open Anyway and the password, Samwise opens"; else fail "Samwise did not open after Open Anyway and the password"; fi
+  note "Samwise process at the end: $(processes)"
+  if [ -n "$(running)" ]; then
+    pass "after Open Anyway and the password, Samwise opens"
+  elif [ -z "$ADMIN" ]; then
+    note "not checked on this machine: Samwise opening after the password"
+  else
+    fail "Samwise did not open after Open Anyway and the password"
+    { for who in coreautha SecurityAgent CoreServicesUIAgent; do echo "--- $who"; dump "$who"; done; } > "$OUT/first-open-after-answer.txt" 2>&1 || true
+    grep -v "^AXStaticText | $" "$OUT/first-open-after-answer.txt" | head -16 | tee -a "$RES"
+  fi
   winshot Samwise 55-opened-window || true
+  # Opened once this way, macOS asks nothing the second time.
+  if [ -n "$(running)" ]; then
+    pkill -x Samwise >/dev/null 2>&1 || true
+    launchctl bootout "gui/$(id -u)/life.samwise.mac" >/dev/null 2>&1 || true
+    sleep 3
+    ( open /Applications/Samwise.app > "$WORK/open2.log" 2>&1 & )
+    for _ in 1 2 3 4 5 6 7 8 9 10; do [ -n "$(running)" ] && break; sleep 2; done
+    sleep 3
+    shot 56-second-open
+    say "windows:"; windows | tee -a "$RES"
+    if [ -n "$(running)" ] && ! windows | grep -q "$(printf '\tCoreServicesUIAgent\t')"; then
+      pass "the second time, Samwise opens with no question"
+    else
+      fail "the second open did not go straight through (processes: $(processes))"
+    fi
+  fi
 fi
 
 # Leave the build machine as it was found.

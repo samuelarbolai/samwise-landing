@@ -31,12 +31,16 @@ macOS Force Quit is never blocked, and three restarts while an alarm is up make 
 - `scripts/e2e.sh` runs the built app on a real Mac with a pretend clock and a stand-in server (`mock_server.py`),
   and takes screenshots. Its last part installs the app for real, so it only runs on a build machine.
 - `scripts/live-check.sh` checks the real samwise.life from a Mac with a temporary test account (see below).
-- `.github/workflows/mac-app.yml` runs these on a GitHub macOS runner. Outputs go to the `mac-builds` branch
-  (builds) and the `mac-live-check` branch (live checks), not to this branch.
+- `scripts/first-open.sh` opens a browser-style download for the first time and photographs what macOS asks
+  (see "Signing, and the first open").
+- `.github/workflows/mac-app.yml` runs the build and the live check on a GitHub macOS runner, and
+  `.github/workflows/mac-first-open.yml` the first open. Outputs go to the `mac-builds`, `mac-live-check` and
+  `mac-first-open-check` branches, not to this branch.
 
 The rest of the feature lives in the website:
 
-- `app/mac/` is the download page, `app/download/mac` the link that always points at the current disk image,
+- `app/mac/` is the download page, `app/mac/open` the page with the first-open steps (every Download button
+  leads there), `app/download/mac` the link that always points at the current disk image,
   `public/mac/install.sh` the one-line installer, `public/downloads/` the disk image itself.
 - `app/api/mac/*` and `lib/mac/server.ts` are what a connected Mac talks to. `lib/mac/release.ts` names the
   version the site offers.
@@ -77,12 +81,38 @@ event: that Mac was on and online. The Mac reports `shown` when the alarm takes 
 (n8n, function `samwise_mac_health_checks()` in Neon) reports any `seen` without `shown`, `done`, `skipped` or
 `missed` (`mac_alarm_not_shown`), and any alarm dropped by the restart guard (`mac_alarm_crashed`).
 
-## Signing
+## Signing, and the first open
 
-The app is not signed with an Apple Developer ID, so the first open needs System Settings > Privacy & Security >
-Open Anyway, or the Terminal line on the download page (files fetched by `curl` are not checked by Gatekeeper).
-Notarizing it needs an Apple Developer account: a Developer ID Application certificate and an App Store Connect
-API key as repository secrets, then `codesign --options runtime` and `xcrun notarytool submit` in `build.sh`.
+The app is not signed with an Apple Developer ID, so it is offered as a beta and macOS refuses a copy that was
+downloaded with a browser. On macOS 15 and newer the dialog says "Samwise" Not Opened and only offers Move to
+Trash and Done: right-click > Open no longer gets past it. The way through is:
+
+1. Click Done. (The blue default button is Move to Trash.)
+2. System Settings > Privacy & Security, scroll down to Security, click Open Anyway.
+3. In the question that follows, Open "Samwise"?, click Open Anyway (Move to Trash is the blue default again),
+   then give an administrator's password or Touch ID.
+
+`samwise.life/mac/open` shows these steps with pictures, says plainly that this is a beta Apple has not checked
+(open it only if you trust Samwise), and is where every Download button on the site leads: on a Mac the page
+starts the download by itself (`/mac/open?dl=1`); on a phone or a PC it starts nothing and says to open the page
+on the Mac. `/download/mac` sends a browser to that page too, and gives the disk image to everything else (curl,
+the checks). The Terminal line on the download page skips the dialog, because files fetched by `curl` are not
+checked by Gatekeeper; the installer prints the same beta notice.
+
+Downloads are counted in the table `mac_downloads` (when, version, which way, nothing about who): `steps` is a
+browser on a Mac through the steps page, `terminal` the curl line, `check` our own checks (`?check=1`). The
+Health Check rule `mac_downloads_not_connecting` compares a week of `steps` downloads with the Macs that
+connected, to notice people who download and do not get through.
+
+`scripts/first-open.sh` (workflow "Mac first open") walks this path on a real Mac: it marks the disk image the
+way Safari does, opens the app, clicks through Privacy & Security and takes a picture of every step. Its outputs
+go to the `mac-first-open-check` branch, and the pictures on `/mac/open` (`public/mac/open-*.png`) are cut from
+them (cropped only, never retouched). Run it again when a new macOS changes the dialogs, and update the page
+from what it shows.
+
+Notarizing the app would remove the dialog for everyone. It needs an Apple Developer account: a Developer ID
+Application certificate and an App Store Connect API key as repository secrets, then `codesign --options runtime`
+and `xcrun notarytool submit` in `build.sh`.
 
 ## Releasing a new version
 
