@@ -34,6 +34,14 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(n?.id, "2026-11-17T16:00")
     }
 
+    func testNextLeavesOutACheckinThatIsAlreadyFinished() {
+        let times = [CheckinTime("16:00")!]
+        let before = at("2026-11-16T19:00:00Z") // 14:00 in Bogota, two hours before
+        XCTAssertEqual(ScheduleMath.next(after: before, times: times, timeZone: tz)?.id, "2026-11-16T16:00")
+        XCTAssertEqual(ScheduleMath.next(after: before, times: times, timeZone: tz, finished: ["2026-11-16T16:00"])?.id, "2026-11-17T16:00")
+        XCTAssertEqual(ScheduleMath.next(after: before, times: times, timeZone: tz, finished: ["2026-11-15T16:00"])?.id, "2026-11-16T16:00")
+    }
+
     func testTimeListParsing() {
         XCTAssertEqual(CheckinTime.list("16:00, 8:30;21:30 nonsense 25:00").map { $0.description }, ["08:30", "16:00", "21:30"])
         XCTAssertEqual(CheckinTime("16:00:00")?.description, "16:00")

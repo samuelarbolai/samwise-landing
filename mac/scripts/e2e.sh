@@ -283,6 +283,7 @@ printf 'test-token' > "$S5/token"
 P5="$(launch "$S5" "${TODAY}T20:58:50Z" --mute --api-base http://127.0.0.1:8787)"
 expect "connected from the saved token" "$S5" paired True 20
 expect "Samwise already counts today's check-in" "$S5" "phases.$ID" done 20
+expect_contains "the menu names tomorrow's check-in, not the one that is done" "$S5" next "tomorrow 16:00 (Bogota)"
 cmd "$S5" "advance:120"
 sleep 4
 expect "so at 16:00 the screen is left alone" "$S5" desired idle

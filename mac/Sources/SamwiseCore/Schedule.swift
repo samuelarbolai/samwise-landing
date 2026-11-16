@@ -91,8 +91,11 @@ public enum ScheduleMath {
         return out.sorted { $0.fireAt < $1.fireAt }
     }
 
-    public static func next(after now: Date, times: [CheckinTime], timeZone: TimeZone) -> Occurrence? {
-        occurrences(times: times, timeZone: timeZone, from: now, to: now.addingTimeInterval(8 * 86_400)).first { $0.fireAt > now }
+    /// The next check-in that can still ring. `finished` holds the ids of check-ins that are already
+    /// done, skipped or missed, which can happen before their time (a written entry earlier in the day).
+    public static func next(after now: Date, times: [CheckinTime], timeZone: TimeZone, finished: Set<String> = []) -> Occurrence? {
+        occurrences(times: times, timeZone: timeZone, from: now, to: now.addingTimeInterval(8 * 86_400))
+            .first { $0.fireAt > now && !finished.contains($0.id) }
     }
 
     /// "16:00" for an instant, in the schedule's zone.

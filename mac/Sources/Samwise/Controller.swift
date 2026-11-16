@@ -124,7 +124,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         let c = copy
         let now = clock.now
         if let until = store.data.pausedUntil, now < until { return c.pausedUntil(dayAndTime(until)) }
-        guard let next = ScheduleMath.next(after: now, times: times, timeZone: timeZone) else { return c.noCheckins }
+        // A check-in Samwise already counts (or that was skipped) will not ring, so it is not the next one.
+        let finished = Set(store.data.states.filter { $0.value.phase.isFinal }.keys)
+        guard let next = ScheduleMath.next(after: now, times: times, timeZone: timeZone, finished: finished) else { return c.noCheckins }
         return c.nextCheckin(dayAndTime(next.fireAt))
     }
 
