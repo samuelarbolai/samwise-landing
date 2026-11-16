@@ -367,6 +367,24 @@ public enum Engine {
     }
 
     /// Forget check-ins older than three days.
+    /// How firmly the Mac is kept awake for the alarm, because a sleeping Mac cannot ring.
+    /// 0: nothing, the Mac sleeps as it always does. 1: the Mac is kept from falling asleep on its own
+    /// (the screen may still turn off). 2: the screen is kept on too, while the alarm is on it.
+    /// It holds from 30 minutes before a check-in that can still ring until 15 minutes after its time,
+    /// and never while the alarms are paused or the user turned this off. Closing the lid still sleeps the Mac.
+    public static func awakeLevel(now: Date, occurrences: [Occurrence], states: [String: OccurrenceState], desired: Desired, enabled: Bool, pausedUntil: Date?) -> Int {
+        guard enabled else { return 0 }
+        if let until = pausedUntil, now < until { return 0 }
+        let near = occurrences.contains { o in
+            let d = o.fireAt.timeIntervalSince(now)
+            guard d <= 30 * 60 && d >= -15 * 60 else { return false }
+            return !(states[o.id]?.phase.isFinal ?? false)
+        }
+        guard near else { return 0 }
+        if case .takeover = desired { return 2 }
+        return 1
+    }
+
     public static func prune(now: Date, states: inout [String: OccurrenceState]) {
         let cutoff = now.addingTimeInterval(-3 * 86_400)
         for (id, s) in states where s.fireAt < cutoff && s.phase.isFinal {

@@ -79,7 +79,7 @@ const QUESTIONS = [
   },
   {
     q: "What if my Mac is asleep?",
-    a: "A sleeping Mac or a closed lid cannot ring. Open it within four hours of the check-in and the alarm comes up then. Your check-in call from Samwise does not depend on your Mac.",
+    a: "A sleeping Mac or a closed lid cannot ring. So from 30 minutes before a check-in, Samwise keeps an open Mac from falling asleep on its own. You can turn that off in Settings. If the Mac was asleep anyway, open it within four hours of the check-in and the alarm comes up then. Your check-in call from Samwise does not depend on your Mac.",
   },
   {
     q: "Why does macOS warn me the first time?",

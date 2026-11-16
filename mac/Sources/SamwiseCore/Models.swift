@@ -26,6 +26,8 @@ public struct AlarmSettings: Codable, Equatable {
     public var localTimes: [String]
     /// Keep the app running: start at login and reopen if it closes.
     public var keepRunning: Bool
+    /// Keep the Mac from falling asleep on its own from 30 minutes before a check-in until the alarm is answered.
+    public var keepAwake: Bool
 
     public init(
         headsUpSeconds: Int = 300,
@@ -40,7 +42,8 @@ public struct AlarmSettings: Codable, Equatable {
         openJournalOnStart: Bool = true,
         showWordsRightAway: Bool = false,
         localTimes: [String] = ["16:00"],
-        keepRunning: Bool = true
+        keepRunning: Bool = true,
+        keepAwake: Bool = true
     ) {
         self.headsUpSeconds = headsUpSeconds
         self.leadSeconds = leadSeconds
@@ -55,6 +58,7 @@ public struct AlarmSettings: Codable, Equatable {
         self.showWordsRightAway = showWordsRightAway
         self.localTimes = localTimes
         self.keepRunning = keepRunning
+        self.keepAwake = keepAwake
     }
 
     // Tolerant decoding: a settings file written by an older version keeps working.
@@ -74,6 +78,7 @@ public struct AlarmSettings: Codable, Equatable {
         showWordsRightAway = (try? c.decodeIfPresent(Bool.self, forKey: .showWordsRightAway)) ?? d.showWordsRightAway
         localTimes = (try? c.decodeIfPresent([String].self, forKey: .localTimes)) ?? d.localTimes
         keepRunning = (try? c.decodeIfPresent(Bool.self, forKey: .keepRunning)) ?? d.keepRunning
+        keepAwake = (try? c.decodeIfPresent(Bool.self, forKey: .keepAwake)) ?? d.keepAwake
     }
 
     public var localCheckinTimes: [CheckinTime] {
