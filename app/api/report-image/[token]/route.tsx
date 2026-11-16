@@ -29,6 +29,7 @@ type Report = {
   trend: { label: string; done: number }[]
   done: number
   total: number
+  answered?: number // check-ins where the call reached the person (added 2026-11-16)
   slip_count: number
   alert_count: number
   line: string | null
@@ -40,20 +41,20 @@ const ES_SLIP = { one: "Desliz", many: "Deslices" }
 
 const T: Record<Lang, Record<string, string | string[]>> = {
   en: {
-    title: "Your week of check-ins", of: "of", done: "check-ins done",
+    title: "Your week of check-ins", of: "of", done: "check-ins done", answered: "answered", answered1: "answered",
     days: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     morning: "Morning", midday: "Midday", night: "Night", checkin: "Check-in",
     written: "Journal entry", oncall: "Done on a call", notdone: "Not done", slip: "Slip",
-    calls: "Check-in calls answered", trend: "Check-ins done, last 4 weeks",
+    calls: "Calls you picked up", trend: "Check-ins done, last 4 weeks",
     slips: "Slips you told Samwise", alerts: "Times Samwise called your trusted people",
     zero: "No check-ins logged this week. One is enough to start again.",
   },
   es: {
-    title: "Tu semana de chequeos", of: "de", done: "chequeos hechos",
+    title: "Tu semana de chequeos", of: "de", done: "chequeos hechos", answered: "contestados", answered1: "contestado",
     days: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
     morning: "Mañana", midday: "Mediodía", night: "Noche", checkin: "Chequeo",
     written: "Entrada del cuaderno", oncall: "Hecho en la llamada", notdone: "No hecho", slip: ES_SLIP.one,
-    calls: "Llamadas de chequeo contestadas", trend: "Chequeos hechos, últimas 4 semanas",
+    calls: "Llamadas que contestaste", trend: "Chequeos hechos, últimas 4 semanas",
     slips: `${ES_SLIP.many} que le contaste a Samwise`, alerts: "Veces que Samwise llamó a tus personas de confianza",
     zero: "Esta semana no quedó ningún chequeo registrado. Con uno basta para volver a empezar.",
   },
@@ -106,7 +107,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
         ) : (
           <div style={{ display: "flex", alignItems: "flex-end", margin: "36px 0 28px" }}>
             <div style={{ fontFamily: "Serif", fontSize: 120, lineHeight: 1 }}>{String(r.done)}</div>
-            <div style={{ fontSize: 34, color: C.mu, marginLeft: 16, marginBottom: 14 }}>{`${t.of} ${r.total} ${t.done}`}</div>
+            <div style={{ fontSize: 34, color: C.mu, marginLeft: 16, marginBottom: 14 }}>
+              {`${t.of} ${r.total} ${t.done}` + (r.answered !== undefined ? ` · ${r.answered} ${r.answered === 1 ? t.answered1 : t.answered}` : "")}
+            </div>
           </div>
         )}
 
