@@ -271,7 +271,7 @@ public struct Copy {
         t("Off: your words stay hidden until you press Tab, in case someone can see your screen.",
           "Apagado: tus palabras quedan ocultas hasta que presiones Tab, por si alguien ve tu pantalla.")
     }
-    public var openJournalSetting: String { t("Open my journal when I start the check-in", "Abrir mi diario cuando empiezo el chequeo") }
+    public var openJournalSetting: String { t("Open my journal when I start the check-in", "Abrir mi cuaderno cuando empiezo el chequeo") }
     public var turnOff: String { t("Turn off and remove from this Mac…", "Apagar y quitar de este Mac…") }
     public var turnOffTitle: String { t("Turn off Samwise on this Mac?", "¿Apagar Samwise en este Mac?") }
     public var turnOffBody: String {
@@ -339,7 +339,7 @@ public struct Copy {
     public var noCheckins: String { t("No check-in times set", "No hay horas de chequeo") }
     public func pausedUntil(_ when: String) -> String { t("Alarms paused until \(when)", "Alarmas en pausa hasta \(when)") }
     public var testAlarm: String { t("Test the alarm now", "Probar la alarma ahora") }
-    public var openJournal: String { t("Open my journal", "Abrir mi diario") }
+    public var openJournal: String { t("Open my journal", "Abrir mi cuaderno") }
     public var afterMenu: String { t("After the check-in…", "Después del chequeo…") }
     public var settings: String { t("Settings…", "Ajustes…") }
     public var pause: String { t("Pause alarms…", "Pausar alarmas…") }

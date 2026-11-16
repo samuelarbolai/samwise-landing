@@ -1,7 +1,16 @@
 name: Mac app
 
-# Builds the Samwise check-in alarm for Mac (mac/), runs it on a real Mac with a pretend clock,
-# and puts the disk image, screenshots and logs on the mac-builds branch.
+# Samwise for Mac, the check-in alarm in mac/. Two jobs, both on a real Mac:
+#
+# build  Builds the app and the disk image, runs the alarm with a pretend clock and a stand-in
+#        server, and puts the disk image, screenshots and logs on the mac-builds branch.
+#        Runs on every push to the mac-checkin-alarm branch, or by hand (Run workflow, no inputs).
+#
+# live   Checks the real samwise.life from a Mac: the download page, the disk image, the one-line
+#        installer, connecting an account and the alarm at that account's check-in time.
+#        Runs by hand with the one-time codes of a temporary test account, and puts its results on
+#        the mac-live-check branch. The inputs are visible to anyone who can read this repository's
+#        Actions, so they must only ever be codes of a throwaway test account.
 
 on:
   push:
@@ -11,6 +20,19 @@ on:
       - "public/mac/install.sh"
       - ".github/workflows/mac-app.yml"
   workflow_dispatch:
+    inputs:
+      live_pair_code:
+        description: "Live check: one-time pairing code of a temporary test account. Leave empty to build instead."
+        required: false
+        default: ""
+      live_phone:
+        description: "Live check, optional: the test account's phone number"
+        required: false
+        default: ""
+      live_otp:
+        description: "Live check, optional: a 6-digit code waiting for that number"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -21,6 +43,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.live_pair_code == '' }}
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
@@ -43,25 +66,35 @@ jobs:
         if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mac/scripts/publish-outputs.sh mac-builds
+
+  live:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.live_pair_code != '' }}
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - name: Keep the test account's codes out of the log
         run: |
-          set -e
-          WORK="$(mktemp -d)"
-          SRC="$GITHUB_WORKSPACE/mac/build"
-          mkdir -p "$WORK/out"
-          if [ -d "$SRC" ]; then
-            cp -R "$SRC/shots" "$WORK/out/" 2>/dev/null || true
-            for f in "$SRC"/*.dmg "$SRC"/*.sha256 "$SRC"/*.txt "$SRC"/*.log "$SRC"/*.jsonl "$SRC"/icon.png; do
-              [ -f "$f" ] && cp "$f" "$WORK/out/"
-            done
-          fi
-          sw_vers > "$WORK/out/runner.txt" 2>&1 || true
-          echo "$GITHUB_SHA run $GITHUB_RUN_ID" > "$WORK/out/BUILD"
-          # This branch only carries build outputs: Vercel must not try to deploy it.
-          echo '{"git":{"deploymentEnabled":false}}' > "$WORK/vercel.json"
-          cd "$WORK"
-          git init -q -b mac-builds
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -q -m "Mac build outputs for ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" mac-builds
+          python3 - <<'PY'
+          import json, os
+          inputs = (json.load(open(os.environ["GITHUB_EVENT_PATH"])).get("inputs") or {})
+          for value in inputs.values():
+              if value:
+                  print("::add-mask::" + str(value))
+          PY
+
+      - uses: actions/checkout@v4
+
+      - name: Check samwise.life from this Mac
+        working-directory: mac
+        env:
+          PAIR_CODE: ${{ inputs.live_pair_code }}
+          TEST_PHONE: ${{ inputs.live_phone }}
+          TEST_OTP: ${{ inputs.live_otp }}
+        run: scripts/live-check.sh build
+
+      - name: Put the outputs on the mac-live-check branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mac/scripts/publish-outputs.sh mac-live-check

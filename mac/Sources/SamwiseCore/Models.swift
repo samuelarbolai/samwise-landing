@@ -122,7 +122,7 @@ public struct RemoteSlot: Codable, Equatable {
     public var id: String
     /// The check-in happened: a call that reached the person, or a written entry.
     public var done: Bool
-    /// "call" or "entry".
+    /// "call" (a check-in call that reached the person) or "written" (a written entry in their journal).
     public var doneSource: String?
     /// Samwise will phone the user at this time (false when calls are paused or an entry already exists).
     public var willCall: Bool

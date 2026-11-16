@@ -337,6 +337,11 @@ stop "$S7" "$P7"
 
 # ───────────────────────── 8. One-line install, kept running by macOS ─────────────────────────
 say "== 8. Installed in Applications and kept running by macOS =="
+# This part replaces the Samwise in Applications and its saved state, so it only runs on a build
+# machine (CI=true) or when asked for by name. On a person's own Mac it is skipped.
+if [ "${CI:-}" != "true" ] && [ "${SAMWISE_E2E_INSTALL:-}" != "1" ]; then
+  say "note  skipped on this Mac: it would replace your installed Samwise and its settings (set SAMWISE_E2E_INSTALL=1 to run it anyway)"
+else
 VERSION="$(cat VERSION)"
 DMG="$PWD/$OUT/Samwise-$VERSION.dmg"
 HOMEDIR="$HOME/Library/Application Support/Samwise"
@@ -387,6 +392,7 @@ pkill -x Samwise 2>/dev/null || true
 launchctl unsetenv SAMWISE_FLAGS
 cp "$HOMEDIR/samwise.log" "$OUT/s8.app.log" 2>/dev/null || true
 cp "$WORK/install.log" "$OUT/s8.install.log" 2>/dev/null || true
+fi
 
 # Keep the app's own logs with the results (they hold no personal data).
 for d in s1 s2 s3 s4 s5 s6 s7; do

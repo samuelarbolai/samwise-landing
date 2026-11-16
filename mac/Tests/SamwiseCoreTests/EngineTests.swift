@@ -191,7 +191,7 @@ final class EngineTests: XCTestCase {
 
     func testNoAlarmWhenSamwiseAlreadyCountsTheCheckin() {
         var s: [String: OccurrenceState] = [:]
-        let remote = [id: RemoteSlot(id: id, done: true, doneSource: "entry")]
+        let remote = [id: RemoteSlot(id: id, done: true, doneSource: "written")]
         let r = step("2026-11-16T20:59:00Z", &s, remote: remote)
         XCTAssertEqual(r.desired, .idle)
         XCTAssertEqual(r.events, [EngineEvent("done", id, ["source": "samwise_entry", "visible": "0"])])

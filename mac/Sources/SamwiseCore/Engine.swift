@@ -122,7 +122,7 @@ public enum Engine {
 
         // 1. Samwise says the check-in happened (a call that reached the person, or a written entry).
         for (id, slot) in remote where slot.done {
-            let source = slot.doneSource == "entry" ? "samwise_entry" : "samwise_call"
+            let source = (slot.doneSource == "written" || slot.doneSource == "entry") ? "samwise_entry" : "samwise_call"
             if var s = states[id] {
                 if !s.phase.isFinal {
                     let wasVisible = s.phase != .pending
