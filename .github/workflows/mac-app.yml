@@ -1,41 +1,66 @@
-name: mac-app
+name: Mac app
+
+# Builds the Samwise check-in alarm for Mac (mac/), runs it on a real Mac with a pretend clock,
+# and puts the disk image, screenshots and logs on the mac-builds branch.
 
 on:
   push:
     branches: [mac-checkin-alarm]
     paths:
-      - 'mac/**'
-      - '.github/workflows/mac-app.yml'
+      - "mac/**"
+      - ".github/workflows/mac-app.yml"
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: mac-app-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  probe:
+  build:
     runs-on: macos-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Environment
+
+      - name: Build the app and the disk image
+        working-directory: mac
+        run: scripts/build.sh build
+
+      - name: Run the alarm on this Mac (end-to-end)
+        working-directory: mac
+        run: scripts/e2e.sh build
+
+      - name: Unit tests
+        if: always()
+        working-directory: mac
+        run: swift test 2>&1 | tail -15
+
+      - name: Put the outputs on the mac-builds branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sw_vers
-          uname -m
-          xcodebuild -version
-          swift --version
-          ls /Applications | grep -i xcode || true
-          xcrun --show-sdk-path
-          xcrun --show-sdk-version
-          system_profiler SPDisplaysDataType | head -40 || true
-          who || true
-          id
-      - name: Screen capture probe
-        run: |
-          mkdir -p out
-          screencapture -x out/probe.png && sips -g pixelWidth -g pixelHeight out/probe.png || echo "screencapture failed"
-          ls -la out
-      - uses: actions/upload-artifact@v4
-        with:
-          name: probe
-          path: out
-          if-no-files-found: warn
+          set -e
+          WORK="$(mktemp -d)"
+          SRC="$GITHUB_WORKSPACE/mac/build"
+          mkdir -p "$WORK/out"
+          if [ -d "$SRC" ]; then
+            cp -R "$SRC/shots" "$WORK/out/" 2>/dev/null || true
+            for f in "$SRC"/*.dmg "$SRC"/*.sha256 "$SRC"/*.txt "$SRC"/*.log "$SRC"/*.jsonl "$SRC"/icon.png; do
+              [ -f "$f" ] && cp "$f" "$WORK/out/"
+            done
+          fi
+          sw_vers > "$WORK/out/runner.txt" 2>&1 || true
+          echo "$GITHUB_SHA run $GITHUB_RUN_ID" > "$WORK/out/BUILD"
+          # This branch only carries build outputs: Vercel must not try to deploy it.
+          echo '{"git":{"deploymentEnabled":false}}' > "$WORK/vercel.json"
+          cd "$WORK"
+          git init -q -b mac-builds
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Mac build outputs for ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" mac-builds

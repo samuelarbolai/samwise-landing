@@ -1,0 +1,376 @@
+import Foundation
+
+/// Where one check-in stands on this Mac.
+public enum Phase: String, Codable {
+    /// Nothing shown yet.
+    case pending
+    /// The screen is taken over.
+    case ringing
+    /// The user asked for a few more minutes.
+    case snoozed
+    /// The user typed the line and got the screen back; the check-in is under way.
+    case committed
+    case done
+    case skipped
+    case missed
+
+    public var isFinal: Bool { self == .done || self == .skipped || self == .missed }
+}
+
+public struct OccurrenceState: Codable, Equatable {
+    public var id: String
+    public var fireAt: Date
+    public var phase: Phase
+    public var firedAt: Date?
+    /// The user pressed a key or clicked: the sound stops, the screen stays.
+    public var silencedAt: Date?
+    public var snoozesUsed: Int
+    public var snoozeUntil: Date?
+    public var committedAt: Date?
+    public var followUpAt: Date?
+    public var followUpAsked: Bool
+    public var notYetCount: Int
+    /// No answer to "did you finish?" by then: take the screen again.
+    public var returnAt: Date?
+    public var cameBack: Bool
+    public var missedCallShown: Bool
+    public var finishedAt: Date?
+    /// "self", "samwise_call", "samwise_entry", "skip", "paused", "expired", "unconfirmed", "crash_guard", "test"
+    public var finishSource: String?
+    public var isTest: Bool
+    /// Times the app was restarted while this alarm was on screen. Three restarts and the app stops
+    /// taking over the screen for this check-in, so a bug can never lock the Mac.
+    public var relaunches: Int
+
+    public init(id: String, fireAt: Date, phase: Phase = .pending, isTest: Bool = false) {
+        self.id = id
+        self.fireAt = fireAt
+        self.phase = phase
+        self.firedAt = nil
+        self.silencedAt = nil
+        self.snoozesUsed = 0
+        self.snoozeUntil = nil
+        self.committedAt = nil
+        self.followUpAt = nil
+        self.followUpAsked = false
+        self.notYetCount = 0
+        self.returnAt = nil
+        self.cameBack = false
+        self.missedCallShown = false
+        self.finishedAt = nil
+        self.finishSource = nil
+        self.isTest = isTest
+        self.relaunches = 0
+    }
+}
+
+public enum TakeoverKind: String, Codable {
+    /// Up to a minute before the time: "Samwise calls you in 0:42".
+    case countdown
+    /// At the time: "Samwise is calling your phone now".
+    case ringing
+    /// Found late, or back from a snooze.
+    case late
+    /// The user said they were starting, then never said they finished.
+    case followUp
+    /// Samwise phoned and nobody picked up.
+    case missedCall
+    case test
+}
+
+/// What should be on screen right now. The app draws exactly this, nothing else:
+/// after a restart, a sleep or a clock change, one call to `Engine.step` puts the right thing back.
+public enum Desired: Equatable {
+    case idle
+    case headsUp(id: String, secondsToCheckin: Int)
+    case takeover(id: String, kind: TakeoverKind)
+    case snoozed(id: String, secondsLeft: Int)
+    case inProgress(id: String, askFinished: Bool)
+}
+
+public struct EngineEvent: Equatable {
+    public var kind: String
+    public var occurrence: String
+    public var detail: [String: String]
+
+    public init(_ kind: String, _ occurrence: String, _ detail: [String: String] = [:]) {
+        self.kind = kind
+        self.occurrence = occurrence
+        self.detail = detail
+    }
+}
+
+public enum Engine {
+    /// How long "Samwise is calling your phone now" stays the headline: the ring (30 s) plus the time to notice.
+    public static let ringingSeconds: TimeInterval = 150
+    /// A key or a click quiets the ring for this long. If the screen is still taken after that, it rings again.
+    public static let resoundSeconds: TimeInterval = 120
+
+    /// Moves every check-in forward to `now` and says what should be on screen.
+    public static func step(
+        now: Date,
+        occurrences: [Occurrence],
+        states: inout [String: OccurrenceState],
+        settings: AlarmSettings,
+        remote: [String: RemoteSlot] = [:],
+        pausedUntil: Date? = nil
+    ) -> (desired: Desired, events: [EngineEvent]) {
+        var events: [EngineEvent] = []
+        let paused = pausedUntil.map { now < $0 } ?? false
+        var byID: [String: Occurrence] = [:]
+        for o in occurrences { byID[o.id] = o }
+
+        // 1. Samwise says the check-in happened (a call that reached the person, or a written entry).
+        for (id, slot) in remote where slot.done {
+            let source = slot.doneSource == "entry" ? "samwise_entry" : "samwise_call"
+            if var s = states[id] {
+                if !s.phase.isFinal {
+                    let wasVisible = s.phase != .pending
+                    s.phase = .done
+                    s.finishedAt = now
+                    s.finishSource = source
+                    states[id] = s
+                    events.append(EngineEvent("done", id, ["source": source, "visible": wasVisible ? "1" : "0"]))
+                }
+            } else if let o = byID[id] {
+                var s = OccurrenceState(id: id, fireAt: o.fireAt, phase: .done)
+                s.finishedAt = now
+                s.finishSource = source
+                states[id] = s
+                events.append(EngineEvent("done", id, ["source": source, "visible": "0"]))
+            }
+        }
+
+        // 2. Walk the check-ins in time order; the first one that needs the screen wins.
+        var all = occurrences
+        for (id, s) in states where byID[id] == nil && !s.phase.isFinal {
+            // A check-in that is still open but no longer in the schedule (the time was changed, or a test).
+            all.append(Occurrence(id: id, fireAt: s.fireAt, time: CheckinTime(hour: 0, minute: 0)!))
+        }
+        all.sort { $0.fireAt < $1.fireAt }
+
+        var desired: Desired = .idle
+        let lead = TimeInterval(max(0, settings.leadSeconds))
+        let headsUp = TimeInterval(max(0, settings.headsUpSeconds))
+        let lateWindow = TimeInterval(max(600, settings.lateWindowSeconds))
+
+        for o in all {
+            var s = states[o.id] ?? OccurrenceState(id: o.id, fireAt: o.fireAt)
+            if s.phase.isFinal { continue }
+
+            let start = o.fireAt.addingTimeInterval(-lead)
+            let headsStart = start.addingTimeInterval(-headsUp)
+            let expiry = o.fireAt.addingTimeInterval(lateWindow)
+
+            if s.phase == .pending && now < headsStart {
+                continue
+            }
+
+            // Too old to act on.
+            if now >= expiry {
+                if s.phase == .committed {
+                    s.phase = .done
+                    s.finishSource = "unconfirmed"
+                    events.append(EngineEvent("done", o.id, ["source": "unconfirmed", "visible": "0"]))
+                } else {
+                    s.phase = .missed
+                    s.finishSource = "expired"
+                    events.append(EngineEvent("missed", o.id, ["seen": s.firedAt == nil ? "0" : "1"]))
+                }
+                s.finishedAt = now
+                states[o.id] = s
+                continue
+            }
+
+            if paused && !s.isTest {
+                if now >= start {
+                    s.phase = .skipped
+                    s.finishedAt = now
+                    s.finishSource = "paused"
+                    states[o.id] = s
+                    events.append(EngineEvent("skipped", o.id, ["source": "paused"]))
+                }
+                continue
+            }
+
+            if desired != .idle {
+                // Something earlier already owns the screen; this one waits its turn.
+                continue
+            }
+
+            switch s.phase {
+            case .pending:
+                if now < start {
+                    desired = .headsUp(id: o.id, secondsToCheckin: Int(o.fireAt.timeIntervalSince(now).rounded(.up)))
+                } else {
+                    s.phase = .ringing
+                    s.firedAt = now
+                    states[o.id] = s
+                    let late = max(0, Int(now.timeIntervalSince(o.fireAt)))
+                    events.append(EngineEvent("fired", o.id, ["late_seconds": String(late)]))
+                    desired = .takeover(id: o.id, kind: kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id]))
+                }
+            case .ringing:
+                if let quiet = s.silencedAt, now.timeIntervalSince(quiet) >= resoundSeconds {
+                    s.silencedAt = nil
+                    states[o.id] = s
+                    events.append(EngineEvent("resound", o.id))
+                }
+                desired = .takeover(id: o.id, kind: kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id]))
+            case .snoozed:
+                if let until = s.snoozeUntil, now < until {
+                    desired = .snoozed(id: o.id, secondsLeft: Int(until.timeIntervalSince(now).rounded(.up)))
+                } else {
+                    s.phase = .ringing
+                    s.silencedAt = nil
+                    states[o.id] = s
+                    events.append(EngineEvent("snooze_over", o.id))
+                    desired = .takeover(id: o.id, kind: kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id]))
+                }
+            case .committed:
+                if let slot = remote[o.id], slot.callMissed, !slot.done, !s.missedCallShown {
+                    // "I am doing my check-in now", but Samwise's call went unanswered.
+                    s.phase = .ringing
+                    s.silencedAt = nil
+                    s.missedCallShown = true
+                    states[o.id] = s
+                    events.append(EngineEvent("call_missed_seen", o.id))
+                    desired = .takeover(id: o.id, kind: .missedCall)
+                } else if let back = s.returnAt, now >= back {
+                    s.phase = .ringing
+                    s.silencedAt = nil
+                    s.cameBack = true
+                    s.returnAt = nil
+                    states[o.id] = s
+                    events.append(EngineEvent("came_back", o.id))
+                    desired = .takeover(id: o.id, kind: .followUp)
+                } else if let ask = s.followUpAt, now >= ask {
+                    if !s.followUpAsked {
+                        s.followUpAsked = true
+                        s.returnAt = now.addingTimeInterval(TimeInterval(max(1, settings.followUpGraceMinutes)) * 60)
+                        states[o.id] = s
+                        events.append(EngineEvent("asked_finished", o.id))
+                    }
+                    desired = .inProgress(id: o.id, askFinished: true)
+                } else {
+                    desired = .inProgress(id: o.id, askFinished: false)
+                }
+            case .done, .skipped, .missed:
+                break
+            }
+        }
+
+        return (desired, events)
+    }
+
+    static func kind(now: Date, fireAt: Date, state: OccurrenceState, slot: RemoteSlot?) -> TakeoverKind {
+        if state.isTest { return .test }
+        if let slot = slot, slot.callMissed, !slot.done { return .missedCall }
+        if state.cameBack { return .followUp }
+        if now < fireAt { return .countdown }
+        if state.snoozesUsed == 0 && now < fireAt.addingTimeInterval(ringingSeconds) { return .ringing }
+        return .late
+    }
+
+    // MARK: - What the user does
+
+    /// A key or a click: the sound stops, the screen stays taken.
+    public static func silence(_ id: String, now: Date, states: inout [String: OccurrenceState]) {
+        guard var s = states[id], s.phase == .ringing, s.silencedAt == nil else { return }
+        s.silencedAt = now
+        states[id] = s
+    }
+
+    /// The typed line: "I am doing my check-in now".
+    public static func commit(_ id: String, now: Date, states: inout [String: OccurrenceState], settings: AlarmSettings) -> EngineEvent? {
+        guard var s = states[id], s.phase == .ringing else { return nil }
+        if s.isTest {
+            s.phase = .done
+            s.finishedAt = now
+            s.finishSource = "test"
+            states[id] = s
+            return EngineEvent("test_done", id)
+        }
+        s.phase = .committed
+        s.committedAt = now
+        s.followUpAt = now.addingTimeInterval(TimeInterval(max(1, settings.followUpMinutes)) * 60)
+        s.followUpAsked = false
+        s.returnAt = nil
+        states[id] = s
+        let delay = Int(now.timeIntervalSince(s.firedAt ?? now))
+        return EngineEvent("committed", id, ["seconds_on_screen": String(max(0, delay))])
+    }
+
+    public static func canSnooze(_ id: String, states: [String: OccurrenceState], settings: AlarmSettings) -> Bool {
+        guard let s = states[id], s.phase == .ringing, !s.isTest else { return false }
+        return s.snoozesUsed < settings.maxSnoozes
+    }
+
+    public static func snooze(_ id: String, now: Date, states: inout [String: OccurrenceState], settings: AlarmSettings) -> EngineEvent? {
+        guard canSnooze(id, states: states, settings: settings), var s = states[id] else { return nil }
+        s.phase = .snoozed
+        s.snoozesUsed += 1
+        s.snoozeUntil = now.addingTimeInterval(TimeInterval(max(1, settings.snoozeMinutes)) * 60)
+        states[id] = s
+        return EngineEvent("snoozed", id, ["count": String(s.snoozesUsed)])
+    }
+
+    /// The typed line: "I choose to skip this check-in". Always available: the user is in charge.
+    public static func skip(_ id: String, now: Date, states: inout [String: OccurrenceState], source: String = "skip") -> EngineEvent? {
+        guard var s = states[id], !s.phase.isFinal else { return nil }
+        s.phase = .skipped
+        s.finishedAt = now
+        s.finishSource = s.isTest ? "test" : source
+        states[id] = s
+        return EngineEvent(s.isTest ? "test_done" : "skipped", id, ["source": source])
+    }
+
+    /// "I finished".
+    public static func finish(_ id: String, now: Date, states: inout [String: OccurrenceState]) -> EngineEvent? {
+        guard var s = states[id], s.phase == .committed || s.phase == .ringing else { return nil }
+        s.phase = .done
+        s.finishedAt = now
+        s.finishSource = s.isTest ? "test" : "self"
+        states[id] = s
+        return EngineEvent(s.isTest ? "test_done" : "done", id, ["source": "self", "visible": "1"])
+    }
+
+    /// "Not yet": five more minutes, twice at most; after that the screen is taken again.
+    public static func notYet(_ id: String, now: Date, states: inout [String: OccurrenceState]) -> EngineEvent? {
+        guard var s = states[id], s.phase == .committed else { return nil }
+        s.notYetCount += 1
+        if s.notYetCount > 2 {
+            s.returnAt = now
+        } else {
+            s.followUpAt = now.addingTimeInterval(5 * 60)
+            s.followUpAsked = false
+            s.returnAt = nil
+        }
+        states[id] = s
+        return EngineEvent("not_yet", id, ["count": String(s.notYetCount)])
+    }
+
+    /// Called once at launch. An alarm that keeps killing the app is dropped after three restarts.
+    public static func noteRelaunch(now: Date, states: inout [String: OccurrenceState]) -> [EngineEvent] {
+        var events: [EngineEvent] = []
+        for (id, var s) in states where s.phase == .ringing {
+            s.relaunches += 1
+            if s.relaunches >= 3 {
+                s.phase = .skipped
+                s.finishedAt = now
+                s.finishSource = "crash_guard"
+                events.append(EngineEvent("crash_guard", id, ["relaunches": String(s.relaunches)]))
+            }
+            states[id] = s
+        }
+        return events
+    }
+
+    /// Forget check-ins older than three days.
+    public static func prune(now: Date, states: inout [String: OccurrenceState]) {
+        let cutoff = now.addingTimeInterval(-3 * 86_400)
+        for (id, s) in states where s.fireAt < cutoff && s.phase.isFinal {
+            states.removeValue(forKey: id)
+        }
+    }
+}
