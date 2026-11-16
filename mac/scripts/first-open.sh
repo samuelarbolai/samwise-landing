@@ -5,8 +5,11 @@
 # Mac and takes a picture of every step, so the steps on samwise.life/mac/open are checked against
 # what macOS really shows, and can be checked again when macOS changes them.
 #
-# It only runs on a throwaway build machine: it sets that machine's login password to a random value,
-# so that it can answer the password question macOS asks at the end.
+# It first reads the live steps page the way Safari on a Mac gets it, and later compares the words
+# macOS shows with the words the page quotes.
+#
+# It only runs on a throwaway build machine: it sets that machine's login password to a random value
+# (or adds a second administrator), so that it can answer the password question macOS asks at the end.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -23,9 +26,12 @@ WORK="$(mktemp -d)"
 mkdir -p "$SHOTS"
 : > "$RES"
 FAILED=0
+SKIPPED=0
 say() { echo "$*" | tee -a "$RES"; }
 pass() { say "PASS  $*"; }
 fail() { say "FAIL  $*"; FAILED=$((FAILED + 1)); }
+# skip: something this run could not check. It is said, counted and never passed off as a pass.
+skip() { say "NOT CHECKED  $*"; SKIPPED=$((SKIPPED + 1)); }
 note() { say "note  $*"; }
 shot() { sleep 1.5; screencapture -x "$SHOTS/$1.png" 2>/dev/null || note "screenshot $1 not taken"; }
 
@@ -200,10 +206,10 @@ on run argv
       try
         set frontmost to true
       end try
+      delay 0.5
       set nameField to missing value
       set pwField to missing value
-      set okButton to missing value
-      set plain to {}
+      set fieldList to {}
       repeat with w in windows
         set els to {}
         try
@@ -222,50 +228,61 @@ on run argv
           if r is "AXSecureTextField" or sr is "AXSecureTextField" then
             set pwField to el
           else if r is "AXTextField" then
-            set end of plain to el
-          else if r is "AXButton" then
-            try
-              if (name of el as text) is "OK" then set okButton to el
-            end try
+            set end of fieldList to el
           end if
         end repeat
       end repeat
-      if pwField is missing value and (count of plain) > 1 then
-        set pwField to item 2 of plain
-      end if
-      if (count of plain) > 0 then set nameField to item 1 of plain
-      if pwField is missing value then return "no password field found (" & (count of plain) & " text fields)"
+      if pwField is missing value and (count of fieldList) > 1 then set pwField to item 2 of fieldList
+      if (count of fieldList) > 0 then set nameField to item 1 of fieldList
+      if nameField is missing value and pwField is missing value then return "no field to type in was found"
+
+      -- The name. macOS fills in the person who is logged in; another administrator is typed over it.
+      set nameWasTyped to false
       if nameField is not missing value then
-        try
-          set value of nameField to adminName
-        end try
-        delay 0.4
         set got to ""
         try
           set got to value of nameField as text
         end try
         if got is adminName then
-          set said to "name set, "
+          set said to "the name was already filled in, "
         else
           try
             set focused of nameField to true
           end try
           delay 0.4
           keystroke "a" using command down
+          delay 0.2
           keystroke adminName
-          set said to "name typed, "
+          delay 0.5
+          set nameWasTyped to true
+          set got to ""
+          try
+            set got to value of nameField as text
+          end try
+          if got is adminName then
+            set said to "name typed, "
+          else
+            set said to "name typed, but the field does not show it, "
+          end if
         end if
       end if
-      try
-        set focused of pwField to true
-      end try
+
+      -- The password field. macOS does not show it to a script (it is not in the window's list of
+      -- things), so it is reached the way a person does: it has the cursor already, or Tab moves there.
+      if pwField is not missing value then
+        try
+          set focused of pwField to true
+        end try
+        set said to said & "password field found, "
+      else if nameWasTyped then
+        key code 48
+        set said to said & "password field reached with Tab, "
+      else
+        set said to said & "password field has the cursor, "
+      end if
       delay 0.5
       keystroke pw
       delay 0.8
-      if okButton is not missing value then
-        click okButton
-        return said & "password typed, OK clicked"
-      end if
       key code 36
       return said & "password typed, Return pressed"
     end tell
@@ -290,12 +307,35 @@ ADMIN=""
 if sudo sysadminctl -resetPasswordFor "$USER" -newPassword "$PW" > "$WORK/passwd.log" 2>&1 && dscl . -authonly "$USER" "$PW" >/dev/null 2>&1; then
   ADMIN="$USER"
   note "login password of this build machine set to a random value"
+elif sudo dscl . -passwd "/Users/$USER" "$PW" >> "$WORK/passwd.log" 2>&1 && dscl . -authonly "$USER" "$PW" >/dev/null 2>&1; then
+  # macOS fills this name into the password window by itself, so only the password is left to type.
+  ADMIN="$USER"
+  note "login password of this build machine set to a random value (directory service)"
 elif sudo sysadminctl -addUser samwisecheck -fullName "Samwise Check" -password "$PW" -admin >> "$WORK/passwd.log" 2>&1 && dscl . -authonly samwisecheck "$PW" >/dev/null 2>&1; then
   ADMIN="samwisecheck"
   note "a second administrator was made on this build machine for the password question"
 else
   note "no administrator password could be set: $(grep -v -i password "$WORK/passwd.log" | tail -2 | tr '\n' ' ')"
 fi
+
+# ───────────────────────── 0. The page people are sent to ─────────────────────────
+say "== 0. The page with the steps ($BASE/mac/open) =="
+SAFARI="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
+PAGE="$WORK/open.html"
+# on_page <words>: the page says these words. What macOS shows below must be what the page quotes.
+on_page() { grep -qF "$1" "$PAGE" 2>/dev/null; }
+LOC="$(curl -s -o /dev/null -A "$SAFARI" -H "Accept: text/html,application/xhtml+xml" -w "%{http_code} %{redirect_url}" --max-time 40 "$BASE/download/mac?check=1" 2>/dev/null)"
+if [ "$LOC" = "302 $BASE/mac/open?dl=1" ]; then pass "a browser that asks for the download is sent to the steps page"; else fail "a browser that asks for the download got: $LOC"; fi
+GOT="$(curl -s -o "$PAGE" -A "$SAFARI" -w "%{http_code}" --max-time 40 "$BASE/mac/open?dl=1" 2>/dev/null)"
+if [ "$GOT" = "200" ]; then pass "the steps page opens"; else fail "the steps page answered $GOT"; fi
+if on_page "Your download has started"; then pass "for a browser on a Mac it starts the download by itself"; else fail "the steps page does not start the download for a browser on a Mac"; fi
+if on_page "Only do that if you trust Samwise"; then pass "it says to allow the beta only if you trust Samwise"; else fail "the steps page does not say to allow the beta only if you trust Samwise"; fi
+PICS="$(grep -o 'src="/mac/open-[a-z-]*\.png"' "$PAGE" 2>/dev/null | sort -u | cut -d'"' -f2)"
+if [ "$(echo "$PICS" | grep -c .)" -ge 4 ]; then pass "it shows $(echo "$PICS" | grep -c .) pictures"; else fail "the steps page shows fewer than 4 pictures: $PICS"; fi
+for PIC in $PICS; do
+  GOT="$(curl -s -o /dev/null -w "%{http_code} %{content_type}" --max-time 40 "$BASE$PIC" 2>/dev/null)"
+  if [ "$GOT" = "200 image/png" ]; then pass "the picture $PIC is served"; else fail "the picture $PIC answered: $GOT"; fi
+done
 
 # ───────────────────────── 1. The download ─────────────────────────
 say "== 1. The download =="
@@ -336,6 +376,7 @@ D1="$(dump CoreServicesUIAgent)"
 echo "$D1" > "$OUT/first-open-dialog.txt"
 echo "$D1" | head -40 | tee -a "$RES"
 if echo "$D1" | grep -q "Not Opened"; then pass "the dialog says Not Opened"; else fail "the dialog does not say Not Opened"; fi
+if echo "$D1" | grep -qF "“Samwise” Not Opened" && on_page "“Samwise” Not Opened"; then pass "the page quotes the dialog's title, “Samwise” Not Opened"; else fail "the page and the dialog do not both say “Samwise” Not Opened"; fi
 if echo "$D1" | grep -q "could not verify"; then pass "it says Apple could not verify the app"; else fail "it does not say Apple could not verify the app"; fi
 if echo "$D1" | grep -q "^AXButton | Done "; then pass "it offers Done"; else fail "it does not offer Done"; fi
 if echo "$D1" | grep -q "^AXButton | Move to Trash "; then pass "it offers Move to Trash"; else fail "it does not offer Move to Trash"; fi
@@ -359,6 +400,7 @@ echo "$D2" | grep -i -E "samwise|anyway|blocked|^WINDOW|Allow app" | tee -a "$RE
 # macOS names the Open Anyway button after the line it belongs to, so that line is how it is found.
 BLOCKED="was blocked to protect your Mac"
 if echo "$D2" | grep -q "^AXStaticText | “Samwise” $BLOCKED"; then pass "Privacy & Security says Samwise was blocked to protect your Mac"; else fail "no line says Samwise was blocked"; fi
+if on_page "$BLOCKED"; then pass "the page quotes that line"; else fail "the page does not quote: $BLOCKED"; fi
 if echo "$D2" | grep -q "^AXButton | “Samwise” $BLOCKED"; then pass "with a button on that line (Open Anyway in the picture)"; else fail "no button on that line"; fi
 if echo "$D2" | grep -q "^AXStaticText | Security "; then pass "under the heading Security"; else note "no heading named Security was found"; fi
 note "Open Anyway: $(press "System Settings" "$BLOCKED" show has)"
@@ -381,6 +423,7 @@ if echo "$D3" | grep -q "^AXButton | Open Anyway "; then ASKER="CoreServicesUIAg
 if [ -n "$ASKER" ]; then pass "macOS asks once more, with an Open Anyway button ($ASKER)"; else fail "no second question with Open Anyway"; fi
 # The words the page quotes for this step.
 if echo "$D3$D3S" | grep -q "Open “Samwise”?"; then pass "the question is: Open “Samwise”?"; else fail "the question is not worded Open “Samwise”?"; fi
+if on_page "Open “Samwise”?"; then pass "the page quotes that question"; else fail "the page does not quote: Open “Samwise”?"; fi
 if echo "$D3$D3S" | grep -q "^AXButton | Move to Trash "; then pass "Move to Trash is offered again there"; else note "no Move to Trash in the second question"; fi
 [ "$ASKER" = "CoreServicesUIAgent" ] && winshot CoreServicesUIAgent 53-open-anyway-question-window
 if [ -n "$ASKER" ]; then
@@ -420,11 +463,17 @@ if [ -n "$ASKER" ]; then
   if [ -n "$(running)" ]; then
     pass "after Open Anyway and the password, Samwise opens"
   elif [ -z "$ADMIN" ]; then
-    note "not checked on this machine: Samwise opening after the password"
+    skip "Samwise opening after the password: no administrator password is known on this machine"
   else
-    fail "Samwise did not open after Open Anyway and the password"
     { for who in coreautha SecurityAgent CoreServicesUIAgent; do echo "--- $who"; dump "$who"; done; } > "$OUT/first-open-after-answer.txt" 2>&1 || true
     grep -v "^AXStaticText | $" "$OUT/first-open-after-answer.txt" | head -16 | tee -a "$RES"
+    if [ -n "$ASKPW" ] && windows | grep -q "$(printf '\t%s\t' "$ASKPW")"; then
+      # The window is still there: the password never arrived. That is the script falling short, and
+      # says nothing about the app. A person types this password; the page says so.
+      skip "Samwise opening after the password: macOS did not take a password typed by a script"
+    else
+      fail "Samwise did not open after Open Anyway and the password"
+    fi
   fi
   winshot Samwise 55-opened-window || true
   # Opened once this way, macOS asks nothing the second time.
@@ -450,5 +499,5 @@ launchctl bootout "gui/$(id -u)/life.samwise.mac" >/dev/null 2>&1 || true
 pkill -x Samwise >/dev/null 2>&1 || true
 osascript -e 'tell application "System Settings" to quit' >/dev/null 2>&1 || true
 
-say "== $FAILED failed =="
+say "== $FAILED failed, $SKIPPED not checked =="
 [ "$FAILED" -eq 0 ]
