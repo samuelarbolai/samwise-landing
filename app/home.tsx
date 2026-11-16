@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { HOME_COPY, type HomeCopy, type Lang } from "./home-copy"
+import { detectLang, saveLang } from "@/lib/lang"
 import "./home.css"
 
 const SIGNUP = "/v2/signup"
 const WA_NUMBER = "15079201622"
-const LANG_KEY = "samwise:v2-lang"
 
 /** The house sparkle — same path as the navbar star and the OG card. */
 function Star({ className }: { className?: string }) {
@@ -33,20 +33,16 @@ export function Home() {
   const t: HomeCopy = HOME_COPY[lang]
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(LANG_KEY)
-    if (stored === "es") setLang("es")
+    // ?lang=, then the saved choice, then the browser's language.
+    setLang(detectLang())
   }, [])
 
   function pick(l: Lang) {
     setLang(l)
-    try {
-      window.localStorage.setItem(LANG_KEY, l)
-    } catch {
-      // Storage blocked — the toggle still applies to this view.
-    }
+    saveLang(l)
   }
 
-  const signupHref = lang === "es" ? `${SIGNUP}?lang=es` : SIGNUP
+  const signupHref = `${SIGNUP}?lang=${lang}`
   // Sign-up has no password, so returning users pick up the chat on WhatsApp.
   const waHref = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(t.waMessage)}`
 

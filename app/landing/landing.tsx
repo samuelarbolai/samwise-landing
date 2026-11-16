@@ -1,12 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { LANDING_EN, type LandingCopy } from "./landing-copy"
+import { LANDING_EN, LANDING_ES, type LandingCopy } from "./landing-copy"
 import { cleanSrc } from "@/lib/v2/src-tag"
+import { detectLang, langFromUrl, saveLang, type PageLang } from "@/lib/lang"
 import "./landing.css"
 
-/** Tag for sign-ups from this page when the visitor's link has no ?src= of its own. */
-const DEFAULT_SRC = "landing"
+/** The hero's example entry labels. */
+const ENTRY_LABELS: Record<PageLang, { before: string; during: string; after: string }> = {
+  en: { before: "Before", during: "During", after: "After" },
+  es: { before: "Antes", during: "Durante", after: "Después" },
+}
 
 /** The house sparkle — same path as the favicon, the navbar star and the OG card. */
 function Star({ className }: { className?: string }) {
@@ -30,20 +34,48 @@ function Arrow() {
  * this page can be counted: an outreach link like samwise.life/?src=itaa-email keeps
  * its own tag, any other visit is tagged "landing".
  */
-function useSignupHref() {
-  const [href, setHref] = useState(`/v2/signup?src=${DEFAULT_SRC}`)
+function useSignupHref(defaultSrc: string, lang: PageLang) {
+  const [src, setSrc] = useState(defaultSrc)
   useEffect(() => {
-    const src = cleanSrc(new URLSearchParams(window.location.search).get("src"))
-    if (src) setHref(`/v2/signup?src=${encodeURIComponent(src)}`)
+    const fromUrl = cleanSrc(new URLSearchParams(window.location.search).get("src"))
+    if (fromUrl) setSrc(fromUrl)
   }, [])
-  return href
+  // The page's language goes along, so sign-up opens in the language the visitor was reading.
+  return `/v2/signup?src=${encodeURIComponent(src)}&lang=${lang}`
 }
 
-export function Landing({ t = LANDING_EN }: { t?: LandingCopy }) {
-  const signup = useSignupHref()
+type Props = {
+  /** Copy per language. Default: the home page. */
+  copy?: Record<PageLang, LandingCopy>
+  /** Tag for sign-ups from this page when the visitor's link has no ?src= of its own. */
+  defaultSrc?: string
+  /**
+   * A page with its own language (e.g. /por-tu-cuenta) starts in it; only ?lang= or the
+   * switch change it. Without it the page follows ?lang=, the saved choice, then the
+   * browser's language.
+   */
+  pageLang?: PageLang
+}
+
+const HOME_COPY: Record<PageLang, LandingCopy> = { en: LANDING_EN, es: LANDING_ES }
+
+export function Landing({ copy = HOME_COPY, defaultSrc = "landing", pageLang }: Props) {
+  // Starts the same on server and client, then reconciles in an effect (no hydration mismatch).
+  const [lang, setLang] = useState<PageLang>(pageLang ?? "en")
+  useEffect(() => {
+    setLang(pageLang ? (langFromUrl() ?? pageLang) : detectLang())
+  }, [pageLang])
+  function pick(l: PageLang) {
+    setLang(l)
+    saveLang(l)
+  }
+
+  const t = copy[lang]
+  const labels = ENTRY_LABELS[lang]
+  const signup = useSignupHref(defaultSrc, lang)
 
   return (
-    <div className="ld-root">
+    <div className="ld-root" lang={lang}>
       <header className="ld-top">
         <nav aria-label="Main" className="ld-wrap ld-nav">
           <a className="ld-brand" href="#top">
@@ -53,6 +85,11 @@ export function Landing({ t = LANDING_EN }: { t?: LandingCopy }) {
           <div className="ld-nav__links">
             <a href="#how">{t.nav.how}</a>
             <a href="#faq">{t.nav.questions}</a>
+            <div className="ld-lang" role="group" aria-label="Language / Idioma">
+              <button type="button" aria-pressed={lang === "en"} onClick={() => pick("en")}>EN</button>
+              <span aria-hidden="true">/</span>
+              <button type="button" aria-pressed={lang === "es"} onClick={() => pick("es")}>ES</button>
+            </div>
             <a className="ld-btn ld-btn--small" href={signup}>
               {t.nav.cta}
             </a>
@@ -84,9 +121,9 @@ export function Landing({ t = LANDING_EN }: { t?: LandingCopy }) {
                 </div>
                 <div className="ld-page">
                   <span className="ld-page__day">{t.hero.entry.day}</span>
-                  <p><b>Before</b> {t.hero.entry.before}</p>
-                  <p><b>During</b> {t.hero.entry.during}</p>
-                  <p><b>After</b> {t.hero.entry.after}</p>
+                  <p><b>{labels.before}</b> {t.hero.entry.before}</p>
+                  <p><b>{labels.during}</b> {t.hero.entry.during}</p>
+                  <p><b>{labels.after}</b> {t.hero.entry.after}</p>
                   <p className="ld-page__next">{t.hero.entry.next}</p>
                 </div>
               </div>
