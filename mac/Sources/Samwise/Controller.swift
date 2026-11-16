@@ -35,6 +35,12 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     private var previousApp: NSRunningApplication?
     private var lastTimesKey = ""
     private var pillText = ""
+    private var pillButtons = ""
+    /// The check-in whose warning ("Samwise has not counted it") is at the top of the screen now.
+    private var warningID: String?
+    /// Warnings the user closed with OK, one per check-in and alert time. Kept only while the app runs:
+    /// a warning is about the next half hour.
+    private var alertDismissed = Set<String>()
     private var hookResult = ""
 
     init(options: Options, store: Store) {
@@ -299,6 +305,15 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             nextPollAt = .distantPast
         case "asked_finished":
             sound.chime(volume: 0.7)
+        case "alert_ahead_seen":
+            // Samwise has not counted this check-in and is going to tell the trusted people.
+            // On the alarm screen the screen itself says it. Otherwise the warning goes at the top of the
+            // screen (reconcile), and this makes sure it is noticed.
+            if e.detail["on"] != "screen" {
+                SoundEngine.wakeDisplay()
+                if settings.sound != "off" { sound.chime(volume: 1) }
+            }
+            nextPollAt = .distantPast
         case "done":
             if e.detail["visible"] == "1" { celebrate() }
         default:
@@ -314,6 +329,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             dropTakeover()
             if let t = transient, Date() < t.until {
                 showPill(t.text)
+            } else if let id = endedButNotCounted(now: now), let slot = alertSlot(id, now: now) {
+                transient = nil
+                showAlertAhead(id, slot: slot, ended: true)
             } else {
                 transient = nil
                 hidePill()
@@ -348,7 +366,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             showPill(c.snoozedPill(left))
         case .inProgress(let id, let ask):
             dropTakeover()
-            if ask {
+            if let slot = alertSlot(id, now: now) {
+                // More urgent than "did you finish?": Samwise has not counted it and says when it tells the trusted people.
+                showAlertAhead(id, slot: slot, ended: false)
+            } else if ask {
                 showPill(c.didYouFinish, emphasis: true, actions: [
                     (title: c.yesDone, style: .primary, run: { [weak self] in self?.finish(id) }),
                     (title: c.notYet, style: .secondary, run: { [weak self] in self?.notYet(id) }),
@@ -364,12 +385,69 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
 
     private func showPill(_ text: String, emphasis: Bool = false, actions: [(title: String, style: PillButton.Style, run: () -> Void)] = []) {
         pillText = text
+        pillButtons = actions.map { $0.title }.joined(separator: "|")
+        warningID = nil
         pill.show(text: text, emphasis: emphasis, actions: actions)
     }
 
     private func hidePill() {
         pillText = ""
+        pillButtons = ""
+        warningID = nil
         pill.hide()
+    }
+
+    // MARK: Samwise has not counted the check-in
+
+    /// How Samwise sees this check-in, while it is still going to tell the trusted people about it.
+    private func alertSlot(_ id: String, now: Date) -> RemoteSlot? {
+        guard usesAccount, let slot = config?.slot(id), slot.alertAhead(now) else { return nil }
+        return slot
+    }
+
+    /// A check-in the user ended here by their own word that Samwise has not counted and will tell the trusted people about.
+    private func endedButNotCounted(now: Date) -> String? {
+        guard usesAccount else { return nil }
+        var found: String?
+        for (id, s) in store.data.states where !s.isTest && s.phase == .done {
+            guard s.finishSource == "self" || s.finishSource == "unconfirmed" else { continue }
+            guard let slot = alertSlot(id, now: now), !alertDismissed.contains(warningKey(id, slot)) else { continue }
+            if found == nil || id > (found ?? "") { found = id }
+        }
+        return found
+    }
+
+    /// The warning at the top of the screen: what Samwise decided, when it tells the trusted people, and the way to stop that.
+    /// It never takes the screen and it can be closed: the user is in charge.
+    private func showAlertAhead(_ id: String, slot: RemoteSlot, ended: Bool) {
+        let c = copy
+        let deadline = slot.tellDate.map { ScheduleMath.clock($0, timeZone: timeZone) } ?? ""
+        var actions: [(title: String, style: PillButton.Style, run: () -> Void)] = []
+        if let number = config?.samwiseNumber, samwiseDigits() != nil {
+            actions.append((title: c.callSamwise(number), style: .primary, run: { [weak self] in self?.callFromWarning(id) }))
+        }
+        if ended {
+            actions.append((title: c.gotIt, style: .secondary, run: { [weak self] in self?.dismissWarning(id) }))
+        } else {
+            actions.append((title: c.finishedShort, style: .secondary, run: { [weak self] in self?.finish(id) }))
+        }
+        showPill(c.alertAhead(deadline: deadline, missed: slot.callMissed), emphasis: true, actions: actions)
+        warningID = id
+    }
+
+    private func callFromWarning(_ id: String) {
+        guard let digits = samwiseDigits(), let url = URL(string: "tel:+\(digits)") else { return }
+        queue("alert_call", occurrence: id)
+        openLink(url)
+        nextPollAt = .distantPast
+    }
+
+    private func warningKey(_ id: String, _ slot: RemoteSlot) -> String { id + "|" + (slot.tellAt ?? "") }
+
+    private func dismissWarning(_ id: String) {
+        if let slot = config?.slot(id) { alertDismissed.insert(warningKey(id, slot)) }
+        queue("alert_closed", occurrence: id)
+        tick()
     }
 
     private func dropTakeover() {
@@ -401,7 +479,20 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         let supportActive = usesAccount && (config?.support?.active ?? false) && callExpected
         let grace = config?.support?.graceMinutes ?? 30
         let deadlineDate = fireAt.addingTimeInterval(TimeInterval(grace) * 60)
-        let deadline = supportActive && now < deadlineDate ? ScheduleMath.clock(deadlineDate, timeZone: tz) : nil
+        var deadline = supportActive && now < deadlineDate ? ScheduleMath.clock(deadlineDate, timeZone: tz) : nil
+        var toldAt: String?
+        if kind == .missedCall, let slot = slot, slot.alertAhead(now), let t = slot.tellDate {
+            // Once the call's result is in, Samwise's own time for telling the trusted people replaces the rule of thumb.
+            deadline = ScheduleMath.clock(t, timeZone: tz)
+        }
+        if kind == .unfinished {
+            // For a call that did not count, Samwise itself says when it tells the trusted people, and when it did.
+            deadline = nil
+            if let slot = slot {
+                if slot.alertAhead(now), let t = slot.tellDate { deadline = ScheduleMath.clock(t, timeZone: tz) }
+                if let t = slot.toldDate { toldAt = ScheduleMath.clock(t, timeZone: tz) }
+            }
+        }
         let secondsTo = Int(fireAt.timeIntervalSince(now).rounded(.up))
         let minutesLate = max(0, Int(now.timeIntervalSince(fireAt) / 60))
 
@@ -426,7 +517,8 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         m.subtitle = c.subtitle(
             kind, time: time, minutesLate: minutesLate, willCall: callExpected,
             number: callExpected ? number : nil, deadline: deadline,
-            startedAt: state?.committedAt.map { ScheduleMath.clock($0, timeZone: tz) }
+            startedAt: state?.committedAt.map { ScheduleMath.clock($0, timeZone: tz) },
+            toldAt: toldAt
         )
         let day = ScheduleMath.calendar(tz).ordinality(of: .day, in: .year, for: now) ?? 0
         m.line = c.line(day: day)
@@ -459,11 +551,13 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             m.snoozeNote = ""
         }
 
-        let canCall = callExpected && number != nil && (kind == .late || kind == .missedCall)
+        let canCall = callExpected && number != nil && (kind == .late || kind == .missedCall || kind == .onCall || kind == .unfinished)
         m.callTitle = canCall ? number.map { c.callSamwise($0) } : nil
         m.whatsAppTitle = canCall && kind == .missedCall ? c.openWhatsApp : nil
         switch kind {
         case .followUp: m.finishTitle = c.iFinished
+        // The screen came back to ask "did you finish?" and the call did not count: the answer can still be given.
+        case .unfinished: m.finishTitle = (state?.cameBack ?? false) ? c.iFinished : nil
         case .test: m.finishTitle = c.endTest
         default: m.finishTitle = nil
         }
@@ -476,7 +570,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         let m = takeover.model
         if let wrong = m.wrongAt, Date().timeIntervalSince(wrong) < 3 { return c.wrongLetter }
         if takeover.isUp && !takeover.hasKeyboard { return c.clickToType }
-        if sound.isLooping { return c.soundHint }
+        if sound.isLooping {
+            let slot = usesAccount ? config?.slot(m.id) : nil
+            return c.soundHint(call: (slot?.willCall ?? false) || (slot?.callPlaced ?? false))
+        }
         return ""
     }
 
@@ -489,7 +586,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             if chimed.insert("count:" + id).inserted && mode != "off" { sound.chime(volume: 0.8) }
             return
         }
-        if mode == "off" || state.silencedAt != nil {
+        // `.onCall`: the ring has run its course and Samwise's call is still open, so the person is most likely on it.
+        // The Mac keeps the screen and stays quiet until the call's result is in.
+        if mode == "off" || state.silencedAt != nil || kind == .onCall {
             sound.stopLoop()
             ringStartedAt = nil
             return
@@ -619,11 +718,14 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     }
 
     private func finish(_ id: String) {
+        // Samwise has not counted this check-in and is going to tell the trusted people: the Mac takes the
+        // user's word for its own screen, but it does not say "Check-in done." The warning stays up.
+        let notCounted = alertSlot(id, now: clock.now) != nil
         guard let e = Engine.finish(id, now: clock.now, states: &store.data.states) else { return }
         record(e)
         if e.kind == "test_done" {
             transient = (copy.testDonePill, Date().addingTimeInterval(7))
-        } else {
+        } else if !notCounted {
             celebrate()
         }
         store.save()
@@ -964,10 +1066,18 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     private var busy: Bool {
         if desired != .idle { return true }
         let now = clock.now
+        let slots = usesAccount ? (config?.slots ?? []) : []
+        // Samwise's call is open, or Samwise is about to tell the trusted people: follow it closely, so the
+        // warning shows in time and goes away as soon as the check-in counts.
+        if slots.contains(where: { !$0.done && ($0.callOpen || $0.alertAhead(now)) }) { return true }
         return occurrences.values.contains { o in
             let d = o.fireAt.timeIntervalSince(now)
             guard d < 8 * 60 && d > -45 * 60 else { return false }
-            return !(store.data.states[o.id]?.phase.isFinal ?? false)
+            guard let s = store.data.states[o.id], s.phase.isFinal else { return true }
+            // Ended here by the user's own word while Samwise's call may still be coming or going on.
+            guard s.phase == .done, s.finishSource == "self" || s.finishSource == "unconfirmed" else { return false }
+            guard let slot = slots.first(where: { $0.id == o.id }) else { return false }
+            return !slot.done && (slot.willCall || slot.callPlaced)
         }
     }
 
@@ -1148,12 +1258,17 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             if value == "tab" { toggleWords() }
             if value == "esc" { escape() }
             if value == "delete" { backspace() }
+        case "touch": takeoverTouched()
         case "snooze": takeoverSnooze()
         case "finish":
             if case .inProgress(let id, _) = desired { finish(id) } else { takeoverFinish() }
         case "notyet":
             if case .inProgress(let id, _) = desired { notYet(id) }
         case "call": takeoverCall()
+        case "warncall":
+            if let id = warningID { callFromWarning(id) }
+        case "warnok":
+            if let id = warningID { dismissWarning(id) }
         case "test": startTest()
         case "poll": nextPollAt = .distantPast
         case "show":
@@ -1206,6 +1321,8 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             "sound": sound.isLooping,
             "pill": pill.isUp,
             "pill_text": pillText,
+            "pill_buttons": pillButtons,
+            "warning": warningID ?? "",
             "takeover": takeover.isUp,
             "keyboard": takeover.hasKeyboard,
             "typed": takeover.model.typed,

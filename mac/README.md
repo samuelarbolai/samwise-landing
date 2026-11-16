@@ -15,7 +15,9 @@ Download: https://www.samwise.life/mac
 | At the time | "It's time for your check-in." A ring that grows louder; after a minute a sharper ring, and a muted Mac is set to 60%. |
 | To get the screen back | Type `I am doing my check-in now`. There is no text field and nothing to paste into. |
 | 15 minutes later | "Did you finish your check-in?" No answer for 10 minutes takes the screen again. |
+| While Samwise's call is open | A Mac that was quieted with a key or a click stays quiet until the call's result is in, so it never rings into the check-in itself. Past the ring the screen says "Samwise called your phone at 16:00" and stays quiet, instead of "call Samwise now". |
 | If Samwise's call was missed | The screen is taken again with Samwise's number and the time until which nobody is told. |
+| If the call was answered but Samwise does not count it | The Mac never says "Check-in done." It says the call did not count, the hour Samwise tells the trusted people, and Samwise's number: on the alarm screen while that is still up, otherwise in the small panel at the top with one chime. It does not take the screen for it, and the panel can be closed. |
 | When Samwise counts the check-in | The alarm ends on its own and shows what the person planned for after. |
 
 The person is always in charge: snooze (5 minutes, twice), skip by typing `I choose to skip this check-in`,
@@ -63,6 +65,21 @@ Everything a token can read or change is scoped to its own user.
 `config` mirrors how Samwise decides about a call (n8n "Ritual Call Dispatch"), so the alarm only says
 "Samwise is calling your phone" when a call is really due: see the comment on `loadConfig`.
 
+It also mirrors how Samwise decides whether a call counts (n8n "Call Ended Handler" and "Support Call
+Dispatcher"). A check-in is `done` by phone only for a call the trusted people would not be told about: answered,
+not rated negative, not scored under 5. For every check-in the Mac also gets:
+
+| Field | Meaning |
+|---|---|
+| `call_open` | Samwise's call was placed and its result is not saved yet (ringing, under way, or ended a few minutes ago). |
+| `call_missed` | Nobody answered. |
+| `call_unfinished` | It was answered and Samwise does not count it. |
+| `tell_at` | When the trusted people are told (the end of the call plus 35 minutes), while that is still ahead and nothing has settled it: a later call that counts, the person calling in, or a written entry. |
+| `told_at` | When they were told. |
+
+"I finished" on the Mac is the person's word for their own screen. It does not change what Samwise does: the Mac
+warns in time, and only a call that counts, the person calling in, or a written check-in stops the alert.
+
 Having a Samwise account is private, so the pairing calls never tell a stranger whether a number has one.
 
 ## Data
@@ -80,6 +97,17 @@ When a connected Mac asks for its schedule within 10 minutes after a check-in ti
 event: that Mac was on and online. The Mac reports `shown` when the alarm takes the screen. The daily Health Check
 (n8n, function `samwise_mac_health_checks()` in Neon) reports any `seen` without `shown`, `done`, `skipped` or
 `missed` (`mac_alarm_not_shown`), and any alarm dropped by the restart guard (`mac_alarm_crashed`).
+
+Two more rules watch a real call next to the alarm. `mac_done_then_alerted`: Samwise told a Mac that a check-in
+was done by a call and then called that person's trusted people about it (the rule in `loadConfig` must make
+this impossible). `mac_alert_not_warned`: the site told a
+Mac on 1.0.4 or newer, at least 3 minutes ahead, that the trusted people were going to be told, and the Mac never
+reported telling the person. The site keeps its own mark for that, `alert_ahead_sent`, written by
+`GET /api/mac/config` the first time it gives a Mac a `tell_at` (the mark's `at` is the alert time, `received_at`
+is when the Mac was told; a Mac cannot write it). The Mac answers with `alert_ahead_seen` (detail `on`: `screen`
+when the alarm screen named the hour, `panel` for the small panel) or `call_missed_seen`. It also reports
+`alert_call` (the call button on the warning) and `alert_closed` (OK), which is how often the warning leads to a
+call back.
 
 ## Signing, and the first open
 

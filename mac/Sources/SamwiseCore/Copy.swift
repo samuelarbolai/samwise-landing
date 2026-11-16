@@ -56,6 +56,10 @@ public struct Copy {
             return t("Did your check-in happen?", "¿Hiciste tu chequeo?")
         case .missedCall:
             return t("You missed Samwise's call.", "No contestaste la llamada de Samwise.")
+        case .onCall:
+            return t("Samwise called your phone at \(time).", "Samwise te llamó a las \(time).")
+        case .unfinished:
+            return t("Your check-in call did not count.", "Tu llamada de chequeo no contó.")
         case .test:
             return t("This is your check-in alarm.", "Esta es la alarma de tu chequeo.")
         }
@@ -63,7 +67,9 @@ public struct Copy {
 
     /// `willCall`: Samwise phones this user at this time (confirmed by the server). `number`: Samwise's number.
     /// `deadline`: until when a call back keeps trusted people out of it ("16:30"), nil when that does not apply.
-    public func subtitle(_ kind: TakeoverKind, time: String, minutesLate: Int, willCall: Bool, number: String?, deadline: String?, startedAt: String?) -> String {
+    /// For a call that did not count it is the time Samwise tells them, as the server gave it.
+    /// `toldAt`: when Samwise told them, once it has.
+    public func subtitle(_ kind: TakeoverKind, time: String, minutesLate: Int, willCall: Bool, number: String?, deadline: String?, startedAt: String?, toldAt: String? = nil) -> String {
         let callBack: String = {
             guard let n = number else { return "" }
             if let d = deadline {
@@ -90,6 +96,20 @@ public struct Copy {
             return since + t(" If it is done, say so below. If not, do it now.", " Si ya está hecho, dilo abajo. Si no, hazlo ahora.")
         case .missedCall:
             return t("The phone rang and nobody picked up.", "El teléfono sonó y nadie contestó.") + callBack
+        case .onCall:
+            let carryOn = t("If you are on the call, carry on: this Mac stays quiet.", "Si estás en la llamada, sigue: este Mac se queda en silencio.")
+            guard let n = number else { return carryOn }
+            return carryOn + t(" If you missed it, call Samwise back: \(n).", " Si no la contestaste, llama a Samwise: \(n).")
+        case .unfinished:
+            let back: String = number.map { t(" To do your check-in now, call Samwise: \($0).", " Para hacer tu chequeo ahora, llama a Samwise: \($0).") } ?? ""
+            // What is still ahead comes first: a second call that did not count can follow an alert already sent.
+            if let d = deadline {
+                return t("Samwise calls your trusted people at about \(d), unless you call back first.", "Samwise llama a tus personas de confianza hacia las \(d), a menos que llames antes.") + back
+            }
+            if let told = toldAt {
+                return t("Samwise called your trusted people at \(told).", "Samwise llamó a tus personas de confianza a las \(told).") + back
+            }
+            return t("Samwise does not count it as your check-in.", "Samwise no la cuenta como tu chequeo.") + back
         case .test:
             return t("Nothing is being called. This is only a test, so you know what to expect.", "No se está llamando a nadie. Es solo una prueba, para que sepas qué esperar.")
         }
@@ -111,7 +131,15 @@ public struct Copy {
     public var showWords: String { t("Press Tab to read your words.", "Presiona Tab para leer tus palabras.") }
     public var hideWords: String { t("Press Tab or Esc to go back.", "Presiona Tab o Esc para volver.") }
     public var yourWords: String { t("Your words", "Tus palabras") }
-    public var soundHint: String { t("Any key or click quiets the sound for two minutes. Your screen stays until you type the line.", "Cualquier tecla o clic calla el sonido por dos minutos. La pantalla sigue hasta que escribas la frase.") }
+    /// `call`: Samwise phones this user for this check-in (confirmed by the server). Then a quieted Mac
+    /// also stays quiet until the call's result is in, so it never rings into the check-in itself.
+    public func soundHint(call: Bool) -> String {
+        call
+            ? t("Any key or click quiets the sound for two minutes, and for the whole of Samwise's call. Your screen stays until you type the line.",
+                "Cualquier tecla o clic calla el sonido por dos minutos, y durante toda la llamada de Samwise. La pantalla sigue hasta que escribas la frase.")
+            : t("Any key or click quiets the sound for two minutes. Your screen stays until you type the line.",
+                "Cualquier tecla o clic calla el sonido por dos minutos. La pantalla sigue hasta que escribas la frase.")
+    }
 
     public func callSamwise(_ number: String) -> String { t("Call \(number)", "Llamar al \(number)") }
     public var openWhatsApp: String { t("Open Samwise on WhatsApp", "Abrir Samwise en WhatsApp") }
@@ -172,6 +200,16 @@ public struct Copy {
     public var yesDone: String { t("Yes, done", "Sí, listo") }
     public var notYet: String { t("Not yet", "Todavía no") }
     public var finishedShort: String { t("I finished", "Terminé") }
+    /// The user said the check-in is under way or done, but Samwise has not counted it and will tell the trusted people.
+    /// `missed`: Samwise's call went unanswered; otherwise it was answered and did not count.
+    /// Two lines, so the panel stays narrow enough for a small screen.
+    public func alertAhead(deadline: String, missed: Bool) -> String {
+        let what = missed
+            ? t("Samwise's call went unanswered.", "No contestaste la llamada de Samwise.")
+            : t("Samwise did not count that call as your check-in.", "Samwise no contó esa llamada como tu chequeo.")
+        return what + "\n" + t("It calls your trusted people at about \(deadline), unless you call back first.", "Llama a tus personas de confianza hacia las \(deadline), a menos que llames antes.")
+    }
+    public var gotIt: String { t("OK", "Entendido") }
 
     // MARK: After the check-in
 

@@ -268,7 +268,10 @@ export default function MacPage() {
               </li>
               <li>
                 <Star className="ld-yours__star" />
-                <span>It tells you when Samwise is calling your phone, and when a call was missed.</span>
+                <span>
+                  It tells you when Samwise is calling your phone, when a call was missed or did not count, and when
+                  Samwise would call your trusted people.
+                </span>
               </li>
               <li>
                 <Star className="ld-yours__star" />

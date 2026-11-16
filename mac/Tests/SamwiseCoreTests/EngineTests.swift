@@ -254,6 +254,155 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(step("2026-11-16T21:03:00Z", &s, remote: remote).desired, .inProgress(id: id, askFinished: false))
     }
 
+    // MARK: A real call next to the alarm (1.0.3 got three things wrong here)
+
+    /// Samwise's call is placed and its result is not in yet.
+    func onThePhone() -> [String: RemoteSlot] { [id: RemoteSlot(id: id, callPlaced: true, callOpen: true)] }
+    /// The call was answered and Samwise does not count it; the trusted people are told at 16:37:10.
+    func notCounted(tellAt: String? = "2026-11-16T21:37:10Z", toldAt: String? = nil) -> [String: RemoteSlot] {
+        [id: RemoteSlot(id: id, callPlaced: true, callUnfinished: true, tellAt: tellAt, toldAt: toldAt)]
+    }
+
+    func testAQuietedMacStaysQuietWhileSamwiseIsOnThePhone() {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T21:00:00Z", &s)
+        Engine.silence(id, now: at("2026-11-16T21:00:08Z"), states: &s)
+
+        // 16:02:08: two minutes after the key press. 1.0.3 rang again here, into the call.
+        let during = step("2026-11-16T21:02:08Z", &s, remote: onThePhone())
+        XCTAssertTrue(during.events.isEmpty)
+        XCTAssertNotNil(s[id]?.silencedAt)
+        XCTAssertEqual(during.desired, .takeover(id: id, kind: .ringing))
+
+        // Past the ring with the call still open: the screen says Samwise called, not "call Samwise now".
+        let later = step("2026-11-16T21:04:00Z", &s, remote: onThePhone())
+        XCTAssertEqual(later.desired, .takeover(id: id, kind: .onCall))
+        XCTAssertTrue(later.events.isEmpty)
+        XCTAssertNotNil(s[id]?.silencedAt)
+
+        // The result is in and the call did not count: the screen says so, and the Mac rings again.
+        let after = step("2026-11-16T21:07:49Z", &s, remote: notCounted())
+        XCTAssertEqual(after.desired, .takeover(id: id, kind: .unfinished))
+        // It also reports that this screen named the hour: that is how Samwise knows the person was told in time.
+        XCTAssertEqual(after.events, [EngineEvent("resound", id), EngineEvent("alert_ahead_seen", id, ["why": "unfinished", "on": "screen"])])
+        XCTAssertNil(s[id]?.silencedAt)
+        XCTAssertTrue(step("2026-11-16T21:07:50Z", &s, remote: notCounted()).events.isEmpty)
+        // That screen names the hour, so no separate warning follows for the same alert.
+        XCTAssertEqual(s[id]?.warnedFor, "2026-11-16T21:37:10Z")
+        _ = Engine.commit(id, now: at("2026-11-16T21:08:30Z"), states: &s, settings: AlarmSettings())
+        XCTAssertTrue(step("2026-11-16T21:08:31Z", &s, remote: notCounted()).events.isEmpty)
+    }
+
+    func testWithoutACallAQuietedRingStillComesBack() {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T21:00:00Z", &s)
+        Engine.silence(id, now: at("2026-11-16T21:00:08Z"), states: &s)
+        // A call that was placed and already has its result does not keep the Mac quiet.
+        let placed = [id: RemoteSlot(id: id, callPlaced: true)]
+        XCTAssertEqual(step("2026-11-16T21:02:08Z", &s, remote: placed).events, [EngineEvent("resound", id)])
+    }
+
+    func testACallThatDidNotCountWarnsOnceAndLeavesTheScreenAlone() {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &s)
+        _ = Engine.commit(id, now: at("2026-11-16T21:02:25Z"), states: &s, settings: AlarmSettings())
+        XCTAssertTrue(step("2026-11-16T21:03:00Z", &s, remote: onThePhone()).events.isEmpty)
+
+        // 16:07:49: the call's result arrives. 1.0.3 said "Check-in done." here.
+        let r = step("2026-11-16T21:07:49Z", &s, remote: notCounted())
+        XCTAssertEqual(r.desired, .inProgress(id: id, askFinished: false))
+        XCTAssertEqual(r.events, [EngineEvent("alert_ahead_seen", id, ["why": "unfinished", "on": "panel"])])
+        XCTAssertEqual(s[id]?.phase, .committed)
+        // Said once.
+        XCTAssertTrue(step("2026-11-16T21:08:19Z", &s, remote: notCounted()).events.isEmpty)
+
+        // "I finished" is the user's word for this Mac. It does not change what Samwise does, and nothing new is announced.
+        XCTAssertNotNil(Engine.finish(id, now: at("2026-11-16T21:09:00Z"), states: &s))
+        let done = step("2026-11-16T21:09:01Z", &s, remote: notCounted())
+        XCTAssertEqual(done.desired, .idle)
+        XCTAssertTrue(done.events.isEmpty)
+        XCTAssertEqual(s[id]?.finishSource, "self")
+
+        // The person calls back and that call does not count either: it has its own time and its own warning.
+        let second = step("2026-11-16T21:30:00Z", &s, remote: notCounted(tellAt: "2026-11-16T22:05:00Z"))
+        XCTAssertEqual(second.events, [EngineEvent("alert_ahead_seen", id, ["why": "unfinished", "on": "panel"])])
+        XCTAssertEqual(second.desired, .idle)
+    }
+
+    func testEndedByOwnWordIsStillWarnedWhenTheCallWentUnanswered() {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &s)
+        _ = Engine.commit(id, now: at("2026-11-16T20:59:30Z"), states: &s, settings: AlarmSettings())
+        XCTAssertNotNil(Engine.finish(id, now: at("2026-11-16T20:59:50Z"), states: &s))
+        let missed = [id: RemoteSlot(id: id, callPlaced: true, callMissed: true, tellAt: "2026-11-16T21:35:41Z")]
+        let r = step("2026-11-16T21:06:00Z", &s, remote: missed)
+        XCTAssertEqual(r.desired, .idle)
+        XCTAssertEqual(r.events, [EngineEvent("alert_ahead_seen", id, ["why": "missed", "on": "panel"])])
+        XCTAssertTrue(step("2026-11-16T21:06:30Z", &s, remote: missed).events.isEmpty)
+    }
+
+    func testAMissedCallAfterTheTypedLineTakesTheScreenAndThatIsTheWarning() {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &s)
+        _ = Engine.commit(id, now: at("2026-11-16T21:00:05Z"), states: &s, settings: AlarmSettings())
+        let missed = [id: RemoteSlot(id: id, callPlaced: true, callMissed: true, tellAt: "2026-11-16T21:35:41Z")]
+        let r = step("2026-11-16T21:06:00Z", &s, remote: missed)
+        XCTAssertEqual(r.desired, .takeover(id: id, kind: .missedCall))
+        XCTAssertEqual(r.events, [EngineEvent("call_missed_seen", id)])
+        _ = Engine.commit(id, now: at("2026-11-16T21:06:30Z"), states: &s, settings: AlarmSettings())
+        let after = step("2026-11-16T21:06:31Z", &s, remote: missed)
+        XCTAssertEqual(after.desired, .inProgress(id: id, askFinished: false))
+        XCTAssertTrue(after.events.isEmpty)
+    }
+
+    func testNoWarningWhenNothingIsAheadOrSamwiseCountsTheCheckin() {
+        // The trusted people were already told: nothing is ahead any more.
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &s)
+        _ = Engine.commit(id, now: at("2026-11-16T21:02:25Z"), states: &s, settings: AlarmSettings())
+        let told = step("2026-11-16T21:38:00Z", &s, remote: notCounted(toldAt: "2026-11-16T21:37:36Z"))
+        XCTAssertFalse(told.events.contains { $0.kind == "alert_ahead_seen" })
+
+        // No trusted people, so no time: the call did not count, and nobody is told.
+        var t: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &t)
+        _ = Engine.commit(id, now: at("2026-11-16T21:02:25Z"), states: &t, settings: AlarmSettings())
+        XCTAssertTrue(step("2026-11-16T21:07:49Z", &t, remote: notCounted(tellAt: nil)).events.isEmpty)
+
+        // Samwise counts the check-in: the alarm ends, with no warning.
+        var u: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &u)
+        _ = Engine.commit(id, now: at("2026-11-16T21:02:25Z"), states: &u, settings: AlarmSettings())
+        let good = [id: RemoteSlot(id: id, done: true, doneSource: "call", callPlaced: true, tellAt: "2026-11-16T23:00:00Z")]
+        XCTAssertEqual(step("2026-11-16T21:07:49Z", &u, remote: good).events, [EngineEvent("done", id, ["source": "samwise_call", "visible": "1"])])
+
+        // A test alarm never gets one.
+        var v: [String: OccurrenceState] = [:]
+        v[id] = OccurrenceState(id: id, fireAt: at("2026-11-16T21:00:00Z"), phase: .committed, isTest: true)
+        XCTAssertFalse(step("2026-11-16T21:07:49Z", &v, remote: notCounted()).events.contains { $0.kind == "alert_ahead_seen" })
+    }
+
+    func testTheScreenThatComesBackSaysTheCallDidNotCount() {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &s)
+        _ = Engine.commit(id, now: at("2026-11-16T21:02:25Z"), states: &s, settings: AlarmSettings())
+        _ = step("2026-11-16T21:07:49Z", &s, remote: notCounted())
+        XCTAssertEqual(step("2026-11-16T21:17:30Z", &s, remote: notCounted()).desired, .inProgress(id: id, askFinished: true))
+        let back = step("2026-11-16T21:27:31Z", &s, remote: notCounted())
+        XCTAssertEqual(back.desired, .takeover(id: id, kind: .unfinished))
+        XCTAssertEqual(back.events, [EngineEvent("came_back", id)])
+        XCTAssertEqual(s[id]?.cameBack, true)
+    }
+
+    func testAStateFileFromAnOlderVersionStillLoads() throws {
+        var s: [String: OccurrenceState] = [:]
+        _ = step("2026-11-16T20:59:00Z", &s)
+        let data = try JSONEncoder().encode(s)
+        // 1.0.3 wrote no "warnedFor" key; a state without it is exactly what this version writes before any warning.
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).contains("warnedFor"))
+        XCTAssertNil(try JSONDecoder().decode([String: OccurrenceState].self, from: data)[id]?.warnedFor)
+    }
+
     // MARK: Sleep, restarts, old check-ins
 
     func testFoundLateStillFiresInsideTheWindow() {
@@ -346,6 +495,11 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(c.words(for: CheckinTime("16:00")!).first?.title, "Opening")
         XCTAssertEqual(c.slot("2026-11-16T16:00")?.callMissed, true)
         XCTAssertEqual(c.slot("2026-11-16T16:00")?.done, false)
+        // Keys added in 1.0.4 are missing here, as from an older server: nothing is assumed.
+        XCTAssertEqual(c.slot("2026-11-16T16:00")?.callOpen, false)
+        XCTAssertEqual(c.slot("2026-11-16T16:00")?.callUnfinished, false)
+        XCTAssertNil(c.slot("2026-11-16T16:00")?.tellAt)
+        XCTAssertEqual(c.slot("2026-11-16T16:00")?.alertAhead(at("2026-11-16T21:10:00Z")), false)
         XCTAssertEqual(c.tasks?.first?.id, 7)
         XCTAssertEqual(c.support?.graceMinutes, 30)
         XCTAssertEqual(c.timeZone?.identifier, "America/Bogota")
@@ -359,8 +513,12 @@ final class EngineTests: XCTestCase {
           "user": {"first_name": "Alex", "language": "en", "timezone": "America/Bogota"},
           "checkins": [{"time": "16:00", "words": [{"title": "", "body": "My opening words."}], "journal_url": "https://example.com/doc?tab=t.1"},
                        {"time": "21:30", "words": [], "journal_url": null}],
-          "slots": [{"id": "2026-11-16T16:00", "done": true, "done_source": "written", "will_call": false, "call_placed": false, "call_missed": false},
-                    {"id": "2026-11-16T21:30", "done": false, "done_source": null, "will_call": true, "call_placed": false, "call_missed": false}],
+          "slots": [{"id": "2026-11-16T16:00", "done": true, "done_source": "written", "will_call": false, "call_placed": false, "call_open": false,
+                     "call_missed": false, "call_unfinished": false, "tell_at": null, "told_at": null},
+                    {"id": "2026-11-16T21:30", "done": false, "done_source": null, "will_call": true, "call_placed": true, "call_open": false,
+                     "call_missed": false, "call_unfinished": true, "tell_at": "2026-11-17T03:07:10Z", "told_at": null},
+                    {"id": "2026-11-15T21:30", "done": false, "done_source": null, "will_call": true, "call_placed": true, "call_open": true,
+                     "call_missed": false, "call_unfinished": false, "tell_at": null, "told_at": "2026-11-16T03:07:36Z"}],
           "tasks": [{"id": 12, "title": "Call a friend", "detail": ""}],
           "support": {"active": true, "grace_minutes": 30},
           "journal_url": "https://example.com/doc",
@@ -379,6 +537,15 @@ final class EngineTests: XCTestCase {
         XCTAssertTrue(c.words(for: CheckinTime("21:30")!).isEmpty)
         XCTAssertEqual(c.slot("2026-11-16T16:00")?.doneSource, "written")
         XCTAssertEqual(c.slot("2026-11-16T21:30")?.willCall, true)
+        let night = c.slot("2026-11-16T21:30")
+        XCTAssertEqual(night?.callUnfinished, true)
+        XCTAssertEqual(night?.tellDate, at("2026-11-17T03:07:10Z"))
+        XCTAssertEqual(night?.alertAhead(at("2026-11-17T03:07:09Z")), true)
+        XCTAssertEqual(night?.alertAhead(at("2026-11-17T03:07:10Z")), false)
+        XCTAssertNil(night?.toldDate)
+        XCTAssertEqual(c.slot("2026-11-15T21:30")?.callOpen, true)
+        XCTAssertEqual(c.slot("2026-11-15T21:30")?.toldDate, at("2026-11-16T03:07:36Z"))
+        XCTAssertEqual(c.slot("2026-11-16T16:00")?.alertAhead(at("2026-11-16T21:00:00Z")), false)
         XCTAssertEqual(c.showWordsRightAway, false)
         XCTAssertEqual(c.downloadUrl, "https://example.com/mac")
     }
@@ -405,12 +572,48 @@ final class EngineTests: XCTestCase {
     func testEveryLineExistsInBothLanguages() {
         for lang in ["en", "es"] {
             let c = Copy(language: lang)
-            for kind in [TakeoverKind.countdown, .ringing, .late, .followUp, .missedCall, .test] {
+            for kind in [TakeoverKind.countdown, .ringing, .late, .followUp, .missedCall, .onCall, .unfinished, .test] {
                 XCTAssertFalse(c.title(kind, time: "16:00", secondsToCheckin: 42).isEmpty)
                 XCTAssertFalse(c.subtitle(kind, time: "16:00", minutesLate: 12, willCall: true, number: "+1 555 010 0000", deadline: "16:30", startedAt: "16:01").isEmpty)
             }
             for d in -3...9 { XCTAssertFalse(c.line(day: d).isEmpty) }
             XCTAssertFalse(c.why.contains("!"))
+            for missed in [true, false] {
+                let warning = c.alertAhead(deadline: "16:37", missed: missed)
+                XCTAssertTrue(warning.contains("16:37"), lang)
+                // Two lines, so the panel stays narrow.
+                XCTAssertEqual(warning.split(separator: "\n").count, 2, lang)
+            }
+            XCTAssertNotEqual(c.alertAhead(deadline: "16:37", missed: true), c.alertAhead(deadline: "16:37", missed: false))
+            XCTAssertFalse(c.gotIt.isEmpty)
+            XCTAssertNotEqual(c.soundHint(call: true), c.soundHint(call: false))
         }
+    }
+
+    func testACallThatDidNotCountNeverPromisesMoreThanSamwiseDoes() {
+        let c = Copy(language: "en")
+        let number = "+1 555 010 0000"
+        // Ahead: the hour, and the way to stop it.
+        let ahead = c.subtitle(.unfinished, time: "16:00", minutesLate: 8, willCall: true, number: number, deadline: "16:37", startedAt: nil)
+        XCTAssertTrue(ahead.contains("at about 16:37"))
+        XCTAssertTrue(ahead.contains("trusted people"))
+        XCTAssertTrue(ahead.contains(number))
+        // Told: said as a fact, with the hour it happened.
+        let told = c.subtitle(.unfinished, time: "16:00", minutesLate: 40, willCall: true, number: number, deadline: nil, startedAt: nil, toldAt: "16:37")
+        XCTAssertTrue(told.contains("called your trusted people at 16:37"))
+        // Still ahead for a second call: what is coming is said first.
+        let both = c.subtitle(.unfinished, time: "16:00", minutesLate: 40, willCall: true, number: number, deadline: "17:05", startedAt: nil, toldAt: "16:37")
+        XCTAssertTrue(both.contains("at about 17:05"))
+        // Nobody to tell: trusted people are not mentioned at all.
+        let alone = c.subtitle(.unfinished, time: "16:00", minutesLate: 8, willCall: true, number: number, deadline: nil, startedAt: nil)
+        XCTAssertFalse(alone.contains("trusted people"))
+        XCTAssertTrue(alone.contains(number))
+        // While the call is open the Mac does not tell someone who is on it to call Samwise "now".
+        let onCall = c.subtitle(.onCall, time: "16:00", minutesLate: 3, willCall: true, number: number, deadline: "16:30", startedAt: nil)
+        XCTAssertFalse(onCall.contains("Call Samwise now"))
+        XCTAssertTrue(onCall.contains("stays quiet"))
+        // The sound hint mentions Samwise's call only for someone Samwise phones.
+        XCTAssertFalse(c.soundHint(call: false).contains("Samwise"))
+        XCTAssertTrue(c.soundHint(call: true).contains("Samwise's call"))
     }
 }
