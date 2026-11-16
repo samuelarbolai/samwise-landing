@@ -1,0 +1,33 @@
+2026-11-16T23:22:33Z launch 1.0.4 
+2026-11-16T23:22:34Z launch 1.0.4 --launchd
+2026-11-16T23:22:34Z stepping aside for the kept-alive copy
+2026-11-16T23:22:34Z agent: install ok
+2026-11-16T23:22:34Z start: not connected, Next check-in: tomorrow 16:00
+2026-11-16T23:22:34Z start: not connected, Next check-in: tomorrow 16:00
+2026-11-16T23:22:45Z hook: paircode
+2026-11-16T23:22:46Z pair: HTTP 401
+2026-11-16T23:22:47Z hook: paircode
+2026-11-16T23:22:47Z schedule: account|America/Los_Angeles|15:34,21:30
+2026-11-16T23:22:47Z connected to a Samwise account
+2026-11-16T23:22:47Z awake: 1
+2026-11-16T23:33:00Z event: fired 2026-11-16T15:34 late_seconds=0
+2026-11-16T23:33:00Z takeover: on 1 display(s)
+2026-11-16T23:33:00Z awake: 2
+2026-11-16T23:33:03Z hook: key
+2026-11-16T23:33:06Z hook: key
+2026-11-16T23:33:07Z hook: type
+2026-11-16T23:33:07Z event: committed 2026-11-16T15:34 seconds_on_screen=7
+2026-11-16T23:33:07Z takeover: off
+2026-11-16T23:33:07Z awake: 1
+2026-11-16T23:33:33Z event: done 2026-11-16T15:34 source=samwise_entry visible=1
+2026-11-16T23:33:33Z awake: 0
+2026-11-16T23:33:35Z hook: taskdone
+2026-11-16T23:33:45Z hook: poll
+2026-11-16T23:33:55Z hook: disconnect
+2026-11-16T23:33:55Z disconnected
+2026-11-16T23:33:55Z schedule: local|GMT|16:00
+2026-11-16T23:33:56Z hook: keeprunning
+2026-11-16T23:33:57Z launch 1.0.4 --replace
+2026-11-16T23:33:57Z agent: removed
+2026-11-16T23:33:57Z start: not connected, Next check-in: tomorrow 16:00
+2026-11-16T23:34:00Z hook: quit

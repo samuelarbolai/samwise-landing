@@ -1,0 +1,77 @@
+== A. samwise.life from this Mac (https://www.samwise.life) ==
+PASS  the download page opens
+PASS  it is the Samwise for Mac page
+PASS  samwise.life/mac without www lands on the same page
+PASS  the download link points at the disk image
+PASS  a browser that asks for the download is sent to the steps page
+PASS  the Download buttons lead to the steps page
+PASS  the download page says it is a beta to open only if you trust Samwise
+PASS  the steps page opens
+PASS  on a phone the steps page starts no download and says the file is for a Mac
+PASS  the steps page has: Your Mac will stop Samwise the first time
+PASS  the steps page has: Only do that if you trust Samwise
+PASS  the steps page has: Not Opened
+PASS  the steps page has: Privacy &amp; Security
+PASS  the steps page has: Open Anyway
+PASS  the steps page has: Move to Trash
+PASS  the steps page has: Your download has started
+PASS  the steps page has: /download/mac?from=open
+PASS  the steps page shows 4 pictures
+PASS  the picture /mac/open-anyway.png is served
+PASS  the picture /mac/open-disk-image.png is served
+PASS  the picture /mac/open-not-opened.png is served
+PASS  the picture /mac/open-question.png is served
+note  download: 200 application/x-apple-diskimage 1280109
+PASS  the disk image downloads
+PASS  its SHA-256 is the one printed on the page
+PASS  macOS accepts the disk image
+PASS  the installer script is served
+PASS  it is the whole script
+PASS  the schedule is refused without a connected Mac
+PASS  answers are marked never to be stored
+PASS  a made-up token is refused
+PASS  events from a made-up token are refused
+PASS  a wrong pairing code is refused
+PASS  a code for a number without an account is refused
+PASS  asking a code for a number without an account answers like any other
+PASS  and takes its time (1.991173s), so the wait says nothing
+PASS  a number that is too short is refused with a reason
+== B. The one-line install ==
+PASS  curl ... install.sh | bash ran
+PASS  it says this is a beta to install only if you trust Samwise
+PASS  Samwise.app is in Applications
+PASS  its signature is intact
+PASS  macOS runs the kept-alive copy
+PASS  it starts without an account
+== C. Connecting the test account ==
+note  WhatsApp-code way not checked in this run (no TEST_PHONE and TEST_OTP)
+PASS  a wrong pairing code is refused
+PASS  the pairing code connects this Mac
+PASS  connected
+PASS  the account's first name arrives
+PASS  the account's after-check-in list arrives
+note  menu line: Next check-in: today 15:34 (Los Angeles)
+PASS  no connection problem is shown
+PASS  for each check-in the site says whether Samwise's call is open, whether it counted and when the trusted people are told (6 check-ins, missing: none, nothing to warn about: True)
+== D. The account's check-in time, on the real clock ==
+PASS  the small countdown comes up for the account's check-in time
+PASS  one minute before, the screen is taken
+note  check-in 2026-11-16T15:34, screen says: Your check-in is in 1:00. / Wrap up. It starts at 15:34.
+PASS  no phone call is promised (this account has no trusted people, so Samwise does not call it)
+PASS  the account's own opening words arrived
+PASS  they stay hidden at first
+PASS  Tab shows them
+PASS  Tab hides them again
+PASS  typing the line gives the screen back
+PASS  and opens the journal at this check-in's tab
+note  waiting for Samwise to count the check-in (a written entry is added to the test account now)
+PASS  when Samwise counts the check-in, the alarm ends on its own
+PASS  the after-check-in card opens
+PASS  the menu moves on to the check-in after this one (Next check-in: today 21:30 (Los Angeles))
+PASS  the card names the check-in after this one too (today 21:30 (Los Angeles))
+PASS  ticking a task is saved by Samwise: its next answer has one task less
+PASS  everything the alarm did was reported to Samwise
+== E. Clean up ==
+PASS  the Mac is disconnected
+PASS  keep running is turned off
+== 0 failed ==
