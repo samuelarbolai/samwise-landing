@@ -76,8 +76,15 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
 
     var isPaused: Bool { store.data.pausedUntil.map { clock.now < $0 } ?? false }
 
-    private var journalURL: URL? {
-        guard paired, let text = config?.journalUrl, let url = URL(string: text), url.scheme == "https" else { return nil }
+    /// The user's journal: the tab for that check-in when Samwise knows it, otherwise the journal itself.
+    private func journalURL(for id: String? = nil) -> URL? {
+        guard paired, let cfg = config else { return nil }
+        var text = cfg.journalUrl
+        if let id = id, let time = occurrences[id]?.time,
+           let own = cfg.checkins?.first(where: { CheckinTime($0.time) == time })?.journalUrl {
+            text = own
+        }
+        guard let t = text, let url = URL(string: t), url.scheme == "https" else { return nil }
         return url
     }
 
@@ -144,6 +151,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
 
         buildStatusItem()
         observe()
+        if !options.launchd && !options.noAgent && store.data.welcomed && settings.keepRunning && Agent.isStableLocation {
+            // launchd starts the kept-alive copy, which then asks this one to step aside (yieldRequested).
+            Agent.install()
+        }
         activity = ProcessInfo.processInfo.beginActivity(options: [.userInitiatedAllowingIdleSystemSleep], reason: "Check-in alarm clock")
 
         let t = Timer(timeInterval: 1, target: self, selector: #selector(timerFired), userInfo: nil, repeats: true)
@@ -187,7 +198,7 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
 
     /// The kept-alive copy started: this copy saves and steps aside.
     @objc private func yieldRequested() {
-        guard !options.launchd, !store.frozen else { return }
+        guard !options.launchd, !options.noAgent, !store.frozen else { return }
         Log.write("stepping aside for the kept-alive copy")
         store.save()
         store.frozen = true
@@ -209,23 +220,35 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     }
 
     var canQuit: Bool { allowQuit || !takeover.isUp }
+    private var ticks = 0
+    private var lastOpened = ""
+
+    /// Opens a link (journal, phone call, WhatsApp, download page). The end-to-end test only records it.
+    private func openLink(_ url: URL) {
+        lastOpened = url.absoluteString
+        if !options.testHooks { NSWorkspace.shared.open(url) }
+    }
 
     // MARK: The loop
 
     func tick() {
         guard !store.frozen else { return }
         if options.testHooks { readCommands() }
+        ticks += 1
+        if options.launchd && ticks % 5 == 0 && !Agent.otherInstances().isEmpty {
+            // Only one copy may run the alarm. A plain copy that is still around is asked again to step aside.
+            Agent.post(Agent.yieldName)
+        }
         let now = clock.now
         let s = settings
         noteScheduleChange()
 
-        var list: [Occurrence] = []
-        if store.data.welcomed {
-            let window = TimeInterval(max(600, s.lateWindowSeconds))
-            let since = store.data.activeSince ?? now
-            list = ScheduleMath.occurrences(times: times, timeZone: timeZone, from: now.addingTimeInterval(-window - 3600), to: now.addingTimeInterval(26 * 3600))
-                .filter { $0.fireAt >= since || store.data.states[$0.id] != nil }
-        }
+        // The alarm works from the first launch, even while the welcome window is still open.
+        // Check-ins from before the app was first opened (or before the schedule changed) never fire late.
+        let window = TimeInterval(max(600, s.lateWindowSeconds))
+        let since = store.data.activeSince ?? now
+        let list = ScheduleMath.occurrences(times: times, timeZone: timeZone, from: now.addingTimeInterval(-window - 3600), to: now.addingTimeInterval(26 * 3600))
+            .filter { $0.fireAt >= since || store.data.states[$0.id] != nil }
         occurrences = [:]
         for o in list { occurrences[o.id] = o }
 
@@ -300,6 +323,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             }
             fill(id: id, kind: kind, now: now)
             takeover.show()
+            if !wasUp && kind != .test {
+                // What Samwise checks every day: the alarm was really put on screen, and on how many displays.
+                queue("shown", occurrence: id, detail: ["screens": String(takeover.screenCount), "kind": kind.rawValue])
+            }
             // The hint depends on who has the keyboard, which is only known once the alarm is on screen.
             let hint = takeoverHint()
             if hint != takeover.model.hint {
@@ -565,9 +592,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         if e.kind == "test_done" {
             transient = (c.testDonePill, Date().addingTimeInterval(7))
         } else if let url = url {
-            NSWorkspace.shared.open(url)
-        } else if settings.openJournalOnStart, let journal = journalURL {
-            NSWorkspace.shared.open(journal)
+            openLink(url)
+        } else if settings.openJournalOnStart, let journal = journalURL(for: id) {
+            openLink(journal)
         }
         store.save()
         tick()
@@ -709,7 +736,6 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     func welcomeFinished() {
         guard !store.data.welcomed else { return }
         store.data.welcomed = true
-        store.data.activeSince = clock.now
         store.save()
         Log.write("welcome done")
         if settings.keepRunning && !options.noAgent && Agent.isStableLocation {
@@ -1036,8 +1062,8 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         }
         menu.addItem(.separator())
         item(c.testAlarm) { [weak self] in self?.startTest() }
-        if let url = journalURL {
-            item(c.openJournal) { NSWorkspace.shared.open(url) }
+        if let url = journalURL() {
+            item(c.openJournal) { [weak self] in self?.openLink(url) }
         }
         if usesAccount, !(config?.tasks ?? []).isEmpty {
             item(c.afterMenu) { [weak self] in self?.showAfterCard() }
@@ -1050,7 +1076,7 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             item(c.pause) { [weak self] in self?.windows.showPause() }
         }
         if let latest = config?.latestVersion, isVersion(latest, newerThan: appVersion), let text = config?.downloadUrl, let url = URL(string: text) {
-            item(c.updateAvailable) { NSWorkspace.shared.open(url) }
+            item(c.updateAvailable) { [weak self] in self?.openLink(url) }
         }
         if !options.launchd {
             menu.addItem(.separator())
@@ -1123,6 +1149,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         case "disconnect": disconnect()
         case "taskdone":
             if let first = config?.tasks?.first { markTaskDone(first.id) }
+        case "keeprunning":
+            setKeepRunning(value == "on")
+        case "welcomedone":
+            welcomeFinished()
         case "quit":
             allowQuit = true
             store.save()
@@ -1154,6 +1184,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             "hook_result": hookResult,
             "problem": connectionProblem ?? "",
             "name": config?.user?.firstName ?? "",
+            "opened": lastOpened,
+            "launchd": options.launchd,
+            "pid": Int(ProcessInfo.processInfo.processIdentifier),
+            "agent": Agent.isInstalled,
         ]
         switch desired {
         case .idle:

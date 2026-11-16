@@ -108,9 +108,12 @@ public struct RemoteCheckin: Codable, Equatable {
     public var time: String
     /// The user's own journal text for this time of day, one block per part.
     public var words: [RemoteWords]?
-    public init(time: String, words: [RemoteWords]? = nil) {
+    /// Where this check-in's written part lives (the right tab of the user's journal), when they have one.
+    public var journalUrl: String?
+    public init(time: String, words: [RemoteWords]? = nil, journalUrl: String? = nil) {
         self.time = time
         self.words = words
+        self.journalUrl = journalUrl
     }
 }
 

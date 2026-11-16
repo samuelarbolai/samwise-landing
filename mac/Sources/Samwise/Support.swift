@@ -24,7 +24,13 @@ struct Options {
     var send: String?
     var renderIcon: String?
 
-    static func parse(_ args: [String]) -> Options {
+    /// Flags come from the command line, plus SAMWISE_FLAGS in the environment. The second way exists so the
+    /// end-to-end test can drive the copy that launchd starts (which always gets the same fixed arguments).
+    static func parse(_ arguments: [String]) -> Options {
+        var args = arguments
+        if let extra = ProcessInfo.processInfo.environment["SAMWISE_FLAGS"] {
+            args += extra.split(separator: " ").map(String.init)
+        }
         var o = Options()
         var i = 1
         func value() -> String? {

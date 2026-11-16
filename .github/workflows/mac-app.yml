@@ -8,6 +8,7 @@ on:
     branches: [mac-checkin-alarm]
     paths:
       - "mac/**"
+      - "public/mac/install.sh"
       - ".github/workflows/mac-app.yml"
   workflow_dispatch:
 

@@ -106,8 +106,9 @@ final class PhraseBox: NSView {
         let y = bounds.midY - h / 2
         p.typed.draw(at: NSPoint(x: x, y: y))
         p.rest.draw(at: NSPoint(x: x + typedSize.width, y: y))
+        // The caret sits just before the next letter to type, never on top of it.
         Theme.gold.setFill()
-        NSRect(x: x + typedSize.width, y: y + 2, width: 3, height: h - 4).fill()
+        NSRect(x: x + typedSize.width - (typedLetters == 0 ? 7 : 1), y: y + 2, width: 3, height: h - 4).fill()
     }
 }
 
@@ -236,7 +237,7 @@ final class TakeoverView: NSView {
         set(wordsHint, model.wordsHint, font: Theme.sans(13 * k), color: Theme.inkFaint)
         wordsScroll.isHidden = !showingWords
         if showingWords {
-            let key = model.words.map { $0.title + "\u{1}" + $0.body }.joined(separator: "\u{2}") + "|\(k)"
+            let key = model.words.map { $0.title + "\u{1}" + $0.body }.joined(separator: "\u{2}") + "|\(k)|" + model.wordsTitle
             if key != lastWordsKey {
                 lastWordsKey = key
                 wordsText.textStorage?.setAttributedString(wordsString(k))
@@ -289,11 +290,16 @@ final class TakeoverView: NSView {
         let body = NSMutableParagraphStyle()
         body.lineHeightMultiple = 1.2
         body.paragraphSpacing = 16
-        for w in model.words {
-            if !w.title.isEmpty {
-                out.append(NSAttributedString(string: w.title.uppercased() + "\n", attributes: [.font: Theme.sans(11.5 * k, .bold), .foregroundColor: Theme.forest, .kern: 1.3, .paragraphStyle: head]))
+        let last = NSMutableParagraphStyle()
+        last.lineHeightMultiple = 1.2
+        for (i, w) in model.words.enumerated() {
+            // Words without a heading of their own (the person's opening words) get the general one.
+            let heading = w.title.isEmpty ? (i == 0 ? model.wordsTitle : "") : w.title
+            if !heading.isEmpty {
+                out.append(NSAttributedString(string: heading.uppercased() + "\n", attributes: [.font: Theme.sans(11.5 * k, .bold), .foregroundColor: Theme.forest, .kern: 1.3, .paragraphStyle: head]))
             }
-            out.append(NSAttributedString(string: w.body.trimmingCharacters(in: .whitespacesAndNewlines) + "\n", attributes: [.font: Theme.serif(19 * k), .foregroundColor: Theme.ink, .paragraphStyle: body]))
+            let isLast = i == model.words.count - 1
+            out.append(NSAttributedString(string: w.body.trimmingCharacters(in: .whitespacesAndNewlines) + (isLast ? "" : "\n"), attributes: [.font: Theme.serif(19 * k), .foregroundColor: Theme.ink, .paragraphStyle: isLast ? last : body]))
         }
         return out
     }
@@ -426,6 +432,7 @@ final class TakeoverPresenter {
     private var screenKey = ""
 
     var isUp: Bool { !panels.isEmpty }
+    var screenCount: Int { panels.count }
 
     private func currentScreenKey() -> String {
         NSScreen.screens.map { NSStringFromRect($0.frame) }.joined(separator: "|")

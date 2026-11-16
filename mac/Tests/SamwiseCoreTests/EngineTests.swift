@@ -319,6 +319,37 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(c.journalUrl, "https://example.com/doc")
     }
 
+    /// The exact shape samwise.life sends (lib/mac/server.ts): opening words without a title, a journal tab per check-in.
+    func testConfigDecodesWhatSamwiseLifeSends() throws {
+        let json = """
+        {
+          "user": {"first_name": "Alex", "language": "en", "timezone": "America/Bogota"},
+          "checkins": [{"time": "16:00", "words": [{"title": "", "body": "My opening words."}], "journal_url": "https://example.com/doc?tab=t.1"},
+                       {"time": "21:30", "words": [], "journal_url": null}],
+          "slots": [{"id": "2026-11-16T16:00", "done": true, "done_source": "written", "will_call": false, "call_placed": false, "call_missed": false},
+                    {"id": "2026-11-16T21:30", "done": false, "done_source": null, "will_call": true, "call_placed": false, "call_missed": false}],
+          "tasks": [{"id": 12, "title": "Call a friend", "detail": ""}],
+          "support": {"active": true, "grace_minutes": 30},
+          "journal_url": "https://example.com/doc",
+          "samwise_number": "+1 555 010 0000",
+          "latest_version": "1.0.0",
+          "download_url": "https://example.com/mac",
+          "show_words_right_away": false
+        }
+        """
+        let c = try RemoteConfig.decode(Data(json.utf8))
+        XCTAssertEqual(c.checkinTimes.map { $0.description }, ["16:00", "21:30"])
+        XCTAssertEqual(c.checkins?.first?.journalUrl, "https://example.com/doc?tab=t.1")
+        XCTAssertNil(c.checkins?.last?.journalUrl)
+        XCTAssertEqual(c.words(for: CheckinTime("16:00")!).first?.title, "")
+        XCTAssertEqual(c.words(for: CheckinTime("16:00")!).first?.body, "My opening words.")
+        XCTAssertTrue(c.words(for: CheckinTime("21:30")!).isEmpty)
+        XCTAssertEqual(c.slot("2026-11-16T16:00")?.doneSource, "written")
+        XCTAssertEqual(c.slot("2026-11-16T21:30")?.willCall, true)
+        XCTAssertEqual(c.showWordsRightAway, false)
+        XCTAssertEqual(c.downloadUrl, "https://example.com/mac")
+    }
+
     func testOldSettingsFileStillLoads() throws {
         let s = try JSONDecoder().decode(AlarmSettings.self, from: Data("{\"snoozeMinutes\": 3}".utf8))
         XCTAssertEqual(s.snoozeMinutes, 3)

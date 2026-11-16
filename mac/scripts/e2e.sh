@@ -208,10 +208,10 @@ write_config() { # done done_source call_placed call_missed
   cat > "$M/config.json" <<JSON
 {
   "user": {"first_name": "Alex", "language": "en", "timezone": "America/Bogota"},
-  "checkins": [{"time": "16:00", "words": [
-    {"title": "Why I do this", "body": "I do this every day because the afternoon is where I lose the thread. Ten minutes here and the rest of the day is mine."},
-    {"title": "What I want today", "body": "One clear thing done before dinner. A walk. A real conversation."}
+  "checkins": [{"time": "16:00", "journal_url": "https://example.com/journal?tab=t.midday", "words": [
+    {"title": "", "body": "I do this every day because the afternoon is where I lose the thread. Ten minutes here and the rest of the day is mine.\n\nOne clear thing done before dinner. A walk. A real conversation."}
   ]}],
+  "journal_url": "https://example.com/journal",
   "slots": [{"id": "$ID", "done": $1, "done_source": $2, "will_call": true, "call_placed": $3, "call_missed": $4}],
   "tasks": [{"id": 1, "title": "Call a friend", "detail": "Ask how the week went."}, {"id": 2, "title": "Book the visit", "detail": null}],
   "support": {"active": true, "grace_minutes": 30},
@@ -252,6 +252,7 @@ cmd "$S4" "key:tab"
 expect "Tab hides them again" "$S4" words_shown False
 cmd "$S4" "type:I am doing my check-in now"
 expect "typing the line gives the screen back" "$S4" desired inProgress
+expect_contains "and opens the journal at the tab for this check-in" "$S4" opened "tab=t.midday"
 write_config false null true true
 cmd "$S4" "poll"
 expect "a missed call takes the screen again" "$S4" kind missedCall 20
@@ -267,7 +268,7 @@ expect "the after-check-in card opens" "$S4" windows True
 shot 25-after-check-in
 cmd "$S4" "taskdone"
 sleep 26
-for kind in paired fired committed call_missed_seen done task_done; do
+for kind in paired shown fired committed call_missed_seen done task_done; do
   if grep -q "\"kind\": \"$kind\"" "$M/requests.jsonl" 2>/dev/null; then say "PASS  Samwise was told: $kind"; else say "FAIL  Samwise was not told: $kind"; FAILS=$((FAILS + 1)); fi
 done
 if grep -q '"path": "/api/mac/tasks/done"' "$M/requests.jsonl" 2>/dev/null; then say "PASS  ticking a task reaches Samwise"; else say "FAIL  ticking a task did not reach Samwise"; FAILS=$((FAILS + 1)); fi
@@ -289,8 +290,106 @@ expect "no alarm window" "$S5" takeover False
 stop "$S5" "$P5"
 kill "$MOCK" 2>/dev/null || true
 
+# ───────────────────────── 6. Over a full-screen app ─────────────────────────
+say "== 6. Over a full-screen app =="
+NOTE="$WORK/working.txt"
+echo "Deep in work. This window is full screen." > "$NOTE"
+open -a TextEdit "$NOTE"
+sleep 4
+osascript -e 'tell application "System Events" to tell process "TextEdit" to set value of attribute "AXFullScreen" of window 1 to true' >/dev/null 2>&1
+sleep 4
+FULL="$(osascript -e 'tell application "System Events" to tell process "TextEdit" to get value of attribute "AXFullScreen" of window 1' 2>/dev/null)"
+say "note  TextEdit is full screen: ${FULL:-unknown}"
+shot 30-full-screen-app-before
+S6="$WORK/s6"
+P6="$(launch "$S6" "${TODAY}T15:59:30Z" --mute)"
+expect "the alarm takes the screen over a full-screen app" "$S6" desired takeover 20
+expect "and it has the keyboard there" "$S6" keyboard True
+shot 31-over-full-screen-app
+keys "$S6" "i am doing my check-in now" desired inProgress
+expect "typing the line gives the screen back" "$S6" desired inProgress
+sleep 2
+FRONT="$(osascript -e 'tell application "System Events" to get name of first process whose frontmost is true' 2>/dev/null)"
+if [ "$FRONT" = "TextEdit" ]; then say "PASS  the app you were working in is in front again"; else say "note  app in front after the alarm: ${FRONT:-unknown}"; fi
+LEAK="$(osascript -e 'tell application "TextEdit" to get text of document 1' 2>/dev/null)"
+case "$LEAK" in
+  *"doing my"*) say "FAIL  typed letters leaked into the app underneath"; FAILS=$((FAILS + 1)) ;;
+  *"Deep in work"*) say "PASS  nothing typed on the alarm reached the app underneath" ;;
+  *) say "note  could not read the document underneath to check for leaked letters" ;;
+esac
+shot 32-back-to-work
+stop "$S6" "$P6"
+osascript -e 'tell application "TextEdit" to quit saving no' >/dev/null 2>&1 || true
+sleep 1
+pkill -x TextEdit 2>/dev/null || true
+
+# ───────────────────────── 7. Screenshots and screen sharing ─────────────────────────
+say "== 7. Screen capture =="
+S7="$WORK/s7"
+mkdir -p "$S7"
+TZ=UTC "$BIN" --no-agent --state-dir "$S7" --test-hooks --no-welcome --mute --fake-now "${TODAY}T15:59:30Z" >> "$S7/stderr.log" 2>&1 &
+P7=$!
+expect "the alarm is on screen (capture not allowed this time)" "$S7" desired takeover 20
+shot 33-what-a-screen-recording-sees
+cmd "$S7" "type:i choose to skip this check-in"
+expect "skip clears it" "$S7" desired idle
+stop "$S7" "$P7"
+
+# ───────────────────────── 8. One-line install, kept running by macOS ─────────────────────────
+say "== 8. Installed in Applications and kept running by macOS =="
+VERSION="$(cat VERSION)"
+DMG="$PWD/$OUT/Samwise-$VERSION.dmg"
+HOMEDIR="$HOME/Library/Application Support/Samwise"
+LABEL="life.samwise.mac"
+DOMAIN="gui/$(id -u)"
+rm -rf "$HOMEDIR"
+mkdir -p "$HOMEDIR"
+# Welcome already done, sound off, and a check-in a few minutes from now on this Mac's real clock.
+AT="$(date -v+3M -v+30S +%H:%M)"
+cat > "$HOMEDIR/state.json" <<JSON
+{"welcomed": true, "settings": {"localTimes": ["$AT"], "keepRunning": true, "sound": "off"}}
+JSON
+launchctl setenv SAMWISE_FLAGS "--test-hooks --allow-capture --mute"
+if SAMWISE_DMG_URL="file://$DMG" bash ../public/mac/install.sh > "$WORK/install.log" 2>&1; then
+  say "PASS  the one-line installer ran"
+else
+  say "FAIL  the one-line installer failed: $(tail -3 "$WORK/install.log" | tr '\n' ' ')"
+  FAILS=$((FAILS + 1))
+fi
+if [ -d "/Applications/Samwise.app" ]; then say "PASS  Samwise.app is in Applications"; else say "FAIL  Samwise.app is not in Applications"; FAILS=$((FAILS + 1)); fi
+expect "macOS runs the kept-alive copy" "$HOMEDIR" launchd True 40
+sleep 4
+COUNT="$(pgrep -x Samwise | wc -l | tr -d ' ')"
+if [ "$COUNT" = "1" ]; then say "PASS  exactly one copy is running"; else say "FAIL  $COUNT copies are running"; FAILS=$((FAILS + 1)); fi
+if launchctl print "$DOMAIN/$LABEL" >/dev/null 2>&1; then say "PASS  the keep-running agent is loaded"; else say "FAIL  the keep-running agent is not loaded"; FAILS=$((FAILS + 1)); fi
+expect "the real clock brings the small countdown" "$HOMEDIR" desired headsUp 90
+shot 34-installed-heads-up
+expect "and one minute before the time, the alarm" "$HOMEDIR" desired takeover 240
+shot 35-installed-alarm
+OLD="$(status "$HOMEDIR" pid)"
+kill -9 "$OLD" 2>/dev/null
+rm -f "$HOMEDIR/status.json"
+expect "killed with the alarm up: macOS reopens it and the alarm is back" "$HOMEDIR" desired takeover 60
+NEW="$(status "$HOMEDIR" pid)"
+if [ -n "$NEW" ] && [ "$NEW" != "$OLD" ]; then say "PASS  it is a new process started by macOS"; else say "FAIL  no new process after the kill"; FAILS=$((FAILS + 1)); fi
+cmd "$HOMEDIR" "type:i choose to skip this check-in"
+expect "the skip line still clears it" "$HOMEDIR" desired idle
+cmd "$HOMEDIR" "keeprunning:off"
+expect "turning Keep running off leaves a plain copy" "$HOMEDIR" launchd False 40
+sleep 3
+if launchctl print "$DOMAIN/$LABEL" >/dev/null 2>&1; then say "FAIL  the agent is still loaded after turning it off"; FAILS=$((FAILS + 1)); else say "PASS  the agent is gone after turning it off"; fi
+if [ -f "$HOME/Library/LaunchAgents/$LABEL.plist" ]; then say "FAIL  the agent file is still there"; FAILS=$((FAILS + 1)); else say "PASS  the agent file is removed"; fi
+COUNT="$(pgrep -x Samwise | wc -l | tr -d ' ')"
+if [ "$COUNT" = "1" ]; then say "PASS  one plain copy keeps running"; else say "FAIL  $COUNT copies are running after turning it off"; FAILS=$((FAILS + 1)); fi
+cmd "$HOMEDIR" "quit"
+sleep 3
+pkill -x Samwise 2>/dev/null || true
+launchctl unsetenv SAMWISE_FLAGS
+cp "$HOMEDIR/samwise.log" "$OUT/s8.app.log" 2>/dev/null || true
+cp "$WORK/install.log" "$OUT/s8.install.log" 2>/dev/null || true
+
 # Keep the app's own logs with the results (they hold no personal data).
-for d in s1 s2 s3 s4 s5; do
+for d in s1 s2 s3 s4 s5 s6 s7; do
   [ -f "$WORK/$d/samwise.log" ] && cp "$WORK/$d/samwise.log" "$OUT/$d.app.log"
   [ -f "$WORK/$d/stderr.log" ] && cp "$WORK/$d/stderr.log" "$OUT/$d.stderr.log"
 done

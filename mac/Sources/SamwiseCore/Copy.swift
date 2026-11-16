@@ -291,8 +291,8 @@ public struct Copy {
     public var sending: String { t("Sending…", "Enviando…") }
     public var connecting: String { t("Connecting…", "Conectando…") }
     public var codeSent: String {
-        t("If that number has a Samwise account, the code is on its way to WhatsApp. It works for 10 minutes.",
-          "Si ese número tiene cuenta de Samwise, el código va en camino a WhatsApp. Sirve por 10 minutos.")
+        t("If that number has a Samwise account, the code is on its way to WhatsApp. It works for 10 minutes. No code after a minute? Check the number and send it again.",
+          "Si ese número tiene cuenta de Samwise, el código va en camino a WhatsApp. Sirve por 10 minutos. ¿No llega en un minuto? Revisa el número y envíalo de nuevo.")
     }
     public var pairCodeBody: String { t("Or use a pairing code, if Samwise gave you one:", "O usa un código de enlace, si Samwise te dio uno:") }
     public var pairCodePlaceholder: String { t("Pairing code", "Código de enlace") }

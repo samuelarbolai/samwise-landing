@@ -119,29 +119,48 @@ final class Form {
         if let last = stack.arrangedSubviews.last { stack.setCustomSpacing(gap, after: last) }
     }
 
+    /// Builds the window around the form. A form taller than the screen scrolls instead of running off it.
     func window(title: String) -> NSWindow {
-        let content = NSView()
+        let content = FlippedView()
         content.addSubview(stack)
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: content.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor),
             stack.topAnchor.constraint(equalTo: content.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: content.bottomAnchor),
             stack.widthAnchor.constraint(equalToConstant: width + 60),
         ])
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: width + 60, height: 300), styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
+        stack.layoutSubtreeIfNeeded()
+        let natural = stack.fittingSize
+        content.frame = NSRect(origin: .zero, size: natural)
+
+        let scroll = NSScrollView()
+        scroll.drawsBackground = false
+        scroll.borderType = .noBorder
+        scroll.hasVerticalScroller = true
+        scroll.hasHorizontalScroller = false
+        scroll.autohidesScrollers = true
+        scroll.automaticallyAdjustsContentInsets = false
+        scroll.verticalScrollElasticity = .none
+        scroll.documentView = content
+
+        let room = max(320, (NSScreen.main?.visibleFrame.height ?? 800) - 48)
+        let size = NSSize(width: natural.width, height: min(natural.height, room))
+        let w = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
         w.title = title
         w.titlebarAppearsTransparent = true
         w.titleVisibility = .hidden
         w.isReleasedWhenClosed = false
         w.appearance = NSAppearance(named: .aqua)
         w.backgroundColor = Theme.bg
-        w.contentView = content
-        content.layoutSubtreeIfNeeded()
-        w.setContentSize(content.fittingSize)
+        w.contentView = scroll
+        w.setContentSize(size)
         w.center()
         return w
     }
+}
+
+/// A plain container whose content starts at the top, so a long form opens scrolled to its beginning.
+final class FlippedView: NSView {
+    override var isFlipped: Bool { true }
 }
 
 /// The app's ordinary windows: welcome, settings, connect, pause, and "after your check-in".

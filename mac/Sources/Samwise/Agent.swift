@@ -109,10 +109,8 @@ enum Agent {
             post(showName)
             return false
         }
-        if store.data.welcomed && store.data.settings.keepRunning && isStableLocation {
-            // launchd starts the kept-alive copy, which then asks this one to step aside.
-            install()
-        }
+        // The keep-running agent is installed later, in AppController.start(), once this copy is listening
+        // for the kept-alive copy's request to step aside.
         return true
     }
 }
