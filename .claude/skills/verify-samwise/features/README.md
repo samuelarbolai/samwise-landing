@@ -11,6 +11,7 @@ One file per user-facing feature: what it is, how a user reaches it, how to driv
 | [Telnyx webhook filter](telnyx-webhook-filter.md) | samwise.life `/api/hooks/telnyx` (protects the n8n budget) | Vercel runtime logs + n8n executions; local POST | yes | 2026-11-15 PASS (local: non-received event + invalid JSON) |
 | Landing page | samwise.life `/` | Vercel `web_fetch_vercel_url` | yes | 2026-11-15 PASS (prod: 200, title, CTAs `/v2/signup?src=landing`) |
 | Clinician plan pages | `/v2/signup?role=clinician`, `/p/<code>` (see [signup.md](signup.md)) | Vercel fetch + Neon | pages: yes; sign-up sends a code | 2026-11-15 PASS (prod pages; bad code shows "no longer active") |
+| [Self-improvement loop](self-improvement.md) | n8n + Neon (no user surface) | n8n dry runs + Neon `samwise_loop_health_checks()` | yes (dry runs; one Prompt Check case costs about $0.23) | 2026-11-16 FAIL at stages 4-5 (stalled), rules added |
 
 ## Failure rules
 Every live feature has a failure rule in Samwise Health Check `n0c7zZBjAk5fwx8P` (daily 21:30 Bogota). The registry is `/mnt/project-files/logs/metrics.md`. A feature without a row there has no alarm: add one (skill samwise-feature-metrics) before calling it done.
