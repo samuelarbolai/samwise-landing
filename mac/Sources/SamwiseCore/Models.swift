@@ -125,23 +125,37 @@ public struct RemoteCheckin: Codable, Equatable {
 /// How one check-in stands on Samwise's side. `id` matches `Occurrence.id`.
 public struct RemoteSlot: Codable, Equatable {
     public var id: String
-    /// The check-in happened: a call that reached the person, or a written entry.
+    /// Samwise counts the check-in: a call that went well enough to count, or a written entry.
     public var done: Bool
-    /// "call" (a check-in call that reached the person) or "written" (a written entry in their journal).
+    /// "call" (a check-in call that counts) or "written" (a written entry in their journal).
     public var doneSource: String?
     /// Samwise will phone the user at this time (false when calls are paused or an entry already exists).
     public var willCall: Bool
     public var callPlaced: Bool
     /// Samwise phoned and nobody picked up.
     public var callMissed: Bool
+    /// Samwise's call for this check-in was placed and its result is not in yet: it is ringing,
+    /// under way, or ended a few minutes ago. While this is true the Mac never rings again.
+    public var callOpen: Bool
+    /// The call was answered, but Samwise does not count it as the check-in.
+    public var callUnfinished: Bool
+    /// When Samwise will tell the trusted people about this check-in, while that is still ahead (ISO 8601, about right to the minute).
+    public var tellAt: String?
+    /// When Samwise told them (ISO 8601).
+    public var toldAt: String?
 
-    public init(id: String, done: Bool = false, doneSource: String? = nil, willCall: Bool = true, callPlaced: Bool = false, callMissed: Bool = false) {
+    public init(id: String, done: Bool = false, doneSource: String? = nil, willCall: Bool = true, callPlaced: Bool = false, callMissed: Bool = false,
+                callOpen: Bool = false, callUnfinished: Bool = false, tellAt: String? = nil, toldAt: String? = nil) {
         self.id = id
         self.done = done
         self.doneSource = doneSource
         self.willCall = willCall
         self.callPlaced = callPlaced
         self.callMissed = callMissed
+        self.callOpen = callOpen
+        self.callUnfinished = callUnfinished
+        self.tellAt = tellAt
+        self.toldAt = toldAt
     }
 
     public init(from decoder: Decoder) throws {
@@ -152,6 +166,19 @@ public struct RemoteSlot: Codable, Equatable {
         willCall = (try? c.decodeIfPresent(Bool.self, forKey: .willCall)) ?? true
         callPlaced = (try? c.decodeIfPresent(Bool.self, forKey: .callPlaced)) ?? false
         callMissed = (try? c.decodeIfPresent(Bool.self, forKey: .callMissed)) ?? false
+        callOpen = (try? c.decodeIfPresent(Bool.self, forKey: .callOpen)) ?? false
+        callUnfinished = (try? c.decodeIfPresent(Bool.self, forKey: .callUnfinished)) ?? false
+        tellAt = try? c.decodeIfPresent(String.self, forKey: .tellAt)
+        toldAt = try? c.decodeIfPresent(String.self, forKey: .toldAt)
+    }
+
+    public var tellDate: Date? { tellAt.flatMap { ISO8601DateFormatter().date(from: $0) } }
+    public var toldDate: Date? { toldAt.flatMap { ISO8601DateFormatter().date(from: $0) } }
+
+    /// Samwise has not counted this check-in and is going to tell the trusted people.
+    public func alertAhead(_ now: Date) -> Bool {
+        guard !done, let t = tellDate else { return false }
+        return now < t
     }
 }
 

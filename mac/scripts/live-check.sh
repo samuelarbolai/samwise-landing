@@ -225,6 +225,30 @@ say "note  menu line: $(status next)"
 check "no connection problem is shown" "$(status problem)" ""
 shot 40-live-connected
 
+# What the site tells this Mac about each check-in (from 1.0.4): whether Samwise's call is open, whether it
+# counted, and when the trusted people are told. Only the field names are looked at, never the account's text.
+TOKEN="$(cat "$HOMEDIR/token" 2>/dev/null)"
+if [ -n "$TOKEN" ]; then
+  FACTS="$(curl -s --max-time 40 -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -A "Samwise-Mac/$(status version)" "$BASE/api/mac/config" 2>/dev/null | python3 -c '
+import json, sys
+try:
+    slots = json.load(sys.stdin).get("slots") or []
+except Exception:
+    slots = []
+want = ["done", "will_call", "call_placed", "call_open", "call_missed", "call_unfinished", "tell_at", "told_at"]
+missing = sorted({k for s in slots for k in want if k not in s})
+quiet = all(s.get("tell_at") is None and not s.get("call_open") and not s.get("call_unfinished") for s in slots)
+print("%d check-ins, missing: %s, nothing to warn about: %s" % (len(slots), ",".join(missing) or "none", quiet))
+' 2>/dev/null)"
+  case "$FACTS" in
+    "0 check-ins"*|"") fail "the site gave this Mac no check-ins to look at ($FACTS)" ;;
+    *"missing: none, nothing to warn about: True") pass "for each check-in the site says whether Samwise's call is open, whether it counted and when the trusted people are told ($FACTS)" ;;
+    *) fail "the site's answer about calls is not what 1.0.4 expects ($FACTS)" ;;
+  esac
+else
+  fail "this Mac's token could not be read, so the site's answer about calls was not checked"
+fi
+
 # ───────────────────────── D. The real schedule on the real clock ─────────────────────────
 say "== D. The account's check-in time, on the real clock =="
 if wait_for_either desired headsUp takeover 600; then

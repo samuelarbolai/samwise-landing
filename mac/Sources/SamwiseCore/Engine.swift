@@ -41,6 +41,10 @@ public struct OccurrenceState: Codable, Equatable {
     /// Times the app was restarted while this alarm was on screen. Three restarts and the app stops
     /// taking over the screen for this check-in, so a bug can never lock the Mac.
     public var relaunches: Int
+    /// The user was warned that Samwise has not counted this check-in and will tell the trusted people:
+    /// the `tellAt` that warning was about. A later call that does not count either has its own time and
+    /// its own warning. Optional, so a state file written by an older version still loads.
+    public var warnedFor: String?
 
     public init(id: String, fireAt: Date, phase: Phase = .pending, isTest: Bool = false) {
         self.id = id
@@ -61,6 +65,7 @@ public struct OccurrenceState: Codable, Equatable {
         self.finishSource = nil
         self.isTest = isTest
         self.relaunches = 0
+        self.warnedFor = nil
     }
 }
 
@@ -75,6 +80,10 @@ public enum TakeoverKind: String, Codable {
     case followUp
     /// Samwise phoned and nobody picked up.
     case missedCall
+    /// Samwise's call was placed and its result is not in yet: the person may be on it right now.
+    case onCall
+    /// The call was answered, but Samwise does not count it as the check-in.
+    case unfinished
     case test
 }
 
@@ -103,7 +112,8 @@ public struct EngineEvent: Equatable {
 public enum Engine {
     /// How long "Samwise is calling your phone now" stays the headline: the ring (30 s) plus the time to notice.
     public static let ringingSeconds: TimeInterval = 150
-    /// A key or a click quiets the ring for this long. If the screen is still taken after that, it rings again.
+    /// A key or a click quiets the ring for this long. If the screen is still taken after that, it rings again,
+    /// except while Samwise's call is ringing or under way (`RemoteSlot.callOpen`).
     public static let resoundSeconds: TimeInterval = 120
 
     /// Moves every check-in forward to `now` and says what should be on screen.
@@ -139,6 +149,19 @@ public enum Engine {
                 states[id] = s
                 events.append(EngineEvent("done", id, ["source": source, "visible": "0"]))
             }
+        }
+
+        // 1b. The user said here that the check-in is under way or done, but Samwise has not counted it
+        //     and is going to tell the trusted people. Say so once, in time, without taking the screen.
+        for (id, slot) in remote where slot.alertAhead(now) {
+            guard var s = states[id], s.warnedFor != slot.tellAt, !s.isTest else { continue }
+            let ownWord = s.phase == .committed || (s.phase == .done && (s.finishSource == "self" || s.finishSource == "unconfirmed"))
+            guard ownWord else { continue }
+            // A missed call takes the screen again below, and that screen says it.
+            if s.phase == .committed && slot.callMissed && !s.missedCallShown { continue }
+            s.warnedFor = slot.tellAt
+            states[id] = s
+            events.append(EngineEvent("alert_ahead_seen", id, ["why": slot.callMissed ? "missed" : "unfinished", "on": "panel"]))
         }
 
         // 2. Walk the check-ins in time order; the first one that needs the screen wins.
@@ -213,12 +236,23 @@ public enum Engine {
                     desired = .takeover(id: o.id, kind: kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id]))
                 }
             case .ringing:
-                if let quiet = s.silencedAt, now.timeIntervalSince(quiet) >= resoundSeconds {
+                // While Samwise's call is ringing or under way, a quieted Mac stays quiet: ringing again
+                // would interrupt the check-in itself (1.0.3 did).
+                let onCall = remote[o.id]?.callOpen ?? false
+                if !onCall, let quiet = s.silencedAt, now.timeIntervalSince(quiet) >= resoundSeconds {
                     s.silencedAt = nil
                     states[o.id] = s
                     events.append(EngineEvent("resound", o.id))
                 }
-                desired = .takeover(id: o.id, kind: kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id]))
+                let k = kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id])
+                if k == .missedCall || k == .unfinished, let slot = remote[o.id], slot.alertAhead(now), s.warnedFor != slot.tellAt {
+                    // This screen says when the trusted people are told; no second notice for the same alert after it.
+                    // Reported all the same: it is how Samwise knows the person was told in time.
+                    s.warnedFor = slot.tellAt
+                    states[o.id] = s
+                    events.append(EngineEvent("alert_ahead_seen", o.id, ["why": k == .missedCall ? "missed" : "unfinished", "on": "screen"]))
+                }
+                desired = .takeover(id: o.id, kind: k)
             case .snoozed:
                 if let until = s.snoozeUntil, now < until {
                     desired = .snoozed(id: o.id, secondsLeft: Int(until.timeIntervalSince(now).rounded(.up)))
@@ -235,6 +269,7 @@ public enum Engine {
                     s.phase = .ringing
                     s.silencedAt = nil
                     s.missedCallShown = true
+                    if slot.alertAhead(now) { s.warnedFor = slot.tellAt }
                     states[o.id] = s
                     events.append(EngineEvent("call_missed_seen", o.id))
                     desired = .takeover(id: o.id, kind: .missedCall)
@@ -245,7 +280,8 @@ public enum Engine {
                     s.returnAt = nil
                     states[o.id] = s
                     events.append(EngineEvent("came_back", o.id))
-                    desired = .takeover(id: o.id, kind: .followUp)
+                    // "Did your check-in happen?", unless Samwise already knows the call was missed or did not count.
+                    desired = .takeover(id: o.id, kind: kind(now: now, fireAt: o.fireAt, state: s, slot: remote[o.id]))
                 } else if let ask = s.followUpAt, now >= ask {
                     if !s.followUpAsked {
                         s.followUpAsked = true
@@ -268,9 +304,12 @@ public enum Engine {
     static func kind(now: Date, fireAt: Date, state: OccurrenceState, slot: RemoteSlot?) -> TakeoverKind {
         if state.isTest { return .test }
         if let slot = slot, slot.callMissed, !slot.done { return .missedCall }
+        if let slot = slot, slot.callUnfinished, !slot.done { return .unfinished }
         if state.cameBack { return .followUp }
         if now < fireAt { return .countdown }
         if state.snoozesUsed == 0 && now < fireAt.addingTimeInterval(ringingSeconds) { return .ringing }
+        // Past the ring, with the call's result still open: never "call Samwise now" at someone who is on the call.
+        if let slot = slot, slot.callOpen { return .onCall }
         return .late
     }
 

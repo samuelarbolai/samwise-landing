@@ -5,6 +5,8 @@ import { deviceFromRequest, deviceInfo, json, refuse } from "@/lib/mac/server"
 export const dynamic = "force-dynamic"
 
 const KIND = /^[a-z][a-z_]{0,39}$/
+/** Marks only the site writes (GET /api/mac/config): what a Mac was told, and when. A Mac cannot report them. */
+const SITE_ONLY = new Set(["seen", "alert_ahead_sent"])
 const OCCURRENCE = /^[A-Za-z0-9:T_-]{0,40}$/
 const WEEK = 7 * 24 * 3600 * 1000
 
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
     for (const item of list) {
       if (!item || typeof item !== "object") continue
       const e = item as Record<string, unknown>
-      if (typeof e.kind !== "string" || !KIND.test(e.kind) || e.kind === "seen") continue
+      if (typeof e.kind !== "string" || !KIND.test(e.kind) || SITE_ONLY.has(e.kind)) continue
       const occurrence = typeof e.occurrence === "string" && OCCURRENCE.test(e.occurrence) ? e.occurrence : ""
       const detail: Record<string, string> = {}
       if (e.detail && typeof e.detail === "object" && !Array.isArray(e.detail)) {

@@ -10,6 +10,9 @@ final class PillView: NSView {
 
     init() {
         super.init(frame: .zero)
+        // One line, or two when the text carries a line break (the warning that Samwise has not counted a check-in).
+        label.usesSingleLineMode = false
+        label.maximumNumberOfLines = 2
         addSubview(label)
     }
 
@@ -47,7 +50,7 @@ final class PillView: NSView {
         var w = padX + starSide + 10 + ceil(label.frame.width) + padX
         for b in buttons { w += b.preferredSize.width + 8 }
         if !buttons.isEmpty { w += 4 }
-        return NSSize(width: w, height: buttons.isEmpty ? 44 : 56)
+        return NSSize(width: w, height: max(buttons.isEmpty ? 44 : 56, ceil(label.frame.height) + 20))
     }
 
     override func layout() {

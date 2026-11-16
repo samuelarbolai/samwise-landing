@@ -1,6 +1,7 @@
 #!/bin/bash
 # End-to-end check on a real Mac. Launches the built app with a pretend clock and walks it through
-# an afternoon: countdown, takeover, typing the line, snooze, follow-up, skip, missed call, done.
+# an afternoon: countdown, takeover, typing the line, snooze, follow-up, skip, missed call, done,
+# and a real call next to the alarm (quiet during the call, the warning when the call did not count).
 # Every step waits for the app's own status file and takes a screenshot. All account data is made up.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -219,7 +220,7 @@ stop "$S3" "$P3"
 say "== 4. Connected to a Samwise account =="
 M="$WORK/mock"
 mkdir -p "$M"
-write_config() { # done done_source call_placed call_missed
+write_config() { # done done_source call_placed call_missed [call_open call_unfinished tell_at told_at]
   cat > "$M/config.json" <<JSON
 {
   "user": {"first_name": "Alex", "language": "en", "timezone": "America/Bogota"},
@@ -227,7 +228,8 @@ write_config() { # done done_source call_placed call_missed
     {"title": "", "body": "I do this every day because the afternoon is where I lose the thread. Ten minutes here and the rest of the day is mine.\n\nOne clear thing done before dinner. A walk. A real conversation."}
   ]}],
   "journal_url": "https://example.com/journal",
-  "slots": [{"id": "$ID", "done": $1, "done_source": $2, "will_call": true, "call_placed": $3, "call_missed": $4}],
+  "slots": [{"id": "$ID", "done": $1, "done_source": $2, "will_call": true, "call_placed": $3, "call_missed": $4,
+             "call_open": ${5:-false}, "call_unfinished": ${6:-false}, "tell_at": ${7:-null}, "told_at": ${8:-null}}],
   "tasks": [{"id": 1, "title": "Call a friend", "detail": "Ask how the week went."}, {"id": 2, "title": "Book the visit", "detail": null}],
   "support": {"active": true, "grace_minutes": 30},
   "samwise_number": "+1 555 010 0199",
@@ -239,6 +241,15 @@ write_config false null false false
 python3 scripts/mock_server.py 8787 "$M" &
 MOCK=$!
 sleep 1
+asked() { if [ -f "$M/gets.log" ]; then wc -l < "$M/gets.log" | tr -d ' '; else echo 0; fi; }
+# Has the app ask Samwise again and waits until it did, so the next check sees the new answer.
+repoll() { # dir
+  local n i=0
+  n="$(asked)"
+  cmd "$1" "poll"
+  while [ "$(asked)" -le "$n" ] && [ "$i" -lt 15 ]; do sleep 1; i=$((i + 1)); done
+  sleep 1
+}
 S4="$WORK/s4"
 mkdir -p "$S4"
 P4="$(launch "$S4" "${TODAY}T20:55:30Z" --mute --api-base http://127.0.0.1:8787)"
@@ -273,6 +284,9 @@ cmd "$S4" "poll"
 expect "a missed call takes the screen again" "$S4" kind missedCall 20
 expect_contains "it gives the number and the deadline" "$S4" subtitle "Before 16:30, nobody is told"
 shot 24-missed-call
+write_config false null true true false false "\"${TODAY}T21:35:41Z\"" null
+repoll "$S4"
+expect_contains "once the call's result is in, it gives Samwise's own time for telling the trusted people" "$S4" subtitle "Before 16:35, nobody is told"
 cmd "$S4" "type:I am doing my check-in now"
 expect "typing the line gives the screen back again" "$S4" desired inProgress
 write_config true '"call"' true false
@@ -325,7 +339,6 @@ stop "$S5A" "$P5A"
 # ───────────────────────── 5b. A check-in comes near on a quiet Mac ─────────────────────────
 say "== 5b. Asking Samwise again when a check-in comes near =="
 write_config false null false false
-asked() { if [ -f "$M/gets.log" ]; then wc -l < "$M/gets.log" | tr -d ' '; else echo 0; fi; }
 S5B="$WORK/s5b"
 mkdir -p "$S5B"
 printf 'test-token' > "$S5B/token"
@@ -345,6 +358,115 @@ LATER="$(asked)"
 if [ "$LATER" -le $((AFTER + 1)) ]; then say "PASS  and then keeps to one request every 30 seconds ($LATER)"; else say "FAIL  it asked Samwise $((LATER - AFTER)) more times within 5 seconds"; FAILS=$((FAILS + 1)); fi
 expect "no alarm yet, seven minutes before" "$S5B" desired idle
 stop "$S5B" "$P5B"
+
+# ───────────────────────── 5c. A real call next to the alarm ─────────────────────────
+# 1.0.3 got three things wrong next to a real call: the Mac rang again two minutes into the call, it said
+# "Check-in done." after a call Samwise did not count, and it never said that the trusted people were about
+# to be told. This walks such an afternoon, with the sound on.
+say "== 5c. A real call next to the alarm: quiet during the call, and the truth after it =="
+TELL="${TODAY}T21:37:10Z"
+write_config false null false false
+S5C="$WORK/s5c"
+mkdir -p "$S5C"
+printf 'test-token' > "$S5C/token"
+P5C="$(launch "$S5C" "${TODAY}T20:59:20Z" --api-base http://127.0.0.1:8787)"
+expect "connected from the saved token" "$S5C" paired True 20
+expect "the alarm has the screen" "$S5C" desired takeover 20
+cmd "$S5C" "advance:45"
+expect "at 16:00 it says it is time" "$S5C" kind ringing
+expect "and it rings" "$S5C" sound True
+cmd "$S5C" "touch"
+expect "a key or a click quiets the ring" "$S5C" sound False
+write_config false null true false true false
+repoll "$S5C"
+# More than two minutes after the key press: without an open call the ring would be back here.
+cmd "$S5C" "advance:126"
+sleep 4
+expect "two minutes later, with Samwise's call open, the Mac is still quiet" "$S5C" sound False
+expect "and the screen is still taken" "$S5C" desired takeover
+cmd "$S5C" "advance:60"
+expect "past the ring it says Samwise called, not 'call Samwise now'" "$S5C" kind onCall
+expect_contains "and that this Mac stays quiet" "$S5C" subtitle "this Mac stays quiet"
+sleep 3
+expect "and it does stay quiet" "$S5C" sound False
+shot 27-on-the-call
+cmd "$S5C" "advance:281"
+write_config false null true false false true "\"$TELL\"" null
+repoll "$S5C"
+expect "the call's result is in and Samwise does not count it: the screen says so" "$S5C" kind unfinished 20
+expect_contains "with the hour the trusted people are told" "$S5C" subtitle "at about 16:37"
+expect_contains "and Samwise's number" "$S5C" subtitle "+1 555 010 0199"
+expect "the Mac rings again for it" "$S5C" sound True
+expect "the check-in is not marked done" "$S5C" "phases.$ID" ringing
+shot 28-call-did-not-count
+cmd "$S5C" "type:I am doing my check-in now"
+expect "typing the line gives the screen back" "$S5C" desired inProgress
+expect_contains "the small panel keeps the warning up" "$S5C" pill_text "did not count"
+expect_contains "with the same hour" "$S5C" pill_text "at about 16:37"
+expect_contains "a button that calls Samwise back" "$S5C" pill_buttons "Call +1 555 010 0199"
+expect_contains "and the usual way to say it is finished" "$S5C" pill_buttons "I finished"
+shot 29-warning-in-progress
+cmd "$S5C" "finish"
+expect "'I finished' is taken as the person's word on this Mac" "$S5C" "phases.$ID" done
+sleep 2
+expect "but the Mac does not open the 'Check-in done' card" "$S5C" windows False
+expect_contains "and the warning stays, because Samwise still has not counted it" "$S5C" pill_text "at about 16:37"
+expect_contains "now with a button to close it" "$S5C" pill_buttons "|OK"
+shot 29a-warning-after-finished
+cmd "$S5C" "warncall"
+expect_contains "the call button dials Samwise" "$S5C" opened "tel:+15550100199"
+cmd "$S5C" "warnok"
+expect "OK closes the warning: the person is in charge" "$S5C" pill False
+write_config false null true false false true "\"${TODAY}T21:50:00Z\"" null
+repoll "$S5C"
+expect_contains "a second call that does not count has its own hour and warns again" "$S5C" pill_text "at about 16:50" 
+write_config true '"call"' true false
+repoll "$S5C"
+expect "when Samwise counts the check-in, the warning goes away" "$S5C" pill False 20
+sleep 26
+for kind in alert_ahead_seen alert_call alert_closed; do
+  if grep -q "\"kind\": \"$kind\"" "$M/requests.jsonl" 2>/dev/null; then say "PASS  Samwise was told: $kind"; else say "FAIL  Samwise was not told: $kind"; FAILS=$((FAILS + 1)); fi
+done
+# The daily Health Check counts a Mac as having warned the person when it reports either of these.
+for where in screen panel; do
+  if grep '"kind": "alert_ahead_seen"' "$M/requests.jsonl" 2>/dev/null | grep -q "\"on\": \"$where\""; then say "PASS  including where the hour was shown: $where"; else say "FAIL  Samwise was not told that the hour was shown on the $where"; FAILS=$((FAILS + 1)); fi
+done
+stop "$S5C" "$P5C"
+
+# The same afternoon as it really went: the line was typed during the call, so the screen was already given back.
+say "== 5d. The call did not count after the screen was given back =="
+write_config false null false false
+S5D="$WORK/s5d"
+mkdir -p "$S5D"
+printf 'test-token' > "$S5D/token"
+WARNED_BEFORE="$(grep -o '"kind": "alert_ahead_seen"' "$M/requests.jsonl" 2>/dev/null | wc -l | tr -d ' ')"
+P5D="$(launch "$S5D" "${TODAY}T20:59:20Z" --mute --api-base http://127.0.0.1:8787)"
+expect "connected from the saved token" "$S5D" paired True 20
+expect "the alarm has the screen" "$S5D" desired takeover 20
+cmd "$S5D" "advance:45"
+expect "at 16:00 it says it is time" "$S5D" kind ringing
+cmd "$S5D" "type:I am doing my check-in now"
+expect "the line is typed while Samwise is on the phone" "$S5D" desired inProgress
+write_config false null true false true false
+repoll "$S5D"
+expect_contains "while the call is open the small panel says the check-in is in progress" "$S5D" pill_text "in progress"
+cmd "$S5D" "advance:467"
+write_config false null true false false true "\"$TELL\"" null
+repoll "$S5D"
+expect_contains "the call did not count: the Mac says so instead of 'Check-in done.'" "$S5D" pill_text "did not count" 
+expect_contains "with the hour the trusted people are told" "$S5D" pill_text "at about 16:37"
+expect "the warning is for today's check-in" "$S5D" warning "$ID"
+expect "the check-in is not marked done" "$S5D" "phases.$ID" committed
+expect "the screen is not taken for it" "$S5D" takeover False
+expect "and no 'Check-in done' card opens" "$S5D" windows False
+shot 29b-warned-in-time
+cmd "$S5D" "advance:1800"
+expect "after that hour the warning gives way to the usual question" "$S5D" ask True 20
+expect_contains "which is 'did you finish?'" "$S5D" pill_text "Did you finish"
+sleep 26
+WARNED_AFTER="$(grep -o '"kind": "alert_ahead_seen"' "$M/requests.jsonl" 2>/dev/null | wc -l | tr -d ' ')"
+if [ "$WARNED_AFTER" -gt "$WARNED_BEFORE" ]; then say "PASS  Samwise was told that this Mac warned in time"; else say "FAIL  Samwise was not told about the warning ($WARNED_BEFORE before, $WARNED_AFTER after)"; FAILS=$((FAILS + 1)); fi
+stop "$S5D" "$P5D"
 kill "$MOCK" 2>/dev/null || true
 
 # ───────────────────────── 6. Over a full-screen app ─────────────────────────
@@ -452,7 +574,7 @@ cp "$WORK/install.log" "$OUT/s8.install.log" 2>/dev/null || true
 fi
 
 # Keep the app's own logs with the results (they hold no personal data).
-for d in s1 s2 s3 s4 s5 s6 s7; do
+for d in s1 s2 s3 s4 s5 s5c s5d s6 s7; do
   [ -f "$WORK/$d/samwise.log" ] && cp "$WORK/$d/samwise.log" "$OUT/$d.app.log"
   [ -f "$WORK/$d/stderr.log" ] && cp "$WORK/$d/stderr.log" "$OUT/$d.stderr.log"
 done
