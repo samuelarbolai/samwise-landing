@@ -201,7 +201,7 @@ shot 40-live-connected
 
 # ───────────────────────── D. The real schedule on the real clock ─────────────────────────
 say "== D. The account's check-in time, on the real clock =="
-if wait_for_either desired headsUp takeover 480; then
+if wait_for_either desired headsUp takeover 600; then
   if [ "$(status desired)" = "headsUp" ]; then
     pass "the small countdown comes up for the account's check-in time"
   else

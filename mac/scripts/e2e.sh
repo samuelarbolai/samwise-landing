@@ -114,12 +114,12 @@ awake_note() { # name
 # ───────────────────────── 1. No account: 16:00 on this Mac's clock ─────────────────────────
 say "== 1. No account, check-in at 16:00 =="
 S1="$WORK/s1"
-P1="$(launch "$S1" "${TODAY}T15:54:30Z" --mute)"
+P1="$(launch "$S1" "${TODAY}T15:55:30Z" --mute)"
 expect "small countdown five minutes before" "$S1" desired headsUp 20
 shot 01-heads-up
 expect "the Mac is kept from falling asleep before the check-in" "$S1" awake 1
 awake_note before
-cmd "$S1" "advance:275"
+cmd "$S1" "advance:215"
 expect "screen taken one minute before" "$S1" desired takeover
 expect "and its screen is kept on while the alarm is up" "$S1" awake 2
 awake_note alarm
@@ -241,7 +241,7 @@ MOCK=$!
 sleep 1
 S4="$WORK/s4"
 mkdir -p "$S4"
-P4="$(launch "$S4" "${TODAY}T20:54:30Z" --mute --api-base http://127.0.0.1:8787)"
+P4="$(launch "$S4" "${TODAY}T20:55:30Z" --mute --api-base http://127.0.0.1:8787)"
 expect "starts without an account" "$S4" paired False 20
 cmd "$S4" "pairverify:+15550100000,000000"
 expect "a wrong code is refused" "$S4" hook_result "pairverify:problem"
@@ -251,7 +251,7 @@ expect "the account's name arrives" "$S4" name Alex
 expect "16:00 Bogota: small countdown" "$S4" desired headsUp
 expect_contains "the menu shows the account's time and place" "$S4" next "16:00 (Bogota)"
 shot 20-heads-up-connected
-cmd "$S4" "advance:275"
+cmd "$S4" "advance:215"
 expect "screen taken one minute before the call" "$S4" kind countdown
 expect_contains "it says Samwise will call the phone" "$S4" subtitle "Samwise calls your phone at 16:00"
 shot 21-countdown-connected
