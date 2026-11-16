@@ -8,6 +8,7 @@ import { TimezoneSelect, detectTimezone } from "./timezone-select"
 import { LanguageSelect, useActiveAgentLanguages } from "./language-select"
 import type { LanguageCode } from "@/lib/v2/validate"
 import { COUNTRIES, countryFromTimezone, toE164, type CountryIso } from "@/lib/v2/phone"
+import { DemoVideo } from "@/app/_shared/demo-video"
 import { SRC_KEY, cleanSrc } from "@/lib/v2/src-tag"
 import type { PlanInvite } from "@/lib/v2/plan"
 
@@ -252,6 +253,9 @@ export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
               </section>
             )}
             {planMissing && <p className="v2-help" style={{ marginTop: 16 }}>{s.planMissing}</p>}
+
+            {/* Clinicians land here from outreach: a short demo above the form, which stays the first action. */}
+            {role === "clinician" && <DemoVideo video="clinician-plan" lang={lang} className="v2-video" compact />}
 
             <form
               onSubmit={(e) => {

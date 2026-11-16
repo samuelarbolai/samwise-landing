@@ -144,3 +144,5 @@
   .sw-btn, .sw-btn__arrow { transition: none; }
   .sw-btn:hover { transform: none; }
 }
+
+.sw-root .sw-video { margin-top: 40px; }
