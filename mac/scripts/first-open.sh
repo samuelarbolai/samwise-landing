@@ -194,22 +194,40 @@ AS
 dump() { osascript "$WORK/dump.applescript" "$1" 2>&1; }
 press() { osascript "$WORK/press.applescript" "$@" 2>&1; }
 # answer <process> <administrator> <password>: fills in the question macOS asks before it lets the app open.
+# It first types the password into the name field, where what arrived can be read back, so that a
+# password macOS turns down can be told apart from keys that got lost on the way.
 cat > "$WORK/answer.applescript" <<'AS'
-on run argv
-  set procName to item 1 of argv
-  set adminName to item 2 of argv
-  set pw to item 3 of argv
-  set said to ""
+-- Types one key at a time, the way a person does, so that no key is lost on a slow machine.
+on typeSlowly(theText)
+  set chList to characters of theText
+  repeat with ch in chList
+    set oneKey to contents of ch
+    tell application "System Events" to keystroke oneKey
+    delay 0.05
+  end repeat
+end typeSlowly
+
+-- Is the question still on the screen?
+on windowUp(procName)
   tell application "System Events"
-    if not (exists process procName) then return "no process " & procName
+    if not (exists process procName) then return false
+    try
+      return ((count of windows of process procName) > 0)
+    on error
+      return false
+    end try
+  end tell
+end windowUp
+
+-- The name field, the password field and the OK button of the question, where macOS shows them.
+on findParts(procName)
+  set nameField to missing value
+  set pwField to missing value
+  set okButton to missing value
+  set fieldList to {}
+  tell application "System Events"
+    if not (exists process procName) then return {missing value, missing value, missing value}
     tell process procName
-      try
-        set frontmost to true
-      end try
-      delay 0.5
-      set nameField to missing value
-      set pwField to missing value
-      set fieldList to {}
       repeat with w in windows
         set els to {}
         try
@@ -229,64 +247,142 @@ on run argv
             set pwField to el
           else if r is "AXTextField" then
             set end of fieldList to el
+          else if r is "AXButton" then
+            set bn to ""
+            try
+              set bn to name of el as text
+            end try
+            if bn is "OK" then set okButton to el
           end if
         end repeat
       end repeat
-      if pwField is missing value and (count of fieldList) > 1 then set pwField to item 2 of fieldList
-      if (count of fieldList) > 0 then set nameField to item 1 of fieldList
-      if nameField is missing value and pwField is missing value then return "no field to type in was found"
-
-      -- The name. macOS fills in the person who is logged in; another administrator is typed over it.
-      set nameWasTyped to false
-      if nameField is not missing value then
-        set got to ""
-        try
-          set got to value of nameField as text
-        end try
-        if got is adminName then
-          set said to "the name was already filled in, "
-        else
-          try
-            set focused of nameField to true
-          end try
-          delay 0.4
-          keystroke "a" using command down
-          delay 0.2
-          keystroke adminName
-          delay 0.5
-          set nameWasTyped to true
-          set got to ""
-          try
-            set got to value of nameField as text
-          end try
-          if got is adminName then
-            set said to "name typed, "
-          else
-            set said to "name typed, but the field does not show it, "
-          end if
-        end if
-      end if
-
-      -- The password field. macOS does not show it to a script (it is not in the window's list of
-      -- things), so it is reached the way a person does: it has the cursor already, or Tab moves there.
-      if pwField is not missing value then
-        try
-          set focused of pwField to true
-        end try
-        set said to said & "password field found, "
-      else if nameWasTyped then
-        key code 48
-        set said to said & "password field reached with Tab, "
-      else
-        set said to said & "password field has the cursor, "
-      end if
-      delay 0.5
-      keystroke pw
-      delay 0.8
-      key code 36
-      return said & "password typed, Return pressed"
     end tell
   end tell
+  if pwField is missing value and (count of fieldList) > 1 then set pwField to item 2 of fieldList
+  if (count of fieldList) > 0 then set nameField to item 1 of fieldList
+  return {nameField, pwField, okButton}
+end findParts
+
+on run argv
+  set procName to item 1 of argv
+  set adminName to item 2 of argv
+  set pw to item 3 of argv
+  set said to ""
+  tell application "System Events"
+    if not (exists process procName) then return "no process " & procName
+    try
+      set frontmost of process procName to true
+    end try
+  end tell
+  delay 0.5
+  set foundList to my findParts(procName)
+  set nameField to item 1 of foundList
+  set pwField to item 2 of foundList
+  if nameField is missing value and pwField is missing value then return "no field to type in was found"
+
+  if nameField is not missing value then
+    -- Do the keys arrive as typed? The name field shows what it holds, the password field never does.
+    tell application "System Events"
+      try
+        set focused of nameField to true
+      end try
+      delay 0.4
+      keystroke "a" using command down
+    end tell
+    delay 0.2
+    my typeSlowly(pw)
+    delay 0.4
+    set got to ""
+    tell application "System Events"
+      try
+        set got to value of nameField as text
+      end try
+    end tell
+    considering case
+      set sameText to (got is pw)
+    end considering
+    if sameText then
+      set said to said & "typing test exact, "
+    else
+      set said to said & "typing test NOT exact (" & (length of got) & " characters arrived for " & (length of pw) & "), "
+    end if
+    -- The administrator's name goes over it. macOS fills in the person who is logged in.
+    tell application "System Events" to keystroke "a" using command down
+    delay 0.2
+    my typeSlowly(adminName)
+    delay 0.4
+    set got to ""
+    tell application "System Events"
+      try
+        set got to value of nameField as text
+      end try
+    end tell
+    if got is adminName then
+      set said to said & "name typed, "
+    else
+      set said to said & "name typed, but the field does not show it, "
+    end if
+  end if
+
+  -- The password field. macOS does not always show it to a script, so without it Tab moves there.
+  tell application "System Events"
+    if pwField is not missing value then
+      try
+        set focused of pwField to true
+      end try
+      set said to said & "password field found, "
+    else
+      key code 48
+      set said to said & "password field reached with Tab, "
+    end if
+  end tell
+  delay 0.5
+  my typeSlowly(pw)
+  delay 0.6
+  tell application "System Events" to key code 36
+  set said to said & "password typed, Return pressed, "
+
+  set stillUp to true
+  repeat 16 times
+    delay 0.5
+    set stillUp to my windowUp(procName)
+    if not stillUp then exit repeat
+  end repeat
+  if not stillUp then return said & "the window closed"
+
+  -- A second way in: hand the password to the field through accessibility, and press OK.
+  set foundList to my findParts(procName)
+  set pwField to item 2 of foundList
+  set okButton to item 3 of foundList
+  if pwField is missing value then return said & "the window stayed up and shows no password field"
+  set secondTry to "password set through accessibility, "
+  tell application "System Events"
+    try
+      set focused of pwField to true
+      delay 0.3
+      set value of pwField to pw
+      delay 0.5
+      if okButton is not missing value then
+        click okButton
+        set secondTry to secondTry & "OK clicked, "
+      else
+        key code 36
+        set secondTry to secondTry & "Return pressed, "
+      end if
+    on error number errNum
+      set secondTry to "the password could not be set through accessibility (error " & errNum & "), "
+    end try
+  end tell
+  set said to said & "the window stayed up, second try: " & secondTry
+
+  set stillUp to true
+  repeat 16 times
+    delay 0.5
+    set stillUp to my windowUp(procName)
+    if not stillUp then exit repeat
+  end repeat
+  if stillUp then return said & "the window stayed up"
+  return said & "the window closed"
 end run
 AS
 answer() { osascript "$WORK/answer.applescript" "$@" 2>&1 | tr '\n' ' ' | sed "s/$PW/(the password)/g"; }
@@ -301,7 +397,8 @@ note "screen: $(osascript -e 'tell application "Finder" to get bounds of window 
 
 # An administrator's password for this throwaway Mac, to answer the question macOS asks at the end:
 # this user's own password set to a random value, or else a second administrator made for the run.
-PW="Sw-$(uuidgen | tr -d '-' | cut -c1-14)"
+# Small letters and digits only: keys that need no Shift arrive the same on every keyboard.
+PW="sw$(uuidgen | tr -d '-' | tr '[:upper:]' '[:lower:]' | cut -c1-16)"
 echo "::add-mask::$PW"
 ADMIN=""
 if sudo sysadminctl -resetPasswordFor "$USER" -newPassword "$PW" > "$WORK/passwd.log" 2>&1 && dscl . -authonly "$USER" "$PW" >/dev/null 2>&1; then
@@ -457,7 +554,7 @@ if [ -n "$ASKER" ]; then
   fi
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do [ -n "$(running)" ] && break; sleep 2; done
   sleep 4
-  shot 55-opened
+  if [ -n "$(running)" ]; then shot 55-opened; else shot 55-after-password; fi
   say "windows:"; windows | tee -a "$RES"
   note "Samwise process at the end: $(processes)"
   if [ -n "$(running)" ]; then
@@ -468,9 +565,12 @@ if [ -n "$ASKER" ]; then
     { for who in coreautha SecurityAgent CoreServicesUIAgent; do echo "--- $who"; dump "$who"; done; } > "$OUT/first-open-after-answer.txt" 2>&1 || true
     grep -v "^AXStaticText | $" "$OUT/first-open-after-answer.txt" | head -16 | tee -a "$RES"
     if [ -n "$ASKPW" ] && windows | grep -q "$(printf '\t%s\t' "$ASKPW")"; then
-      # The window is still there: the password never arrived. That is the script falling short, and
-      # says nothing about the app. A person types this password; the page says so.
-      skip "Samwise opening after the password: macOS did not take a password typed by a script"
+      # The window is still there: macOS did not accept what this script entered. That is the script
+      # falling short, and says nothing about the app. A person types this password; the page says so.
+      # What macOS itself wrote down about the try goes with the outputs (it never writes a password).
+      log show --last 3m --style compact --predicate 'process == "coreautha" OR process == "authd" OR process == "opendirectoryd"' 2>/dev/null \
+        | sed "s/$PW/(the password)/g" | tail -80 > "$OUT/first-open-auth-log.txt" || true
+      skip "Samwise opening after the password: macOS did not accept the password this script entered"
     else
       fail "Samwise did not open after Open Anyway and the password"
     fi
