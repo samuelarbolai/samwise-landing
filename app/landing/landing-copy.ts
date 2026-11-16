@@ -19,7 +19,7 @@ export type LandingCopy = {
   yours: { title: string; items: string[] }
   faq: { title: string; items: { q: string; a: string }[] }
   close: { title: string; cta: string; under: string }
-  footer: { left: string; right: string }
+  footer: { left: string; right: string; mac: string }
 }
 
 export const LANDING_EN: LandingCopy = {
@@ -81,5 +81,7 @@ export const LANDING_EN: LandingCopy = {
   footer: {
     left: "Samwise · samwise.life",
     right: "Designed with behavioral psychologist Ana María Reyes. Samwise is an independent tool.",
+    // Link to /mac, the optional check-in alarm for Mac (added 2026-11-16; not part of the approved 11-14 copy).
+    mac: "Samwise for Mac",
   },
 }

@@ -174,7 +174,12 @@ export function Landing({ t = LANDING_EN }: { t?: LandingCopy }) {
 
       <footer className="ld-foot">
         <div className="ld-wrap ld-foot__row">
-          <span>{t.footer.left}</span>
+          <span>
+            {t.footer.left} ·{" "}
+            <a className="ld-foot__link" href="/mac">
+              {t.footer.mac}
+            </a>
+          </span>
           <span>{t.footer.right}</span>
         </div>
       </footer>

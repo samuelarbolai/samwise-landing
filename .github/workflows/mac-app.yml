@@ -1,0 +1,100 @@
+name: Mac app
+
+# Samwise for Mac, the check-in alarm in mac/. Two jobs, both on a real Mac:
+#
+# build  Builds the app and the disk image, runs the alarm with a pretend clock and a stand-in
+#        server, and puts the disk image, screenshots and logs on the mac-builds branch.
+#        Runs on every push to the mac-checkin-alarm branch, or by hand (Run workflow, no inputs).
+#
+# live   Checks the real samwise.life from a Mac: the download page, the disk image, the one-line
+#        installer, connecting an account and the alarm at that account's check-in time.
+#        Runs by hand with the one-time codes of a temporary test account, and puts its results on
+#        the mac-live-check branch. The inputs are visible to anyone who can read this repository's
+#        Actions, so they must only ever be codes of a throwaway test account.
+
+on:
+  push:
+    branches: [mac-checkin-alarm]
+    paths:
+      - "mac/**"
+      - "public/mac/install.sh"
+      - ".github/workflows/mac-app.yml"
+  workflow_dispatch:
+    inputs:
+      live_pair_code:
+        description: "Live check: one-time pairing code of a temporary test account. Leave empty to build instead."
+        required: false
+        default: ""
+      live_phone:
+        description: "Live check, optional: the test account's phone number"
+        required: false
+        default: ""
+      live_otp:
+        description: "Live check, optional: a 6-digit code waiting for that number"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.live_pair_code == '' }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the app and the disk image
+        working-directory: mac
+        run: scripts/build.sh build
+
+      - name: Run the alarm on this Mac (end-to-end)
+        working-directory: mac
+        run: scripts/e2e.sh build
+
+      - name: Unit tests
+        if: always()
+        working-directory: mac
+        run: swift test 2>&1 | tail -15
+
+      - name: Put the outputs on the mac-builds branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mac/scripts/publish-outputs.sh mac-builds
+
+  live:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.live_pair_code != '' }}
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - name: Keep the test account's codes out of the log
+        run: |
+          python3 - <<'PY'
+          import json, os
+          inputs = (json.load(open(os.environ["GITHUB_EVENT_PATH"])).get("inputs") or {})
+          for value in inputs.values():
+              if value:
+                  print("::add-mask::" + str(value))
+          PY
+
+      - uses: actions/checkout@v4
+
+      - name: Check samwise.life from this Mac
+        working-directory: mac
+        env:
+          PAIR_CODE: ${{ inputs.live_pair_code }}
+          TEST_PHONE: ${{ inputs.live_phone }}
+          TEST_OTP: ${{ inputs.live_otp }}
+        run: scripts/live-check.sh build
+
+      - name: Put the outputs on the mac-live-check branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mac/scripts/publish-outputs.sh mac-live-check
