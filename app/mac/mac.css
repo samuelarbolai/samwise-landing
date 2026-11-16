@@ -44,6 +44,16 @@
 
 .mac-section--tight { padding-top: 24px; }
 
+/* The beta notice under the download button. */
+.ld-root .mac-beta {
+  max-width: 44ch;
+  padding-left: 14px;
+  border-left: 3px solid var(--gold);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-mute);
+}
+
 .ld-root .mac-note { margin-top: 40px; max-width: 62ch; color: var(--ink-mute); }
 
 /* Install: two ways side by side. */
@@ -110,7 +120,75 @@
 
 .mac-connect-how { padding-top: 22px; border-top: 1px solid var(--rule); font-size: 17px; color: var(--ink-mute); }
 
+/* ─── /mac/open: the first open, one step at a time ─── */
+.mac-open-hero { padding: 40px 0 64px; }
+.mac-open-hero__text { display: flex; flex-direction: column; gap: 22px; max-width: 780px; }
+.ld-root .mac-open-lead { max-width: 54ch; }
+.ld-root .mac-open-lead b { color: var(--ink); font-weight: 700; }
+
+/* The line that says the download has started, or offers it. (.ld-root p resets margin and padding.) */
+.ld-root .mac-dl { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 4px; }
+.ld-root .mac-dl--on {
+  align-self: flex-start;
+  padding: 14px 20px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink-mute);
+}
+.mac-dl__on { font-weight: 700; color: var(--ink); }
+
+.mac-open-list { display: flex; flex-direction: column; gap: 24px; }
+.mac-open-step {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
+  gap: 32px 56px;
+  align-items: center;
+  padding: 40px;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--bg);
+}
+.mac-open-step__text { display: flex; flex-direction: column; gap: 12px; max-width: 46ch; }
+.mac-open-step__text p { color: var(--ink-mute); }
+.mac-open-step__text b { color: var(--ink); font-weight: 700; }
+.mac-open-step__n {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--forest);
+}
+
+/* The pictures are taken on a real Mac at its own size, so they are never stretched. */
+.mac-shot { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.mac-shot__frame { position: relative; max-width: 100%; line-height: 0; }
+.mac-shot__frame img { display: block; max-width: 100%; height: auto; }
+.mac-shot--window .mac-shot__frame img { filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.2)); }
+/* The hairline is a shadow, not a border: a border would take 2px from the picture and scale it. */
+.mac-shot--crop .mac-shot__frame { border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px var(--rule), 0 16px 28px rgba(0, 0, 0, 0.1); }
+/* A ring around the button to click. Placed in percent, so it follows the picture when it shrinks. */
+.mac-ring {
+  position: absolute;
+  border: 3px solid var(--gold);
+  border-radius: 999px;
+  box-shadow: 0 0 0 5px rgba(212, 168, 90, 0.28);
+  pointer-events: none;
+}
+
+.mac-trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 32px 48px; }
+.mac-trust > div { display: flex; flex-direction: column; gap: 8px; }
+.mac-trust p { color: var(--ink-mute); }
+.mac-trust b { color: var(--ink); font-weight: 700; }
+
+@media (max-width: 860px) {
+  .mac-open-step { grid-template-columns: minmax(0, 1fr); padding: 28px; }
+}
+
 @media (max-width: 560px) {
+  .mac-open-hero { padding: 32px 0 48px; }
+  .mac-open-step { padding: 24px; }
+  .mac-dl .ld-btn { width: 100%; }
   .mac-way { padding: 24px; }
   .mac-cmd { flex-direction: column; }
   .mac-cmd button { min-height: 44px; border-left: 0; border-top: 1px solid var(--ink); }

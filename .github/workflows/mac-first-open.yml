@@ -1,0 +1,44 @@
+name: Mac first open
+
+# What a person meets when they download Samwise for Mac with a browser and open it for the first
+# time: macOS says "Samwise" Not Opened, and System Settings > Privacy & Security offers Open Anyway.
+# This walks that path on a real Mac (mac/scripts/first-open.sh) and puts a picture of every step on
+# the mac-first-open-check branch. The steps on samwise.life/mac/open are written from these pictures.
+# Run it by hand when macOS changes, or push to the mac-first-open branch.
+
+on:
+  push:
+    branches: [mac-first-open]
+    paths:
+      - "mac/scripts/first-open.sh"
+      - ".github/workflows/mac-first-open.yml"
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "The Mac to run on (a GitHub macOS runner label)"
+        required: false
+        default: "macos-latest"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-first-open-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  first-open:
+    runs-on: ${{ inputs.runner || 'macos-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open a browser download for the first time
+        working-directory: mac
+        run: scripts/first-open.sh build
+
+      - name: Put the pictures on the mac-first-open-check branch
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mac/scripts/publish-outputs.sh mac-first-open-check

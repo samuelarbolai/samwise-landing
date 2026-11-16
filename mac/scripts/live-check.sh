@@ -107,9 +107,34 @@ if grep -q "A check-in alarm you cannot miss" "$WORK/page.html"; then pass "it i
 BARE="$(curl -s -o /dev/null -L -w "%{http_code} %{url_effective}" --max-time 40 "https://samwise.life/mac" 2>/dev/null)"
 case "$BARE" in "200 https://www.samwise.life/mac"*) pass "samwise.life/mac without www lands on the same page" ;; *) fail "samwise.life/mac without www: $BARE" ;; esac
 
-LOC="$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" --max-time 40 "$BASE/download/mac" 2>/dev/null)"
+# ?check=1 marks these downloads as a check, so they are not counted as people (table mac_downloads).
+LOC="$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" --max-time 40 "$BASE/download/mac?check=1" 2>/dev/null)"
 case "$LOC" in "302 $BASE/downloads/Samwise-"*".dmg") pass "the download link points at the disk image" ;; *) fail "the download link answered: $LOC" ;; esac
-DL="$(curl -s -L -o "$WORK/Samwise.dmg" -w "%{http_code} %{content_type} %{size_download}" --max-time 120 "$BASE/download/mac" 2>/dev/null)"
+# A browser gets the page with the steps for the first open instead, and that page starts the download.
+LOC="$(curl -s -o /dev/null -H "Accept: text/html,application/xhtml+xml" -w "%{http_code} %{redirect_url}" --max-time 40 "$BASE/download/mac?check=1" 2>/dev/null)"
+check "a browser that asks for the download is sent to the steps page" "$LOC" "302 $BASE/mac/open?dl=1"
+if grep -q 'href="/mac/open?dl=1"' "$WORK/page.html"; then pass "the Download buttons lead to the steps page"; else fail "the Download buttons do not lead to /mac/open?dl=1"; fi
+if grep -q "Only do that if you trust Samwise" "$WORK/page.html"; then pass "the download page says it is a beta to open only if you trust Samwise"; else fail "the download page does not carry the beta and trust notice"; fi
+SAFARI="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15"
+IPHONE="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+GOT="$(curl -s -o "$WORK/open.html" -A "$SAFARI" -w "%{http_code}" --max-time 40 "$BASE/mac/open?dl=1" 2>/dev/null)"
+check "the steps page opens" "$GOT" 200
+curl -s -o "$WORK/open-phone.html" -A "$IPHONE" --max-time 40 "$BASE/mac/open?dl=1" 2>/dev/null
+if grep -qF "This download is for a Mac" "$WORK/open-phone.html" && ! grep -qF "Your download has started" "$WORK/open-phone.html"; then
+  pass "on a phone the steps page starts no download and says the file is for a Mac"
+else
+  fail "on a phone the steps page does not say the download is for a Mac"
+fi
+for TEXT in "Your Mac will stop Samwise the first time" "Only do that if you trust Samwise" "Not Opened" "Privacy &amp; Security" "Open Anyway" "Move to Trash" "Your download has started" "/download/mac?from=open"; do
+  if grep -qF "$TEXT" "$WORK/open.html"; then pass "the steps page has: $TEXT"; else fail "the steps page lacks: $TEXT"; fi
+done
+PICS="$(grep -o 'src="/mac/open-[a-z-]*\.png"' "$WORK/open.html" | sort -u | cut -d'"' -f2)"
+if [ "$(echo "$PICS" | grep -c .)" -ge 3 ]; then pass "the steps page shows $(echo "$PICS" | grep -c .) pictures"; else fail "the steps page shows fewer than 3 pictures: $PICS"; fi
+for PIC in $PICS; do
+  GOT="$(curl -s -o /dev/null -w "%{http_code} %{content_type}" --max-time 40 "$BASE$PIC" 2>/dev/null)"
+  check "the picture $PIC is served" "$GOT" "200 image/png"
+done
+DL="$(curl -s -L -o "$WORK/Samwise.dmg" -w "%{http_code} %{content_type} %{size_download}" --max-time 120 "$BASE/download/mac?check=1" 2>/dev/null)"
 say "note  download: $DL"
 check "the disk image downloads" "$(echo "$DL" | cut -d' ' -f1)" 200
 GOT_SUM="$(shasum -a 256 "$WORK/Samwise.dmg" 2>/dev/null | cut -d' ' -f1)"
@@ -151,8 +176,9 @@ cat > "$HOMEDIR/state.json" <<JSON
 JSON
 # The installed copy is started by macOS, so its test flags travel in the environment. No --api-base: it talks to samwise.life.
 launchctl setenv SAMWISE_FLAGS "--test-hooks --allow-capture --mute"
-if curl -fsSL "$BASE/mac/install.sh" | bash > "$WORK/install.log" 2>&1; then
+if curl -fsSL "$BASE/mac/install.sh" | SAMWISE_DMG_URL="$BASE/download/mac?check=1" bash > "$WORK/install.log" 2>&1; then
   pass "curl ... install.sh | bash ran"
+  if grep -q "Install it only if you trust Samwise" "$WORK/install.log"; then pass "it says this is a beta to install only if you trust Samwise"; else fail "the installer does not print the beta and trust notice"; fi
 else
   fail "the one-line install failed: $(tail -3 "$WORK/install.log" | tr '\n' ' ')"
 fi
@@ -208,7 +234,7 @@ if wait_for_either desired headsUp takeover 600; then
     say "note  this Mac was connected less than a minute before the check-in, so the alarm came up without the countdown"
   fi
 else
-  fail "no countdown within 8 minutes (state: $(status desired), next: $(status next))"
+  fail "no countdown within 10 minutes (state: $(status desired), next: $(status next))"
 fi
 shot 41-live-heads-up
 expect "one minute before, the screen is taken" desired takeover 420
