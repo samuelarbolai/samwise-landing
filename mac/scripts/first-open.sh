@@ -95,10 +95,15 @@ on run argv
           try
             set d to description of el as text
           end try
+          set t to ""
+          try
+            set t to title of el as text
+          end try
           if n is "missing value" then set n to ""
           if v is "missing value" then set v to ""
+          if t is "missing value" then set t to ""
           if n is not "" or v is not "" or r is "AXButton" or r is "AXScrollBar" then
-            set out to out & r & " | " & n & " | " & v & " | " & d & " | " & my frameOf(el) & linefeed
+            set out to out & r & " | " & n & " | " & v & " | " & d & " | " & my frameOf(el) & " | " & t & linefeed
           end if
         end repeat
       end repeat
@@ -120,12 +125,15 @@ on frameOf(el)
 end frameOf
 AS
 
-# press <process> <button> <show|click>: finds a button by its name; show only scrolls it into view.
+# press <process> <button> <show|click> [has]: finds a button by its name, or with "has" by a part of
+# its name; show only scrolls it into view.
 cat > "$WORK/press.applescript" <<'AS'
 on run argv
   set procName to item 1 of argv
   set btnName to item 2 of argv
   set mode to item 3 of argv
+  set part to false
+  if (count of argv) > 3 then set part to true
   tell application "System Events"
     if not (exists process procName) then return "no process " & procName
     tell process procName
@@ -155,7 +163,7 @@ on run argv
             try
               set d to description of el as text
             end try
-            if n is btnName or t is btnName or d is btnName then
+            if n is btnName or t is btnName or d is btnName or (part and (n contains btnName or t contains btnName)) then
               try
                 perform action "AXScrollToVisible" of el
               end try
@@ -178,20 +186,26 @@ on run argv
 end run
 AS
 dump() { osascript "$WORK/dump.applescript" "$1" 2>&1; }
-press() { osascript "$WORK/press.applescript" "$1" "$2" "$3" 2>&1; }
+press() { osascript "$WORK/press.applescript" "$@" 2>&1; }
+running() { ps -axo pid=,stat=,etime=,command= | grep "[S]amwise.app/Contents/MacOS/Samwise" | awk '{ print $1 " " $2 " " $3 }' | tr '\n' ';'; }
 
 say "== First open of a browser download: $(sw_vers -productName) $(sw_vers -productVersion) ($(sw_vers -buildVersion)) =="
 note "gatekeeper: $(spctl --status 2>&1 | tr '\n' ' ')"
-note "display: $(system_profiler SPDisplaysDataType 2>/dev/null | grep -i 'resolution' | head -1 | xargs)"
+note "screen: $(osascript -e 'tell application "Finder" to get bounds of window of desktop' 2>/dev/null)"
 
-# The login password of this throwaway Mac, to answer the question macOS asks at the end.
+# An administrator's password for this throwaway Mac, to answer the question macOS asks at the end:
+# this user's own password set to a random value, or else a second administrator made for the run.
 PW="Sw-$(uuidgen | tr -d '-' | cut -c1-14)"
 echo "::add-mask::$PW"
-if sudo dscl . -passwd "/Users/$USER" "$PW" 2> "$WORK/passwd.log"; then
+ADMIN=""
+if sudo sysadminctl -resetPasswordFor "$USER" -newPassword "$PW" > "$WORK/passwd.log" 2>&1 && dscl . -authonly "$USER" "$PW" >/dev/null 2>&1; then
+  ADMIN="$USER"
   note "login password of this build machine set to a random value"
+elif sudo sysadminctl -addUser samwisecheck -fullName "Samwise Check" -password "$PW" -admin >> "$WORK/passwd.log" 2>&1 && dscl . -authonly samwisecheck "$PW" >/dev/null 2>&1; then
+  ADMIN="samwisecheck"
+  note "a second administrator was made on this build machine for the password question"
 else
-  note "could not set the login password: $(head -2 "$WORK/passwd.log" | tr '\n' ' ')"
-  PW=""
+  note "no administrator password could be set: $(grep -v -i password "$WORK/passwd.log" | tail -2 | tr '\n' ' ')"
 fi
 
 # ───────────────────────── 1. The download ─────────────────────────
@@ -201,9 +215,14 @@ if [ "${DL%% *}" = "200" ]; then pass "the disk image downloads from $BASE ($DL)
 # A browser marks what it downloads, curl does not. This is the mark Safari leaves.
 MARK="0083;$(printf '%x' "$(date +%s)");Safari;$(uuidgen)"
 xattr -w com.apple.quarantine "$MARK" "$WORK/Samwise.dmg"
-MNT="$WORK/mnt"
-mkdir -p "$MNT"
-hdiutil attach "$WORK/Samwise.dmg" -nobrowse -readonly -quiet -mountpoint "$MNT" || fail "the disk image did not open"
+MNT="/Volumes/Samwise"
+hdiutil attach "$WORK/Samwise.dmg" -readonly -quiet || fail "the disk image did not open"
+open "$MNT" 2>/dev/null || true
+sleep 4
+shot 49-disk-image
+say "windows:"; windows | tee -a "$RES"
+winshot Finder 49-disk-image-window || true
+osascript -e 'tell application "Finder" to close every window' >/dev/null 2>&1 || true
 rm -rf /Applications/Samwise.app
 # Dragging to Applications is a copy that keeps the mark.
 ditto "$MNT/Samwise.app" /Applications/Samwise.app || fail "Samwise could not be copied to Applications"
@@ -223,7 +242,7 @@ say "== 2. Opening it, as a double-click does =="
 sleep 8
 shot 50-not-opened
 say "windows:"; windows | tee -a "$RES"
-if pgrep -x Samwise >/dev/null; then fail "Samwise opened without a question, so this Mac does not check downloads"; else pass "macOS did not open Samwise"; fi
+note "Samwise process while the dialog is up: $(running)"
 D1="$(dump CoreServicesUIAgent)"
 echo "$D1" > "$OUT/first-open-dialog.txt"
 echo "$D1" | head -40 | tee -a "$RES"
@@ -235,7 +254,9 @@ if echo "$D1" | grep -q -E "^AXButton \| Open"; then fail "the dialog offers Ope
 winshot CoreServicesUIAgent 50-not-opened-window
 
 note "Done: $(press CoreServicesUIAgent Done click)"
-sleep 2
+sleep 4
+note "Samwise process after Done: $(running)"
+if [ -z "$(running)" ]; then pass "after Done, Samwise is not running"; else fail "Samwise is running although macOS said Not Opened"; fi
 
 # ───────────────────────── 3. Privacy & Security ─────────────────────────
 say "== 3. System Settings > Privacy & Security =="
@@ -246,16 +267,19 @@ D2="$(dump "System Settings")"
 echo "$D2" > "$OUT/first-open-settings.txt"
 note "settings elements: $(echo "$D2" | wc -l | xargs)"
 echo "$D2" | grep -i -E "samwise|anyway|blocked|^WINDOW|Allow app" | tee -a "$RES"
-if echo "$D2" | grep -q "Open Anyway"; then pass "Privacy & Security offers Open Anyway"; else fail "Privacy & Security does not offer Open Anyway"; fi
-if echo "$D2" | grep -i "samwise" | grep -qi "blocked"; then pass "next to a line that says Samwise was blocked"; else fail "no line says Samwise was blocked"; fi
-note "Open Anyway: $(press "System Settings" "Open Anyway" show)"
+# macOS names the Open Anyway button after the line it belongs to, so that line is how it is found.
+BLOCKED="was blocked to protect your Mac"
+if echo "$D2" | grep -q "^AXStaticText | “Samwise” $BLOCKED"; then pass "Privacy & Security says Samwise was blocked to protect your Mac"; else fail "no line says Samwise was blocked"; fi
+if echo "$D2" | grep -q "^AXButton | “Samwise” $BLOCKED"; then pass "with a button on that line (Open Anyway in the picture)"; else fail "no button on that line"; fi
+if echo "$D2" | grep -q "^AXStaticText | Security "; then pass "under the heading Security"; else note "no heading named Security was found"; fi
+note "Open Anyway: $(press "System Settings" "$BLOCKED" show has)"
 shot 52-open-anyway
 say "windows:"; windows | tee -a "$RES"
 winshot "System Settings" 52-open-anyway-window
 
 # ───────────────────────── 4. Open Anyway ─────────────────────────
 say "== 4. Open Anyway =="
-note "click: $(press "System Settings" "Open Anyway" click)"
+note "click: $(press "System Settings" "$BLOCKED" click has)"
 sleep 5
 shot 53-open-anyway-question
 say "windows:"; windows | tee -a "$RES"
@@ -272,19 +296,24 @@ if [ -n "$ASKER" ]; then
   sleep 5
   shot 54-password
   say "windows:"; windows | tee -a "$RES"
-  dump SecurityAgent > "$OUT/first-open-password.txt" 2>&1 || true
-  head -20 "$OUT/first-open-password.txt" | tee -a "$RES"
+  { for who in SecurityAgent coreautha "System Settings" CoreServicesUIAgent; do echo "--- $who"; dump "$who"; done; } > "$OUT/first-open-password.txt" 2>&1 || true
+  grep -v "^AXStaticText | $" "$OUT/first-open-password.txt" | head -40 | tee -a "$RES"
   winshot SecurityAgent 54-password-window || true
-  if pgrep -x Samwise >/dev/null; then
+  if windows | grep -q -E $'\t(SecurityAgent|coreautha|LocalAuthenticationRemoteService)\t'; then pass "macOS then asks for an administrator's password"; else note "no password window was seen"; fi
+  if [ -n "$(running)" ]; then
     note "Samwise opened without a password question"
-  elif [ -n "$PW" ]; then
-    osascript -e 'on run argv' -e 'tell application "System Events" to keystroke (item 1 of argv)' -e 'delay 0.6' -e 'tell application "System Events" to key code 36' -e 'end run' "$PW" >/dev/null 2>&1 || note "the password could not be typed"
+  elif [ "$ADMIN" = "$USER" ]; then
+    osascript -e 'on run argv' -e 'tell application "System Events"' -e 'keystroke (item 1 of argv)' -e 'delay 0.6' -e 'key code 36' -e 'end tell' -e 'end run' "$PW" >/dev/null 2>&1 || note "the password could not be typed"
+  elif [ -n "$ADMIN" ]; then
+    # Another administrator answers: back to the name field, replace the name, then the password.
+    osascript -e 'on run argv' -e 'tell application "System Events"' -e 'key code 48 using shift down' -e 'delay 0.4' -e 'keystroke "a" using command down' -e 'keystroke (item 1 of argv)' -e 'delay 0.4' -e 'key code 48' -e 'delay 0.4' -e 'keystroke (item 2 of argv)' -e 'delay 0.6' -e 'key code 36' -e 'end tell' -e 'end run' "$ADMIN" "$PW" >/dev/null 2>&1 || note "the name and password could not be typed"
   fi
-  for _ in 1 2 3 4 5 6 7 8 9 10; do pgrep -x Samwise >/dev/null && break; sleep 2; done
+  for _ in 1 2 3 4 5 6 7 8 9 10; do [ -n "$(running)" ] && break; sleep 2; done
   sleep 3
   shot 55-opened
   say "windows:"; windows | tee -a "$RES"
-  if pgrep -x Samwise >/dev/null; then pass "after Open Anyway and the password, Samwise opens"; else fail "Samwise did not open after Open Anyway and the password"; fi
+  note "Samwise process at the end: $(running)"
+  if [ -n "$(running)" ]; then pass "after Open Anyway and the password, Samwise opens"; else fail "Samwise did not open after Open Anyway and the password"; fi
   winshot Samwise 55-opened-window || true
 fi
 
