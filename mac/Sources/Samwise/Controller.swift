@@ -941,6 +941,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     private func network() {
         guard paired else { return }
         let real = Date()
+        // A check-in came near since the last answer: ask now instead of waiting out the quiet 15 minutes,
+        // so a check-in that is already done or was moved never takes the screen, and Samwise knows this Mac is on.
+        if busy && nextPollAt.timeIntervalSince(real) > 30 { nextPollAt = real }
         if !fetching && real >= nextPollAt { fetchConfig() }
         if !posting && !store.data.events.isEmpty && real.timeIntervalSince(lastPostAt) > 20 { postEvents() }
     }

@@ -2,7 +2,8 @@
 """Stand-in for samwise.life in the Mac app's end-to-end check.
 
 Usage: mock_server.py <port> <dir>
-Serves <dir>/config.json as GET /api/mac/config and writes every POST to <dir>/requests.jsonl.
+Serves <dir>/config.json as GET /api/mac/config (one line per request in <dir>/gets.log) and writes
+every POST to <dir>/requests.jsonl.
 All data in it is made up; no real account is involved.
 """
 import json
@@ -35,6 +36,9 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith("/api/mac/config"):
             if not self.authed():
                 return self.reply(401, {"error": "This Mac is not connected."})
+            # One line per answered schedule request, so the check can count how often the app asks.
+            with open(os.path.join(DIR, "gets.log"), "a") as f:
+                f.write(self.path + "\n")
             return self.reply(200, self.config())
         self.reply(404, {"error": "Not found."})
 
