@@ -159,7 +159,9 @@ public enum Engine {
             if s.phase.isFinal { continue }
 
             let start = o.fireAt.addingTimeInterval(-lead)
-            let headsStart = start.addingTimeInterval(-headsUp)
+            // The small countdown starts `headsUp` before the check-in itself, as Settings words it
+            // ("5 minutes before"), and gives way to the alarm at `start`.
+            let headsStart = o.fireAt.addingTimeInterval(-max(headsUp, lead))
             let expiry = o.fireAt.addingTimeInterval(lateWindow)
 
             if s.phase == .pending && now < headsStart {

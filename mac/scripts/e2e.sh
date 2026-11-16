@@ -114,12 +114,12 @@ awake_note() { # name
 # ───────────────────────── 1. No account: 16:00 on this Mac's clock ─────────────────────────
 say "== 1. No account, check-in at 16:00 =="
 S1="$WORK/s1"
-P1="$(launch "$S1" "${TODAY}T15:54:30Z" --mute)"
+P1="$(launch "$S1" "${TODAY}T15:55:30Z" --mute)"
 expect "small countdown five minutes before" "$S1" desired headsUp 20
 shot 01-heads-up
 expect "the Mac is kept from falling asleep before the check-in" "$S1" awake 1
 awake_note before
-cmd "$S1" "advance:275"
+cmd "$S1" "advance:215"
 expect "screen taken one minute before" "$S1" desired takeover
 expect "and its screen is kept on while the alarm is up" "$S1" awake 2
 awake_note alarm
@@ -241,7 +241,7 @@ MOCK=$!
 sleep 1
 S4="$WORK/s4"
 mkdir -p "$S4"
-P4="$(launch "$S4" "${TODAY}T20:54:30Z" --mute --api-base http://127.0.0.1:8787)"
+P4="$(launch "$S4" "${TODAY}T20:55:30Z" --mute --api-base http://127.0.0.1:8787)"
 expect "starts without an account" "$S4" paired False 20
 cmd "$S4" "pairverify:+15550100000,000000"
 expect "a wrong code is refused" "$S4" hook_result "pairverify:problem"
@@ -251,7 +251,7 @@ expect "the account's name arrives" "$S4" name Alex
 expect "16:00 Bogota: small countdown" "$S4" desired headsUp
 expect_contains "the menu shows the account's time and place" "$S4" next "16:00 (Bogota)"
 shot 20-heads-up-connected
-cmd "$S4" "advance:275"
+cmd "$S4" "advance:215"
 expect "screen taken one minute before the call" "$S4" kind countdown
 expect_contains "it says Samwise will call the phone" "$S4" subtitle "Samwise calls your phone at 16:00"
 shot 21-countdown-connected
@@ -304,6 +304,23 @@ sleep 4
 expect "so at 16:00 the screen is left alone" "$S5" desired idle
 expect "no alarm window" "$S5" takeover False
 stop "$S5" "$P5"
+
+# ───────────────────────── 5a. Counted during the last minute ─────────────────────────
+say "== 5a. The check-in is counted while the countdown is on screen =="
+write_config false null false false
+S5A="$WORK/s5a"
+mkdir -p "$S5A"
+printf 'test-token' > "$S5A/token"
+P5A="$(launch "$S5A" "${TODAY}T20:59:02Z" --mute --api-base http://127.0.0.1:8787)"
+expect "the countdown has the screen before 16:00" "$S5A" kind countdown 20
+write_config true '"entry"' false false
+cmd "$S5A" "poll"
+expect "it ends on its own when Samwise counts the check-in" "$S5A" desired idle 20
+expect "the after-check-in card opens" "$S5A" windows True
+expect_contains "the card names tomorrow's check-in, not the one that just ended" "$S5A" after_next "tomorrow 16:00 (Bogota)"
+expect_contains "and so does the menu" "$S5A" next "tomorrow 16:00 (Bogota)"
+shot 26-after-check-in-early
+stop "$S5A" "$P5A"
 
 # ───────────────────────── 5b. A check-in comes near on a quiet Mac ─────────────────────────
 say "== 5b. Asking Samwise again when a check-in comes near =="

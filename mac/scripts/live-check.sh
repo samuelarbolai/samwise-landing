@@ -201,7 +201,7 @@ shot 40-live-connected
 
 # ───────────────────────── D. The real schedule on the real clock ─────────────────────────
 say "== D. The account's check-in time, on the real clock =="
-if wait_for_either desired headsUp takeover 480; then
+if wait_for_either desired headsUp takeover 600; then
   if [ "$(status desired)" = "headsUp" ]; then
     pass "the small countdown comes up for the account's check-in time"
   else
@@ -239,6 +239,11 @@ if wait_for "phases.$ID" done 480; then
   case "$(status next)" in
     *"today ${ID#*T}"*) fail "the menu still names the check-in that is done ($(status next))" ;;
     *) pass "the menu moves on to the check-in after this one ($(status next))" ;;
+  esac
+  case "$(status after_next)" in
+    *"today ${ID#*T}"*) fail "the card still names the check-in that is done ($(status after_next))" ;;
+    "") fail "the card names no next check-in" ;;
+    *) pass "the card names the check-in after this one too ($(status after_next))" ;;
   esac
   shot 45-live-after-check-in
   cmd "taskdone"

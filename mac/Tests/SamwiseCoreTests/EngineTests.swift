@@ -110,7 +110,11 @@ final class EngineTests: XCTestCase {
 
     func testHeadsUpThenTakeoverThenRingingThenLate() {
         var s: [String: OccurrenceState] = [:]
-        XCTAssertEqual(step("2026-11-16T20:54:30Z", &s).desired, .headsUp(id: id, secondsToCheckin: 330))
+        // The small countdown comes five minutes before the check-in itself, not before the alarm.
+        XCTAssertEqual(step("2026-11-16T20:54:30Z", &s).desired, .idle)
+        XCTAssertTrue(s.isEmpty)
+        XCTAssertEqual(step("2026-11-16T20:55:00Z", &s).desired, .headsUp(id: id, secondsToCheckin: 300))
+        XCTAssertEqual(step("2026-11-16T20:55:30Z", &s).desired, .headsUp(id: id, secondsToCheckin: 270))
 
         let fired = step("2026-11-16T20:59:00Z", &s)
         XCTAssertEqual(fired.desired, .takeover(id: id, kind: .countdown))

@@ -126,10 +126,14 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         let c = copy
         let now = clock.now
         if let until = store.data.pausedUntil, now < until { return c.pausedUntil(dayAndTime(until)) }
-        // A check-in Samwise already counts (or that was skipped) will not ring, so it is not the next one.
-        let finished = Set(store.data.states.filter { $0.value.phase.isFinal }.keys)
-        guard let next = ScheduleMath.next(after: now, times: times, timeZone: timeZone, finished: finished) else { return c.noCheckins }
+        guard let next = ScheduleMath.next(after: now, times: times, timeZone: timeZone, finished: finishedCheckins) else { return c.noCheckins }
         return c.nextCheckin(dayAndTime(next.fireAt))
+    }
+
+    /// Check-ins that Samwise already counts, or that were skipped or missed. They will not ring,
+    /// so none of them is "the next check-in", even while its own time is still ahead.
+    private var finishedCheckins: Set<String> {
+        Set(store.data.states.filter { $0.value.phase.isFinal }.keys)
     }
 
     // MARK: Start
@@ -664,8 +668,10 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
 
     // MARK: After the check-in
 
+    /// The check-in named on the "Check-in done" card. A check-in can be counted before its own time
+    /// (a written entry during the last minute), so the one that just ended is left out here too.
     private func nextText() -> String? {
-        ScheduleMath.next(after: clock.now, times: times, timeZone: timeZone).map { dayAndTime($0.fireAt) }
+        ScheduleMath.next(after: clock.now, times: times, timeZone: timeZone, finished: finishedCheckins).map { dayAndTime($0.fireAt) }
     }
 
     private func celebrate() {
@@ -1210,6 +1216,7 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             "windows": windows.anyVisible,
             "queued_events": store.data.events.count,
             "next": nextCheckinLine(),
+            "after_next": nextText() ?? "",
             "awake": awakeLevel,
             "tasks": config?.tasks?.count ?? 0,
             "hook_result": hookResult,

@@ -5,9 +5,9 @@
  * update the three values below (see mac/README.md).
  */
 export const MAC_RELEASE = {
-  version: "1.0.2",
-  file: "/downloads/Samwise-1.0.2.dmg",
-  sha256: "22436bfcaadb0b590fdfd48d8d8cc0aedb71a960ff65c6e03f31aa78e36ec814",
+  version: "1.0.3",
+  file: "/downloads/Samwise-1.0.3.dmg",
+  sha256: "78c77b4cf70fefad5c243f4e590b8aa6bfe5ed7bc8698ef082303909a711292c",
   sizeMb: "1.2",
   minMacOS: "13",
 } as const
