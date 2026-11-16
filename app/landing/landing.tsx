@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { LANDING_EN, LANDING_ES, type LandingCopy } from "./landing-copy"
 import { cleanSrc } from "@/lib/v2/src-tag"
+import { DemoVideo } from "../_shared/demo-video"
 import { detectLang, langFromUrl, saveLang, type PageLang } from "@/lib/lang"
 import "./landing.css"
 
@@ -129,6 +130,13 @@ export function Landing({ copy = HOME_COPY, defaultSrc = "landing", pageLang }: 
               </div>
               <figcaption className="ld-caption">{t.hero.caption}</figcaption>
             </figure>
+          </div>
+        </section>
+
+        {/* 1b. Demo video: the first week, in the page's language. Loads only on tap. */}
+        <section aria-label="Video" className="ld-video">
+          <div className="ld-wrap">
+            <DemoVideo video="first-week" lang={lang} />
           </div>
         </section>
 

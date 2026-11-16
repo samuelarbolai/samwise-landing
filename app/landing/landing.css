@@ -157,6 +157,7 @@
 
 /* ── sections ── */
 .ld-section { padding: 96px 0; }
+.ld-video { background: var(--bg); color: var(--ink); padding: 0 0 72px; }
 .ld-section--paper { background: var(--paper); }
 
 /* 2. how it works */

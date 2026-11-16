@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { HOME_COPY, type HomeCopy, type Lang } from "./home-copy"
+import { DemoVideo } from "./_shared/demo-video"
 import { detectLang, saveLang } from "@/lib/lang"
 import "./home.css"
 
@@ -75,6 +76,8 @@ export function Home() {
           {t.cta} <Arrow />
         </Link>
         <p className="sw-micro">{t.micro}</p>
+
+        <DemoVideo video="first-week" lang={lang} className="sw-video" />
       </main>
 
       <footer className="sw-foot">
