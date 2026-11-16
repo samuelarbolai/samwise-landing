@@ -83,6 +83,24 @@
 .ld-nav__links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; font-size: 15px; }
 .ld-nav__links > a:not(.ld-btn) { color: var(--ink-mute); text-decoration: none; padding: 10px 0; }
 .ld-nav__links > a:not(.ld-btn):hover { color: var(--ink); }
+.ld-lang { display: inline-flex; align-items: center; gap: 5px; }
+.ld-lang button {
+  position: relative;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  cursor: pointer;
+}
+/* A bigger tap target than the two letters. */
+.ld-lang button::before { content: ""; position: absolute; inset: -12px -8px; }
+.ld-lang button[aria-pressed="true"] { color: var(--ink); border-bottom-color: currentColor; }
+.ld-lang span { color: var(--ink-mute); font-size: 11px; opacity: 0.6; }
 
 /* ── 1. hero ── */
 .ld-hero { background: var(--bg); color: var(--ink); padding: 40px 0 96px; }

@@ -85,3 +85,72 @@ export const LANDING_EN: LandingCopy = {
     mac: "Samwise for Mac",
   },
 }
+
+/**
+ * Spanish of the home page. Translated by Dev 2026-11-16 with the plain-wording glossary
+ * (chequeo, cuaderno, desliz, personas de confianza) so the page can follow the visitor's
+ * language; lines shared with the self-managed page use Sales' approved Spanish.
+ * Sales may replace any line.
+ */
+export const LANDING_ES: LandingCopy = {
+  nav: { how: "Cómo funciona", questions: "Preguntas", cta: "Empieza tu primer chequeo" },
+  hero: {
+    title: "Convierte cada desliz en algo que puedes trabajar.",
+    sub: "Samwise te llama cada día para tu chequeo. Cuando tienes un desliz, escribes lo que pasó, en tu propio cuaderno, listo para tu padrino.",
+    cta: "Empieza tu primer chequeo",
+    under: "Gratis. Sin app. Una llamada corta y un cuaderno.",
+    chip: "¿He tenido un desliz desde mi último chequeo?",
+    entry: {
+      day: "Martes · desliz",
+      before: "Cansancio, a solas después del trabajo, el celular en la cama.",
+      during: "Como anestesiado. Me dije que solo cinco minutos.",
+      after: "Vergüenza. Esta noche el celular se carga en la cocina.",
+      next: "→ hablar con mi padrino el jueves",
+    },
+    caption: "Entrada de ejemplo escrita para esta página. No es de una persona real.",
+  },
+  how: {
+    title: "Cómo funciona",
+    steps: [
+      {
+        title: "Haz tu chequeo cada día.",
+        body: "Una llamada corta que pregunta: “¿Algún desliz desde tu último chequeo?” Tu cuaderno empieza con “¿Estoy en riesgo hoy?” y “¿He tenido un desliz desde mi último chequeo?”",
+      },
+      {
+        title: "Escríbelo.",
+        body: "¿Tuviste un desliz? Escribe cómo te sentiste antes, durante y después. En papel o en tu propio Google Doc. Samwise guarda las entradas con su fecha.",
+      },
+      { title: "Llévalo a tu padrino.", body: "Es tu cuaderno. Tú decides quién lo lee." },
+    ],
+  },
+  net: {
+    title: "Si faltas a un chequeo, tus personas de confianza reciben una llamada.",
+    steps: [
+      { label: "Tu hora", body: "Samwise te llama. ¿Sin tiempo? Pídele que te llame más tarde." },
+      { label: "30 minutos", body: "Llama tú a Samwise o haz tu chequeo en los siguientes 30 minutos y nadie recibe aviso." },
+      { label: "Después", body: "Samwise llama a tus personas de confianza. Quien no conteste recibe un correo." },
+    ],
+  },
+  yours: {
+    title: "Lo que sigue siendo tuyo",
+    items: [
+      "Samwise nunca comparte lo que escribes.",
+      "Sin rachas.",
+      "Funciona junto a tus reuniones y tu padrino. No los reemplaza.",
+    ],
+  },
+  faq: {
+    title: "Preguntas",
+    items: [
+      { q: "¿Necesito una app?", a: "No. Una llamada, WhatsApp y tu cuaderno o Google Doc." },
+      { q: "¿Quién lee mi cuaderno?", a: "Tú, quien tú quieras, y Samwise, para seguir tus pasos. Tus personas de confianza solo saben que escribiste una entrada, nunca lo que dice." },
+      { q: "¿Y si no contesto?", a: "Llama tú a Samwise en los siguientes 30 minutos y nadie recibe aviso." },
+    ],
+  },
+  close: { title: "Un chequeo honesto al día.", cta: "Empieza tu primer chequeo", under: "Gratis. Sin app. En español o inglés." },
+  footer: {
+    left: "Samwise · samwise.life",
+    right: "Diseñado con la psicóloga conductual Ana María Reyes. Samwise es una herramienta independiente.",
+    mac: "Samwise para Mac",
+  },
+}

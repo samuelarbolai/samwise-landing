@@ -2,30 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { V2_STRINGS, type Lang, type V2Strings } from "../strings"
-
-const KEY = "samwise:v2-lang"
+import { detectLang, saveLang } from "@/lib/lang"
 
 /**
- * Starts at "en" on both server and client, then reconciles from ?lang / storage
- * in an effect — otherwise the first paint would mismatch during hydration.
+ * Starts at "en" on both server and client, then reconciles in an effect from
+ * ?lang, the saved choice, or the browser's language (Spanish when it starts with
+ * "es") — otherwise the first paint would mismatch during hydration.
  */
 export function useLang(): { lang: Lang; setLang: (l: Lang) => void; s: V2Strings } {
   const [lang, setLangState] = useState<Lang>("en")
 
   useEffect(() => {
-    const fromUrl = new URLSearchParams(window.location.search).get("lang")
-    const stored = window.localStorage.getItem(KEY)
-    const next = fromUrl === "es" || fromUrl === "en" ? fromUrl : stored === "es" ? "es" : "en"
-    setLangState(next as Lang)
+    setLangState(detectLang())
   }, [])
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l)
-    try {
-      window.localStorage.setItem(KEY, l)
-    } catch {
-      // Private mode / storage disabled — the toggle still works for this view.
-    }
+    saveLang(l)
   }, [])
 
   return { lang, setLang, s: V2_STRINGS[lang] }
