@@ -1,0 +1,6 @@
+2026-11-16T23:12:29Z launch 1.0.4 --no-agent --state-dir /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/tmp.724ttq8Tz5/s5 --allow-capture --test-hooks --no-welcome --fake-now 2026-11-16T20:58:50Z --mute --api-base http://127.0.0.1:8787
+2026-11-16T23:12:30Z start: connected, Next check-in: tomorrow 16:00
+2026-11-16T23:12:30Z schedule: account|America/Bogota|16:00
+2026-11-16T23:12:30Z event: done 2026-11-16T16:00 source=samwise_entry visible=0
+2026-11-16T23:12:32Z hook: advance
+2026-11-16T23:12:36Z hook: quit

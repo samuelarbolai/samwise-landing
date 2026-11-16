@@ -1,0 +1,29 @@
+2026-11-16 23:11:00 +0000 
+Assertion status system-wide:
+   BackgroundTask                 0
+   PreventDiskIdle                1
+   ApplePushServiceTask           0
+   UserIsActive                   1
+   PreventUserIdleDisplaySleep    1
+   SoftwareUpdateTask             0
+   PreventSystemSleep             0
+   ExternalMedia                  0
+   InternalPreventDisplaySleep    1
+   PreventUserIdleSystemSleep     1
+   NetworkClientActive            1
+Listed by owning process:
+   pid 161(WindowServer): [0x000000070009802c] 00:00:03 UserIsActive named: "com.apple.iohideventsystem.queue.tickle.nxevent service:IOHIDSystem pid:2364 process:System Events"  
+   pid 2207(Samwise): [0x0000007300098101] 00:00:05 UserIsActive named: "Samwise check-in alarm"  
+   pid 2207(Samwise): [0x00000064000980f9] 00:00:21 UserIsActive named: "Samwise check-in alarm"  
+   pid 292(addonsd): [0x0000000600018029] 00:01:55 PreventUserIdleSystemSleep named: "Anka sleeplessness"  
+   pid 292(addonsd): [0x0000000600058028] 00:01:55 NoDisplaySleepAssertion named: "Anka sleeplessness"  
+   pid 292(addonsd): [0x00000006000f802a] 00:01:55 PreventDiskIdle named: "Anka sleeplessness"  
+   pid 292(addonsd): [0x000000060011802b] 00:01:55 NetworkClientActive named: "Anka sleeplessness"  
+   pid 99(powerd): [0x0000000400018000] 00:01:56 PreventUserIdleSystemSleep named: "Powerd - Prevent sleep while display is on"  
+   pid 99(powerd): [0x0000000400098001] 00:01:56 UserIsActive named: "com.apple.powerd.ws.initialize"  
+   pid 99(powerd): [0x00000071001080fe] 00:00:03 InternalPreventDisplaySleep named: "com.apple.powermanagement.delayDisplayOff"  
+	Timeout will fire in 296 secs Action=TimeoutActionTurnOff
+   pid 114(mds): [0x00000011000b80af] 00:01:43 BackgroundTask named: "com.apple.metadata.mds.power"  
+Kernel Assertions: 0x4=USB
+   id=501  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.0c900000 owner=Virtual USB Keyboard
+   id=502  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.0ca00000 owner=Virtual USB Digitizer

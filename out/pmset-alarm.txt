@@ -1,0 +1,27 @@
+2026-11-16 23:10:39 +0000 
+Assertion status system-wide:
+   BackgroundTask                 0
+   PreventDiskIdle                1
+   ApplePushServiceTask           0
+   UserIsActive                   1
+   PreventUserIdleDisplaySleep    1
+   SoftwareUpdateTask             0
+   PreventSystemSleep             0
+   ExternalMedia                  0
+   PreventUserIdleSystemSleep     1
+   NetworkClientActive            1
+Listed by owning process:
+   pid 161(WindowServer): [0x000000070009802c] 00:01:33 UserIsActive named: "com.apple.iohideventsystem.queue.tickle.nxevent service:IOHIDSystem pid:364 process:Dock"  
+   pid 2207(Samwise): [0x00000064000180fa] 00:00:00 PreventUserIdleSystemSleep named: "Samwise check-in alarm is on screen"  
+   pid 2207(Samwise): [0x00000064000580fb] 00:00:00 PreventUserIdleDisplaySleep named: "Samwise check-in alarm is on screen"  
+   pid 2207(Samwise): [0x00000064000980f9] 00:00:00 UserIsActive named: "Samwise check-in alarm"  
+   pid 292(addonsd): [0x0000000600018029] 00:01:34 PreventUserIdleSystemSleep named: "Anka sleeplessness"  
+   pid 292(addonsd): [0x0000000600058028] 00:01:34 NoDisplaySleepAssertion named: "Anka sleeplessness"  
+   pid 292(addonsd): [0x00000006000f802a] 00:01:34 PreventDiskIdle named: "Anka sleeplessness"  
+   pid 292(addonsd): [0x000000060011802b] 00:01:34 NetworkClientActive named: "Anka sleeplessness"  
+   pid 99(powerd): [0x0000000400018000] 00:01:36 PreventUserIdleSystemSleep named: "Powerd - Prevent sleep while display is on"  
+   pid 99(powerd): [0x0000000400098001] 00:01:36 UserIsActive named: "com.apple.powerd.ws.initialize"  
+   pid 114(mds): [0x00000011000b80af] 00:01:23 BackgroundTask named: "com.apple.metadata.mds.power"  
+Kernel Assertions: 0x4=USB
+   id=501  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.0c900000 owner=Virtual USB Keyboard
+   id=502  level=255 0x4=USB creat= description=com.apple.usb.externaldevice.0ca00000 owner=Virtual USB Digitizer

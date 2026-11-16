@@ -1,0 +1,13 @@
+2026-11-16T23:11:28Z launch 1.0.4 --no-agent --state-dir /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/tmp.724ttq8Tz5/s3 --allow-capture --test-hooks --no-welcome --fake-now 2026-11-16T15:59:30Z
+2026-11-16T23:11:28Z start: not connected, Next check-in: today 16:00
+2026-11-16T23:11:28Z event: fired 2026-11-16T16:00 late_seconds=0
+2026-11-16T23:11:28Z takeover: on 1 display(s)
+2026-11-16T23:11:29Z awake: 2
+2026-11-16T23:11:29Z hook: advance
+2026-11-16T23:11:29Z sound: ring on
+2026-11-16T23:11:36Z hook: type
+2026-11-16T23:11:36Z event: skipped 2026-11-16T16:00 source=skip
+2026-11-16T23:11:36Z sound: off
+2026-11-16T23:11:36Z takeover: off
+2026-11-16T23:11:36Z awake: 0
+2026-11-16T23:11:37Z hook: quit

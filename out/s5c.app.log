@@ -1,0 +1,32 @@
+2026-11-16T23:12:55Z launch 1.0.4 --no-agent --state-dir /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/tmp.724ttq8Tz5/s5c --allow-capture --test-hooks --no-welcome --fake-now 2026-11-16T20:59:20Z --api-base http://127.0.0.1:8787
+2026-11-16T23:12:55Z start: connected, Next check-in: tomorrow 16:00
+2026-11-16T23:12:55Z schedule: account|America/Bogota|16:00
+2026-11-16T23:12:55Z event: fired 2026-11-16T16:00 late_seconds=0
+2026-11-16T23:12:55Z takeover: on 1 display(s)
+2026-11-16T23:12:55Z awake: 2
+2026-11-16T23:12:57Z hook: advance
+2026-11-16T23:12:57Z sound: ring on
+2026-11-16T23:12:58Z hook: touch
+2026-11-16T23:12:58Z sound: off
+2026-11-16T23:12:59Z hook: poll
+2026-11-16T23:13:01Z hook: advance
+2026-11-16T23:13:05Z hook: advance
+2026-11-16T23:13:11Z hook: advance
+2026-11-16T23:13:11Z hook: poll
+2026-11-16T23:13:11Z event: resound 2026-11-16T16:00 
+2026-11-16T23:13:11Z event: alert_ahead_seen 2026-11-16T16:00 on=screen why=unfinished
+2026-11-16T23:13:11Z sound: ring on
+2026-11-16T23:13:14Z hook: type
+2026-11-16T23:13:14Z event: committed 2026-11-16T16:00 seconds_on_screen=531
+2026-11-16T23:13:14Z sound: off
+2026-11-16T23:13:14Z takeover: off
+2026-11-16T23:13:14Z awake: 1
+2026-11-16T23:13:17Z hook: finish
+2026-11-16T23:13:17Z event: done 2026-11-16T16:00 source=self visible=1
+2026-11-16T23:13:17Z awake: 0
+2026-11-16T23:13:22Z hook: warncall
+2026-11-16T23:13:23Z hook: warnok
+2026-11-16T23:13:24Z hook: poll
+2026-11-16T23:13:24Z event: alert_ahead_seen 2026-11-16T16:00 on=panel why=unfinished
+2026-11-16T23:13:26Z hook: poll
+2026-11-16T23:13:54Z hook: quit

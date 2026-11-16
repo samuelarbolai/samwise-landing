@@ -1,0 +1,40 @@
+2026-11-16T23:10:35Z launch 1.0.4 --no-agent --state-dir /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/tmp.724ttq8Tz5/s1 --allow-capture --test-hooks --no-welcome --fake-now 2026-11-16T15:55:30Z --mute
+2026-11-16T23:10:36Z start: not connected, Next check-in: today 16:00
+2026-11-16T23:10:36Z awake: 1
+2026-11-16T23:10:39Z hook: advance
+2026-11-16T23:10:39Z event: fired 2026-11-16T16:00 late_seconds=0
+2026-11-16T23:10:39Z takeover: on 1 display(s)
+2026-11-16T23:10:39Z awake: 2
+2026-11-16T23:10:43Z hook: advance
+2026-11-16T23:10:48Z hook: type
+2026-11-16T23:10:50Z hook: key
+2026-11-16T23:10:52Z hook: snooze
+2026-11-16T23:10:52Z event: snoozed 2026-11-16T16:00 count=1
+2026-11-16T23:10:52Z takeover: off
+2026-11-16T23:10:52Z awake: 1
+2026-11-16T23:10:54Z hook: advance
+2026-11-16T23:10:54Z event: snooze_over 2026-11-16T16:00 
+2026-11-16T23:10:54Z takeover: on 1 display(s)
+2026-11-16T23:10:54Z awake: 2
+2026-11-16T23:10:56Z event: committed 2026-11-16T16:00 seconds_on_screen=378
+2026-11-16T23:10:56Z takeover: off
+2026-11-16T23:10:56Z awake: 1
+2026-11-16T23:10:59Z hook: advance
+2026-11-16T23:10:59Z event: asked_finished 2026-11-16T16:00 
+2026-11-16T23:10:59Z awake: 0
+2026-11-16T23:11:02Z hook: advance
+2026-11-16T23:11:02Z event: came_back 2026-11-16T16:00 
+2026-11-16T23:11:02Z takeover: on 1 display(s)
+2026-11-16T23:11:04Z event: skipped 2026-11-16T16:00 source=skip
+2026-11-16T23:11:04Z takeover: off
+2026-11-16T23:11:06Z hook: test
+2026-11-16T23:11:06Z event: fired test-1 late_seconds=0
+2026-11-16T23:11:06Z takeover: on 1 display(s)
+2026-11-16T23:11:08Z hook: finish
+2026-11-16T23:11:08Z event: test_done test-1 source=self visible=1
+2026-11-16T23:11:08Z takeover: off
+2026-11-16T23:11:10Z hook: show
+2026-11-16T23:11:12Z hook: show
+2026-11-16T23:11:14Z hook: show
+2026-11-16T23:11:15Z hook: show
+2026-11-16T23:11:16Z hook: quit

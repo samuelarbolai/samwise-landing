@@ -1,0 +1,165 @@
+== 1. No account, check-in at 16:00 ==
+PASS  small countdown five minutes before
+PASS  the Mac is kept from falling asleep before the check-in
+note  macOS lists it (before): pid 2207(Samwise): [0x00000061000180f8] 00:00:02 PreventUserIdleSystemSleep named: "A Samwise check-in is near"  |
+PASS  screen taken one minute before
+PASS  and its screen is kept on while the alarm is up
+note  macOS lists it (alarm): pid 2207(Samwise): [0x00000064000180fa] 00:00:00 PreventUserIdleSystemSleep named: "Samwise check-in alarm is on screen"  |pid 2207(Samwise): [0x00000064000580fb] 00:00:00 PreventUserIdleDisplaySleep named: "Samwise check-in alarm is on screen"  |
+PASS  it is the countdown
+PASS  the alarm has the keyboard
+PASS  at 16:00 it says it is time
+PASS  no phone call is promised without an account
+PASS  typed letters are taken
+PASS  letters that do not belong are refused
+PASS  Esc clears the line
+PASS  snooze gives five minutes
+PASS  after the snooze the screen is taken again
+PASS  and it says the check-in is waiting
+PASS  typing the line gives the screen back
+PASS  the alarm is off the screen
+PASS  15 minutes later it asks if the check-in is finished
+PASS  by then the Mac may fall asleep on its own again
+note  macOS lists no Samwise sleep assertion (after)
+PASS  no answer for 10 minutes takes the screen again
+PASS  typing the skip line always clears the screen
+PASS  the check-in is marked skipped
+PASS  the test alarm takes the screen
+PASS  ending the test clears the screen
+PASS  welcome window opens
+keys  real key presses: yes
+== 2. Restarts while the alarm is on screen ==
+PASS  the alarm is on screen
+PASS  after the app is killed and reopened, the alarm is back
+PASS  and it now says it is time
+PASS  after three restarts the alarm lets go (a bug can never lock the Mac)
+PASS  that check-in is closed
+== 3. Sound ==
+PASS  the alarm is on screen
+PASS  at 16:00 it rings
+PASS  the app keeps running with sound on
+note  ring playing on this Mac: True
+PASS  skip works while ringing
+== 4. Connected to a Samwise account ==
+PASS  starts without an account
+PASS  a wrong code is refused
+PASS  the right code connects this Mac
+PASS  the account's name arrives
+PASS  16:00 Bogota: small countdown
+PASS  the menu shows the account's time and place
+PASS  screen taken one minute before the call
+PASS  it says Samwise will call the phone
+PASS  at 16:00 it rings
+PASS  it says Samwise is calling now
+PASS  own words stay hidden at first
+PASS  Tab shows the person's own words
+PASS  Tab hides them again
+PASS  typing the line gives the screen back
+PASS  and opens the journal at the tab for this check-in
+PASS  a missed call takes the screen again
+PASS  it gives the number and the deadline
+PASS  once the call's result is in, it gives Samwise's own time for telling the trusted people
+PASS  typing the line gives the screen back again
+PASS  when Samwise counts the check-in, the alarm ends on its own
+PASS  the check-in is marked done
+PASS  the after-check-in card opens
+PASS  Samwise was told: paired
+PASS  Samwise was told: shown
+PASS  Samwise was told: fired
+PASS  Samwise was told: committed
+PASS  Samwise was told: call_missed_seen
+PASS  Samwise was told: done
+PASS  Samwise was told: task_done
+PASS  ticking a task reaches Samwise
+== 5. Check-in already done before 16:00 ==
+PASS  connected from the saved token
+PASS  Samwise already counts today's check-in
+PASS  the menu names tomorrow's check-in, not the one that is done
+PASS  so at 16:00 the screen is left alone
+PASS  no alarm window
+== 5a. The check-in is counted while the countdown is on screen ==
+PASS  the countdown has the screen before 16:00
+PASS  it ends on its own when Samwise counts the check-in
+PASS  the after-check-in card opens
+PASS  the card names tomorrow's check-in, not the one that just ended
+PASS  and so does the menu
+== 5b. Asking Samwise again when a check-in comes near ==
+PASS  connected from the saved token, twenty minutes before the check-in
+PASS  far from a check-in it asks Samwise once and then stays quiet (1)
+PASS  seven minutes before the check-in it asks Samwise again, without waiting out the quiet 15 minutes
+PASS  and then keeps to one request every 30 seconds (2)
+PASS  no alarm yet, seven minutes before
+== 5c. A real call next to the alarm: quiet during the call, and the truth after it ==
+PASS  connected from the saved token
+PASS  the alarm has the screen
+PASS  at 16:00 it says it is time
+PASS  and it rings
+PASS  a key or a click quiets the ring
+PASS  two minutes later, with Samwise's call open, the Mac is still quiet
+PASS  and the screen is still taken
+PASS  past the ring it says Samwise called, not 'call Samwise now'
+PASS  and that this Mac stays quiet
+PASS  and it does stay quiet
+PASS  the call's result is in and Samwise does not count it: the screen says so
+PASS  with the hour the trusted people are told
+PASS  and Samwise's number
+PASS  the Mac rings again for it
+PASS  the check-in is not marked done
+PASS  typing the line gives the screen back
+PASS  the small panel keeps the warning up
+PASS  with the same hour
+PASS  a button that calls Samwise back
+PASS  and the usual way to say it is finished
+PASS  'I finished' is taken as the person's word on this Mac
+PASS  but the Mac does not open the 'Check-in done' card
+PASS  and the warning stays, because Samwise still has not counted it
+PASS  now with a button to close it
+PASS  the call button dials Samwise
+PASS  OK closes the warning: the person is in charge
+PASS  a second call that does not count has its own hour and warns again
+PASS  when Samwise counts the check-in, the warning goes away
+PASS  Samwise was told: alert_ahead_seen
+PASS  Samwise was told: alert_call
+PASS  Samwise was told: alert_closed
+PASS  including where the hour was shown: screen
+PASS  including where the hour was shown: panel
+== 5d. The call did not count after the screen was given back ==
+PASS  connected from the saved token
+PASS  the alarm has the screen
+PASS  at 16:00 it says it is time
+PASS  the line is typed while Samwise is on the phone
+PASS  while the call is open the small panel says the check-in is in progress
+PASS  the call did not count: the Mac says so instead of 'Check-in done.'
+PASS  with the hour the trusted people are told
+PASS  the warning is for today's check-in
+PASS  the check-in is not marked done
+PASS  the screen is not taken for it
+PASS  and no 'Check-in done' card opens
+PASS  after that hour the warning gives way to the usual question
+PASS  which is 'did you finish?'
+PASS  Samwise was told that this Mac warned in time
+== 6. Over a full-screen app ==
+note  TextEdit is full screen: true
+PASS  the alarm takes the screen over a full-screen app
+PASS  and it has the keyboard there
+PASS  typing the line gives the screen back
+PASS  the app you were working in is in front again
+note  could not read the document underneath to check for leaked letters
+== 7. Screen capture ==
+PASS  the alarm is on screen (capture not allowed this time)
+PASS  skip clears it
+== 8. Installed in Applications and kept running by macOS ==
+PASS  the one-line installer ran
+PASS  Samwise.app is in Applications
+PASS  macOS runs the kept-alive copy
+PASS  exactly one copy is running
+PASS  the keep-running agent is loaded
+PASS  the real clock brings the small countdown
+PASS  and one minute before the time, the alarm
+PASS  killed with the alarm up: macOS reopens it and the alarm is back
+PASS  it is a new process started by macOS
+PASS  the skip line still clears it
+PASS  turning Keep running off leaves a plain copy
+PASS  the agent is gone after turning it off
+PASS  the agent file is removed
+PASS  one plain copy keeps running
+== 0 failed ==

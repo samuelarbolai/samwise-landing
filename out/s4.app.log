@@ -1,0 +1,34 @@
+2026-11-16T23:11:38Z launch 1.0.4 --no-agent --state-dir /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/tmp.724ttq8Tz5/s4 --allow-capture --test-hooks --no-welcome --fake-now 2026-11-16T20:55:30Z --mute --api-base http://127.0.0.1:8787
+2026-11-16T23:11:38Z start: not connected, Next check-in: tomorrow 16:00
+2026-11-16T23:11:40Z hook: pairverify
+2026-11-16T23:11:40Z pair: HTTP 400
+2026-11-16T23:11:42Z hook: pairverify
+2026-11-16T23:11:42Z schedule: account|America/Bogota|16:00
+2026-11-16T23:11:42Z connected to a Samwise account
+2026-11-16T23:11:42Z awake: 1
+2026-11-16T23:11:44Z hook: advance
+2026-11-16T23:11:44Z event: fired 2026-11-16T16:00 late_seconds=0
+2026-11-16T23:11:44Z takeover: on 1 display(s)
+2026-11-16T23:11:44Z awake: 2
+2026-11-16T23:11:47Z hook: advance
+2026-11-16T23:11:50Z hook: key
+2026-11-16T23:11:52Z hook: key
+2026-11-16T23:11:53Z hook: type
+2026-11-16T23:11:53Z event: committed 2026-11-16T16:00 seconds_on_screen=69
+2026-11-16T23:11:53Z takeover: off
+2026-11-16T23:11:53Z awake: 1
+2026-11-16T23:11:54Z hook: poll
+2026-11-16T23:11:54Z event: call_missed_seen 2026-11-16T16:00 
+2026-11-16T23:11:54Z takeover: on 1 display(s)
+2026-11-16T23:11:54Z awake: 2
+2026-11-16T23:11:57Z hook: poll
+2026-11-16T23:11:57Z event: alert_ahead_seen 2026-11-16T16:00 on=screen why=missed
+2026-11-16T23:11:59Z hook: type
+2026-11-16T23:11:59Z event: committed 2026-11-16T16:00 seconds_on_screen=75
+2026-11-16T23:11:59Z takeover: off
+2026-11-16T23:11:59Z awake: 1
+2026-11-16T23:12:00Z hook: poll
+2026-11-16T23:12:00Z event: done 2026-11-16T16:00 source=samwise_call visible=1
+2026-11-16T23:12:00Z awake: 0
+2026-11-16T23:12:03Z hook: taskdone
+2026-11-16T23:12:29Z hook: quit

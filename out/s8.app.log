@@ -1,0 +1,24 @@
+2026-11-16T23:17:01Z launch 1.0.4 
+2026-11-16T23:17:01Z agent: install ok
+2026-11-16T23:17:01Z start: not connected, Next check-in: today 23:20
+2026-11-16T23:17:01Z awake: 1
+2026-11-16T23:17:01Z launch 1.0.4 --launchd
+2026-11-16T23:17:01Z stepping aside for the kept-alive copy
+2026-11-16T23:17:01Z start: not connected, Next check-in: today 23:20
+2026-11-16T23:17:01Z awake: 1
+2026-11-16T23:19:00Z event: fired 2026-11-16T23:20 late_seconds=0
+2026-11-16T23:19:00Z takeover: on 1 display(s)
+2026-11-16T23:19:00Z awake: 2
+2026-11-16T23:19:02Z launch 1.0.4 --launchd
+2026-11-16T23:19:02Z start: not connected, Next check-in: today 23:20
+2026-11-16T23:19:02Z takeover: on 1 display(s)
+2026-11-16T23:19:02Z awake: 2
+2026-11-16T23:19:03Z hook: type
+2026-11-16T23:19:03Z event: skipped 2026-11-16T23:20 source=skip
+2026-11-16T23:19:03Z takeover: off
+2026-11-16T23:19:03Z awake: 0
+2026-11-16T23:19:04Z hook: keeprunning
+2026-11-16T23:19:04Z launch 1.0.4 --replace
+2026-11-16T23:19:04Z agent: removed
+2026-11-16T23:19:04Z start: not connected, Next check-in: tomorrow 23:20
+2026-11-16T23:19:08Z hook: quit

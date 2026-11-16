@@ -1,0 +1,10 @@
+2026-11-16T23:16:52Z launch 1.0.4 --no-agent --state-dir /var/folders/h5/t85nd63d71x27_8gl5gw3l_w0000gn/T/tmp.724ttq8Tz5/s7 --test-hooks --no-welcome --mute --fake-now 2026-11-16T15:59:30Z
+2026-11-16T23:16:52Z start: not connected, Next check-in: today 16:00
+2026-11-16T23:16:52Z event: fired 2026-11-16T16:00 late_seconds=0
+2026-11-16T23:16:52Z takeover: on 1 display(s)
+2026-11-16T23:16:52Z awake: 2
+2026-11-16T23:16:55Z hook: type
+2026-11-16T23:16:55Z event: skipped 2026-11-16T16:00 source=skip
+2026-11-16T23:16:55Z takeover: off
+2026-11-16T23:16:55Z awake: 0
+2026-11-16T23:16:56Z hook: quit
