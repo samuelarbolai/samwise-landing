@@ -1,0 +1,80 @@
+2026-11-16 19:57:13.480 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.480 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.480 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.565 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] invalidated because the client process (pid 10426) either cancelled the connection or exited
+2026-11-16 19:57:13.594 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.594 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.595 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.595 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.596 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.596 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.596 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] activating connection: mach=false listener=false peer=true name=com.apple.authd.peer[10446].0x8ed0c9680
+2026-11-16 19:57:13.596 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.596 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.597 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.597 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.597 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.597 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.683 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] invalidated because the client process (pid 10446) either cancelled the connection or exited
+2026-11-16 19:57:13.724 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.725 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.726 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.726 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.727 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.727 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.727 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] activating connection: mach=false listener=false peer=true name=com.apple.authd.peer[10452].0x8ed0c9680
+2026-11-16 19:57:13.728 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.728 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.729 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.730 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.730 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.730 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.801 Df authd[197:7e39] [com.apple.xpc:connection] [0x8ed0c9680] invalidated because the client process (pid 10452) either cancelled the connection or exited
+2026-11-16 19:57:13.840 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.840 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.843 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.843 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.844 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.844 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.844 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] activating connection: mach=false listener=false peer=true name=com.apple.authd.peer[10461].0x8ed0c9680
+2026-11-16 19:57:13.845 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.845 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.846 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.846 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.847 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.847 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.863 A  opendirectoryd[126:2fe] (SystemCache) Kernel: kauth_membership_check
+2026-11-16 19:57:13.874 A  opendirectoryd[126:2fe] (SystemCache) Kernel: kauth_membership_check
+2026-11-16 19:57:13.919 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] invalidated because the client process (pid 10461) either cancelled the connection or exited
+2026-11-16 19:57:13.951 A  authd[197:7e39] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.952 A  authd[197:7e39] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.954 A  authd[197:7e39] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.954 A  authd[197:7e39] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.955 Df authd[197:7e39] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.955 Df authd[197:7e39] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:13.955 Df authd[197:7e39] [com.apple.xpc:connection] [0x8ed0c9680] activating connection: mach=false listener=false peer=true name=com.apple.authd.peer[10466].0x8ed0c9680
+2026-11-16 19:57:13.957 A  authd[197:7e39] (Security) SecKeyVerifySignature
+2026-11-16 19:57:13.958 A  authd[197:7e39] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:13.960 A  authd[197:7e39] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.960 A  authd[197:7e39] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:13.960 Df authd[197:7e39] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:13.960 Df authd[197:7e39] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:14.041 Df authd[197:7e39] [com.apple.xpc:connection] [0x8ed0c9680] invalidated because the client process (pid 10466) either cancelled the connection or exited
+2026-11-16 19:57:14.086 A  authd[197:7e39] (Security) SecKeyVerifySignature
+2026-11-16 19:57:14.087 A  authd[197:7e39] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:14.088 A  authd[197:7e39] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:14.088 A  authd[197:7e39] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:14.089 Df authd[197:7e39] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:14.089 Df authd[197:7e39] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:14.089 Df authd[197:7e39] [com.apple.xpc:connection] [0x8ed0c9680] activating connection: mach=false listener=false peer=true name=com.apple.authd.peer[10472].0x8ed0c9680
+2026-11-16 19:57:14.089 A  authd[197:7e37] (Security) SecKeyVerifySignature
+2026-11-16 19:57:14.089 A  authd[197:7e37] (Security) SecTrustEvaluateIfNecessary
+2026-11-16 19:57:14.091 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:14.091 A  authd[197:7e37] (Security) SecTrustCopyAppleTrustAnchors
+2026-11-16 19:57:14.092 Df authd[197:7e37] [com.apple.securityd:security_exception] MacOS error: 3
+2026-11-16 19:57:14.092 Df authd[197:7e37] [com.apple.securityd:SecError] Error checking with notarization daemon: 3
+2026-11-16 19:57:14.162 Df authd[197:7e37] [com.apple.xpc:connection] [0x8ed0c9680] invalidated because the client process (pid 10472) either cancelled the connection or exited
+2026-11-16 19:57:19.953 A  opendirectoryd[126:2fe] (SystemCache) Kernel: kauth_membership_check
+2026-11-16 19:57:24.018 Df authd[197:7e39] [com.apple.xpc:connection] [0x8ed0c9040] invalidated because the client process (pid 10009) either cancelled the connection or exited
+2026-11-16 19:57:32.078 A  opendirectoryd[126:2fe] (SystemCache) Kernel: kauth_map_identifier
+2026-11-16 19:57:41.117 A  opendirectoryd[126:2fe] (SystemCache) Kernel: kauth_membership_check

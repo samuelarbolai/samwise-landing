@@ -1,0 +1,6 @@
+WINDOW |  | 382,133,260,268
+AXStaticText | “Samwise” Not Opened | “Samwise” Not Opened | text | 403,232,218,18 | 
+AXStaticText | Apple could not verify “Samwise” is free of malware that may harm your Mac or compromise your privacy. | Apple could not verify “Samwise” is free of malware that may harm your Mac or compromise your privacy. | text | 403,258,218,50 | 
+AXButton |  |  | Help | 601,144,30,30 | 
+AXButton | Move to Trash |  | button | 397,322,230,30 | Move to Trash
+AXButton | Done |  | button | 397,356,230,30 | Done

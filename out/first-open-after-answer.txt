@@ -1,0 +1,14 @@
+--- coreautha
+WINDOW | Privacy & Security | 382,110,260,360
+AXStaticText | Privacy & Security | Privacy & Security | text | 403,209,218,18 | 
+AXStaticText | You are attempting to open an app that may cause harm to your Mac or compromise your privacy | You are attempting to open an app that may cause harm to your Mac or compromise your privacy | text | 403,241,218,50 | 
+AXStaticText | Enter an administrator’s username and password to allow this. | Enter an administrator’s username and password to allow this. | text | 403,305,218,34 | 
+AXTextField |  | samwisecheck | text field | 396,353,232,26 | 
+AXTextField |  |  | secure text field | 396,385,232,26 | 
+AXButton | Cancel |  | button | 397,425,113,30 | Cancel
+AXButton | OK |  | button | 514,425,113,30 | OK
+
+--- SecurityAgent
+no process SecurityAgent
+--- CoreServicesUIAgent
+

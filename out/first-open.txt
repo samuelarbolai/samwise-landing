@@ -1,0 +1,121 @@
+== First open of a browser download: macOS 26.7.2 (25G332) ==
+note  gatekeeper: assessments enabled 
+note  screen: 0, 0, 1024, 768
+note  a second administrator was made on this build machine for the password question
+== 0. The page with the steps (https://www.samwise.life/mac/open) ==
+PASS  a browser that asks for the download is sent to the steps page
+PASS  the steps page opens
+PASS  for a browser on a Mac it starts the download by itself
+PASS  it says to allow the beta only if you trust Samwise
+PASS  it shows 4 pictures
+PASS  the picture /mac/open-anyway.png is served
+PASS  the picture /mac/open-disk-image.png is served
+PASS  the picture /mac/open-not-opened.png is served
+PASS  the picture /mac/open-question.png is served
+== 1. The download ==
+PASS  the disk image downloads from https://www.samwise.life (200 1244050)
+windows:
+30	0	Finder	Samwise	52,91,920,436
+10	-2147483603	Finder		0,0,1024,768
+PASS  the copy in Applications carries the browser's download mark (0083)
+note  spctl: /Applications/Samwise.app: rejected 
+== 2. Opening it, as a double-click does ==
+windows:
+33	8	CoreServicesUIAgent		382,133,260,268
+10	-2147483603	Finder		0,0,1024,768
+note  Samwise process while the dialog is up (T = held back by macOS): 1685 T 00:10;
+WINDOW |  | 382,133,260,268
+AXStaticText | “Samwise” Not Opened | “Samwise” Not Opened | text | 403,232,218,18 | 
+AXStaticText | Apple could not verify “Samwise” is free of malware that may harm your Mac or compromise your privacy. | Apple could not verify “Samwise” is free of malware that may harm your Mac or compromise your privacy. | text | 403,258,218,50 | 
+AXButton |  |  | Help | 601,144,30,30 | 
+AXButton | Move to Trash |  | button | 397,322,230,30 | Move to Trash
+AXButton | Done |  | button | 397,356,230,30 | Done
+PASS  the dialog says Not Opened
+PASS  the page quotes the dialog's title, “Samwise” Not Opened
+PASS  it says Apple could not verify the app
+PASS  it offers Done
+PASS  it offers Move to Trash
+PASS  it offers no way to open the app from the dialog
+note  Done: clicked Done at 397,356,230,30
+note  Samwise process after Done: 
+PASS  after Done, Samwise is not running
+== 3. System Settings > Privacy & Security ==
+note  settings elements: 88
+WINDOW | Privacy & Security | 150,56,723,625
+AXStaticText | Allow applications from | Allow applications from | text | 403,418,141,16 | 
+AXPopUpButton | Allow applications from | App Store & Known Developers | pop up button | 605,415,238,24 | 
+AXStaticText | “Samwise” was blocked to protect your Mac. | “Samwise” was blocked to protect your Mac. | text | 403,465,271,16 | 
+AXButton | “Samwise” was blocked to protect your Mac. |  | button | 736,462,107,24 | 
+AXStaticText | Apple could not verify “Samwise” is free of malware that may harm your Mac or compromise your privacy. | Apple could not verify “Samwise” is free of malware that may harm your Mac or compromise your privacy. | text | 403,506,418,28 | 
+PASS  Privacy & Security says Samwise was blocked to protect your Mac
+PASS  the page quotes that line
+PASS  with a button on that line (Open Anyway in the picture)
+note  no heading named Security was found
+note  Open Anyway: found was blocked to protect your Mac at 736,462,107,24
+windows:
+42	0	System Settings	Privacy & Security	150,56,723,625
+10	-2147483603	Finder		0,0,1024,768
+== 4. Open Anyway ==
+note  click: clicked was blocked to protect your Mac at 736,462,107,24
+windows:
+48	8	CoreServicesUIAgent		382,112,260,350
+42	0	System Settings	Privacy & Security	150,56,723,625
+10	-2147483603	Finder		0,0,1024,768
+WINDOW |  | 382,112,260,350
+AXStaticText | Open “Samwise”? | Open “Samwise”? | text | 403,211,218,18 | 
+AXStaticText | Apple is not able to verify that it is free from malware that could harm your Mac or compromise your privacy. Don’t open this unless you are certain it is from a trustworthy source. | Apple is not able to verify that it is free from malware that could harm your Mac or compromise your privacy. Don’t open this unless you are certain it is from a trustworthy source. | text | 403,237,218,98 | 
+AXButton |  |  | Help | 601,123,30,30 | 
+AXButton | Move to Trash |  | button | 397,349,230,30 | Move to Trash
+AXButton | Open Anyway |  | button | 397,383,230,30 | Open Anyway
+AXButton | Done |  | button | 397,417,230,30 | Done
+PASS  macOS asks once more, with an Open Anyway button (CoreServicesUIAgent)
+PASS  the question is: Open “Samwise”?
+PASS  the page quotes that question
+PASS  Move to Trash is offered again there
+note  click: clicked Open Anyway at 397,383,230,30
+windows:
+57	1000	coreautha		390,415,121,37
+53	1000	coreautha	Privacy & Security	382,110,260,360
+42	0	System Settings	Privacy & Security	150,56,723,625
+10	-2147483603	Finder		0,0,1024,768
+--- coreautha
+WINDOW |  | 390,415,121,37
+AXCell | Passwords… |  | cell | 404,422,93,22 | 
+AXStaticText | Passwords… | Passwords… | text | 403,424,95,18 | 
+WINDOW | Privacy & Security | 382,110,260,360
+AXStaticText | Privacy & Security | Privacy & Security | text | 403,209,218,18 | 
+AXStaticText | You are attempting to open an app that may cause harm to your Mac or compromise your privacy | You are attempting to open an app that may cause harm to your Mac or compromise your privacy | text | 403,241,218,50 | 
+AXStaticText | Enter an administrator’s username and password to allow this. | Enter an administrator’s username and password to allow this. | text | 403,305,218,34 | 
+AXTextField |  | runner | text field | 396,353,232,26 | 
+AXButton | Cancel |  | button | 397,425,113,30 | Cancel
+AXButton | OK |  | button | 514,425,113,30 | OK
+
+--- SecurityAgent
+no process SecurityAgent
+--- System Settings
+WINDOW | Privacy & Security | 150,56,723,625
+PASS  macOS then asks for an administrator's name and password (coreautha)
+note  Samwise process before the answer (T = held back by macOS): 4173 T 02:43;
+note  answer: typing test exact, name typed, password field found, password typed, Return pressed, the window stayed up, second try: password set through accessibility, OK clicked, the window stayed up 
+windows:
+53	1000	coreautha	Privacy & Security	382,110,260,360
+42	0	System Settings	Privacy & Security	150,56,723,625
+10	-2147483603	Finder		0,0,1024,768
+note  Samwise process at the end: 4173 T 04:01;
+--- coreautha
+WINDOW | Privacy & Security | 382,110,260,360
+AXStaticText | Privacy & Security | Privacy & Security | text | 403,209,218,18 | 
+AXStaticText | You are attempting to open an app that may cause harm to your Mac or compromise your privacy | You are attempting to open an app that may cause harm to your Mac or compromise your privacy | text | 403,241,218,50 | 
+AXStaticText | Enter an administrator’s username and password to allow this. | Enter an administrator’s username and password to allow this. | text | 403,305,218,34 | 
+AXTextField |  | samwisecheck | text field | 396,353,232,26 | 
+AXTextField |  |  | secure text field | 396,385,232,26 | 
+AXButton | Cancel |  | button | 397,425,113,30 | Cancel
+AXButton | OK |  | button | 514,425,113,30 | OK
+
+--- SecurityAgent
+no process SecurityAgent
+--- CoreServicesUIAgent
+
+NOT CHECKED  Samwise opening after the password: macOS did not accept the password this script entered
+note  no window of Samwise to photograph
+== 0 failed, 1 not checked ==
