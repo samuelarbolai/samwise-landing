@@ -236,6 +236,10 @@ say "note  waiting for Samwise to count the check-in (a written entry is added t
 if wait_for "phases.$ID" done 480; then
   pass "when Samwise counts the check-in, the alarm ends on its own"
   expect "the after-check-in card opens" windows True
+  case "$(status next)" in
+    *"today ${ID#*T}"*) fail "the menu still names the check-in that is done ($(status next))" ;;
+    *) pass "the menu moves on to the check-in after this one ($(status next))" ;;
+  esac
   shot 45-live-after-check-in
   cmd "taskdone"
   # The app drops the task from its own list at once. Only Samwise's next two answers prove it was saved.

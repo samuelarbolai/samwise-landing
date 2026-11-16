@@ -283,11 +283,36 @@ printf 'test-token' > "$S5/token"
 P5="$(launch "$S5" "${TODAY}T20:58:50Z" --mute --api-base http://127.0.0.1:8787)"
 expect "connected from the saved token" "$S5" paired True 20
 expect "Samwise already counts today's check-in" "$S5" "phases.$ID" done 20
+expect_contains "the menu names tomorrow's check-in, not the one that is done" "$S5" next "tomorrow 16:00 (Bogota)"
 cmd "$S5" "advance:120"
 sleep 4
 expect "so at 16:00 the screen is left alone" "$S5" desired idle
 expect "no alarm window" "$S5" takeover False
 stop "$S5" "$P5"
+
+# ───────────────────────── 5b. A check-in comes near on a quiet Mac ─────────────────────────
+say "== 5b. Asking Samwise again when a check-in comes near =="
+write_config false null false false
+asked() { if [ -f "$M/gets.log" ]; then wc -l < "$M/gets.log" | tr -d ' '; else echo 0; fi; }
+S5B="$WORK/s5b"
+mkdir -p "$S5B"
+printf 'test-token' > "$S5B/token"
+rm -f "$M/gets.log"
+P5B="$(launch "$S5B" "${TODAY}T20:40:00Z" --mute --api-base http://127.0.0.1:8787)"
+expect "connected from the saved token, twenty minutes before the check-in" "$S5B" paired True 20
+sleep 6
+BEFORE="$(asked)"
+if [ "$BEFORE" -ge 1 ] && [ "$BEFORE" -le 2 ]; then say "PASS  far from a check-in it asks Samwise once and then stays quiet ($BEFORE)"; else say "FAIL  far from a check-in it asked Samwise $BEFORE times in 6 seconds"; FAILS=$((FAILS + 1)); fi
+cmd "$S5B" "advance:780"
+i=0
+while [ "$(asked)" -le "$BEFORE" ] && [ "$i" -lt 12 ]; do sleep 1; i=$((i + 1)); done
+AFTER="$(asked)"
+if [ "$AFTER" -gt "$BEFORE" ]; then say "PASS  seven minutes before the check-in it asks Samwise again, without waiting out the quiet 15 minutes"; else say "FAIL  seven minutes before the check-in it did not ask Samwise again ($AFTER requests)"; FAILS=$((FAILS + 1)); fi
+sleep 5
+LATER="$(asked)"
+if [ "$LATER" -le $((AFTER + 1)) ]; then say "PASS  and then keeps to one request every 30 seconds ($LATER)"; else say "FAIL  it asked Samwise $((LATER - AFTER)) more times within 5 seconds"; FAILS=$((FAILS + 1)); fi
+expect "no alarm yet, seven minutes before" "$S5B" desired idle
+stop "$S5B" "$P5B"
 kill "$MOCK" 2>/dev/null || true
 
 # ───────────────────────── 6. Over a full-screen app ─────────────────────────

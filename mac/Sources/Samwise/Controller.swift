@@ -124,7 +124,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         let c = copy
         let now = clock.now
         if let until = store.data.pausedUntil, now < until { return c.pausedUntil(dayAndTime(until)) }
-        guard let next = ScheduleMath.next(after: now, times: times, timeZone: timeZone) else { return c.noCheckins }
+        // A check-in Samwise already counts (or that was skipped) will not ring, so it is not the next one.
+        let finished = Set(store.data.states.filter { $0.value.phase.isFinal }.keys)
+        guard let next = ScheduleMath.next(after: now, times: times, timeZone: timeZone, finished: finished) else { return c.noCheckins }
         return c.nextCheckin(dayAndTime(next.fireAt))
     }
 
@@ -941,6 +943,9 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     private func network() {
         guard paired else { return }
         let real = Date()
+        // A check-in came near since the last answer: ask now instead of waiting out the quiet 15 minutes,
+        // so a check-in that is already done or was moved never takes the screen, and Samwise knows this Mac is on.
+        if busy && nextPollAt.timeIntervalSince(real) > 30 { nextPollAt = real }
         if !fetching && real >= nextPollAt { fetchConfig() }
         if !posting && !store.data.events.isEmpty && real.timeIntervalSince(lastPostAt) > 20 { postEvents() }
     }
