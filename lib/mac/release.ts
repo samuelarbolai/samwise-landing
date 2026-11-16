@@ -7,7 +7,7 @@
 export const MAC_RELEASE = {
   version: "1.0.0",
   file: "/downloads/Samwise-1.0.0.dmg",
-  sha256: "d7e75d2784084e80d79e07a3b7a31be8b2c7fdace571b0c39998a8f3eeee92a9",
+  sha256: "e9e82a527d263fb56db21cc50c1bbe073b9747a96c22c874c92c58648cbde8b0",
   sizeMb: "1.2",
   minMacOS: "13",
 } as const
