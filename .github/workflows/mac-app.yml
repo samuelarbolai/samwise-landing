@@ -1,0 +1,41 @@
+name: mac-app
+
+on:
+  push:
+    branches: [mac-checkin-alarm]
+    paths:
+      - 'mac/**'
+      - '.github/workflows/mac-app.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Environment
+        run: |
+          sw_vers
+          uname -m
+          xcodebuild -version
+          swift --version
+          ls /Applications | grep -i xcode || true
+          xcrun --show-sdk-path
+          xcrun --show-sdk-version
+          system_profiler SPDisplaysDataType | head -40 || true
+          who || true
+          id
+      - name: Screen capture probe
+        run: |
+          mkdir -p out
+          screencapture -x out/probe.png && sips -g pixelWidth -g pixelHeight out/probe.png || echo "screencapture failed"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: probe
+          path: out
+          if-no-files-found: warn
