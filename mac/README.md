@@ -9,6 +9,7 @@ Download: https://www.samwise.life/mac
 
 | When | What happens |
 |---|---|
+| From 30 minutes before | The Mac is kept from falling asleep on its own, because a sleeping Mac cannot ring (`Engine.awakeLevel`). The screen may turn off until the alarm, and is kept on while the alarm is up. It ends when the alarm is answered, at the latest 15 minutes past the time. A setting turns it off; a closed lid still sleeps the Mac. |
 | 5 minutes before | A small countdown panel at the top of the screen and one soft chime. |
 | 1 minute before | Every display is covered. With a connected account: "Samwise calls your phone at 16:00. Get it in your hand." |
 | At the time | "It's time for your check-in." A ring that grows louder; after a minute a sharper ring, and a muted Mac is set to 60%. |

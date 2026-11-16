@@ -102,14 +102,27 @@ stop() { # dir pid
   kill -9 "$2" 2>/dev/null || true
 }
 
+# What macOS itself lists as keeping this Mac awake. Saved with the outputs and printed as a note:
+# the wording of pmset differs between macOS versions, so the pass or fail is the app's own state.
+awake_note() { # name
+  pmset -g assertions > "$OUT/pmset-$1.txt" 2>&1 || true
+  local lines
+  lines="$(grep -E "Samwise check-in alarm is on screen|A Samwise check-in is near" "$OUT/pmset-$1.txt" | sed -E 's/^[[:space:]]+//' | head -3 | tr '\n' '|')"
+  if [ -n "$lines" ]; then say "note  macOS lists it ($1): $lines"; else say "note  macOS lists no Samwise sleep assertion ($1)"; fi
+}
+
 # ───────────────────────── 1. No account: 16:00 on this Mac's clock ─────────────────────────
 say "== 1. No account, check-in at 16:00 =="
 S1="$WORK/s1"
 P1="$(launch "$S1" "${TODAY}T15:54:30Z" --mute)"
 expect "small countdown five minutes before" "$S1" desired headsUp 20
 shot 01-heads-up
+expect "the Mac is kept from falling asleep before the check-in" "$S1" awake 1
+awake_note before
 cmd "$S1" "advance:275"
 expect "screen taken one minute before" "$S1" desired takeover
+expect "and its screen is kept on while the alarm is up" "$S1" awake 2
+awake_note alarm
 expect "it is the countdown" "$S1" kind countdown
 expect "the alarm has the keyboard" "$S1" keyboard True
 shot 02-countdown
@@ -138,6 +151,8 @@ expect "the alarm is off the screen" "$S1" takeover False
 shot 07-in-progress
 cmd "$S1" "advance:901"
 expect "15 minutes later it asks if the check-in is finished" "$S1" ask True
+expect "by then the Mac may fall asleep on its own again" "$S1" awake 0
+awake_note after
 shot 08-did-you-finish
 cmd "$S1" "advance:601"
 expect "no answer for 10 minutes takes the screen again" "$S1" kind followUp

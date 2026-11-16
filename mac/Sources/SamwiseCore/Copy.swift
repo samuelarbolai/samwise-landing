@@ -244,6 +244,12 @@ public struct Copy {
           "Se abre al iniciar sesión y se reabre si se cierra, porque una alarma que se cierra por accidente es una alarma que se pierde. Desmárcalo y Samwise solo corre cuando lo abras.")
     }
 
+    public var keepAwake: String { t("Keep this Mac awake before a check-in", "Mantener este Mac despierto antes de un chequeo") }
+    public var keepAwakeWhy: String {
+        t("A sleeping Mac cannot ring. From 30 minutes before a check-in until you answer the alarm, and at most 15 minutes past its time, Samwise keeps this Mac from falling asleep on its own. The screen can still turn off, and closing the lid still puts it to sleep. Untick it and the alarm only shows when the Mac is awake.",
+          "Un Mac dormido no puede sonar. Desde 30 minutos antes de un chequeo hasta que respondas la alarma, y máximo 15 minutos después de su hora, Samwise evita que este Mac se duerma solo. La pantalla puede apagarse, y cerrar la tapa lo duerme igual. Desmárcalo y la alarma solo aparece si el Mac está despierto.")
+    }
+
     public var off: String { t("Off", "Apagado") }
     public func minutesBefore(_ n: Int) -> String { t("\(n) minutes before", "\(n) minutos antes") }
     public func minutes(_ n: Int) -> String { t("\(n) minutes", "\(n) minutos") }

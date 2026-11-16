@@ -42,6 +42,27 @@ final class EngineTests: XCTestCase {
         XCTAssertEqual(ScheduleMath.next(after: before, times: times, timeZone: tz, finished: ["2026-11-15T16:00"])?.id, "2026-11-16T16:00")
     }
 
+    func testTheMacIsKeptAwakeOnlyAroundACheckinThatCanStillRing() {
+        func level(_ now: String, states: [String: OccurrenceState] = [:], desired: Desired = .idle, enabled: Bool = true, pausedUntil: Date? = nil) -> Int {
+            Engine.awakeLevel(now: at(now), occurrences: day(), states: states, desired: desired, enabled: enabled, pausedUntil: pausedUntil)
+        }
+        XCTAssertEqual(level("2026-11-16T20:29:00Z"), 0) // 15:29, 31 minutes before
+        XCTAssertEqual(level("2026-11-16T20:30:00Z"), 1) // 15:30
+        XCTAssertEqual(level("2026-11-16T20:59:30Z", desired: .takeover(id: id, kind: .countdown)), 2)
+        XCTAssertEqual(level("2026-11-16T21:03:00Z", desired: .snoozed(id: id, secondsLeft: 120)), 1)
+        XCTAssertEqual(level("2026-11-16T21:15:00Z"), 1) // 16:15, still not answered
+        XCTAssertEqual(level("2026-11-16T21:15:01Z", desired: .takeover(id: id, kind: .late)), 0) // after that the Mac may sleep again
+        XCTAssertEqual(level("2026-11-16T20:45:00Z", enabled: false), 0)
+        XCTAssertEqual(level("2026-11-16T20:45:00Z", pausedUntil: at("2026-11-17T05:00:00Z")), 0)
+        XCTAssertEqual(level("2026-11-16T20:45:00Z", pausedUntil: at("2026-11-16T20:00:00Z")), 1) // a pause that is over
+        for phase in [Phase.done, .skipped, .missed] {
+            let states = [id: OccurrenceState(id: id, fireAt: at("2026-11-16T21:00:00Z"), phase: phase)]
+            XCTAssertEqual(level("2026-11-16T20:45:00Z", states: states), 0)
+        }
+        let open = [id: OccurrenceState(id: id, fireAt: at("2026-11-16T21:00:00Z"), phase: .committed)]
+        XCTAssertEqual(level("2026-11-16T21:05:00Z", states: open, desired: .inProgress(id: id, askFinished: false)), 1)
+    }
+
     func testTimeListParsing() {
         XCTAssertEqual(CheckinTime.list("16:00, 8:30;21:30 nonsense 25:00").map { $0.description }, ["08:30", "16:00", "21:30"])
         XCTAssertEqual(CheckinTime("16:00:00")?.description, "16:00")

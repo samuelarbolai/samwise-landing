@@ -345,6 +345,10 @@ final class Windows: NSObject, NSWindowDelegate {
 
         f.section(c.sectionRunning)
         keepRunningBlock(f)
+        f.checkbox(c.keepAwake, on: s.keepAwake, gap: 12) { [weak self] on in
+            self?.app.updateSettings { $0.keepAwake = on }
+        }
+        f.text(c.keepAwakeWhy, size: 12.5, color: Theme.inkFaint, gap: 4)
 
         let test = PillButton(c.testAlarm, style: .secondary) { [weak self] in self?.app.startTest() }
         let pauseButton = PillButton(app.isPaused ? c.resume : c.pause, style: .secondary) { [weak self] in

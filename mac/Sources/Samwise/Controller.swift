@@ -17,6 +17,8 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
     private var menuProxies: [ActionProxy] = []
     private var timer: Timer?
     private var activity: NSObjectProtocol?
+    private var awakeToken: NSObjectProtocol?
+    private var awakeLevel = 0
 
     private(set) var config: RemoteConfig?
     private(set) var desired: Desired = .idle
@@ -268,6 +270,7 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         for e in result.events { handle(e, now: now) }
         desired = result.desired
         reconcile(now: now)
+        stayAwake(now: now)
         if store.data.states != before {
             Engine.prune(now: now, states: &store.data.states)
             store.touch()
@@ -927,6 +930,28 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
         noteScheduleChange()
     }
 
+    // MARK: Staying awake
+
+    /// A sleeping Mac cannot ring. Around a check-in that can still ring, the Mac is kept from falling asleep
+    /// on its own, and its screen is kept on while the alarm is on it (Engine.awakeLevel has the rule).
+    /// The user can turn this off in Settings, and closing the lid still puts the Mac to sleep.
+    private func stayAwake(now: Date) {
+        let level = Engine.awakeLevel(
+            now: now, occurrences: Array(occurrences.values), states: store.data.states,
+            desired: desired, enabled: settings.keepAwake, pausedUntil: store.data.pausedUntil)
+        guard level != awakeLevel else { return }
+        if let token = awakeToken { ProcessInfo.processInfo.endActivity(token) }
+        awakeToken = nil
+        awakeLevel = level
+        if level > 0 {
+            var options: ProcessInfo.ActivityOptions = [.idleSystemSleepDisabled]
+            if level == 2 { options.insert(.idleDisplaySleepDisabled) }
+            let reason = level == 2 ? "Samwise check-in alarm is on screen" : "A Samwise check-in is near"
+            awakeToken = ProcessInfo.processInfo.beginActivity(options: options, reason: reason)
+        }
+        Log.write("awake: \(level)")
+    }
+
     // MARK: Talking to samwise.life
 
     /// A check-in is near or open: ask Samwise every 30 seconds how it stands. Otherwise every 15 minutes.
@@ -1185,6 +1210,7 @@ final class AppController: NSObject, TakeoverActions, NSMenuDelegate {
             "windows": windows.anyVisible,
             "queued_events": store.data.events.count,
             "next": nextCheckinLine(),
+            "awake": awakeLevel,
             "tasks": config?.tasks?.count ?? 0,
             "hook_result": hookResult,
             "problem": connectionProblem ?? "",
