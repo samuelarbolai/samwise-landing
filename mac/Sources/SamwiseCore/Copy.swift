@@ -104,7 +104,7 @@ public struct Copy {
             let back: String = number.map { t(" To do your check-in now, call Samwise: \($0).", " Para hacer tu chequeo ahora, llama a Samwise: \($0).") } ?? ""
             // What is still ahead comes first: a second call that did not count can follow an alert already sent.
             if let d = deadline {
-                return t("Samwise tells your trusted people at about \(d), unless you call back first.", "Samwise avisa a tus personas de confianza hacia las \(d), a menos que llames antes.") + back
+                return t("Samwise calls your trusted people at about \(d), unless you call back first.", "Samwise llama a tus personas de confianza hacia las \(d), a menos que llames antes.") + back
             }
             if let told = toldAt {
                 return t("Samwise called your trusted people at \(told).", "Samwise llamó a tus personas de confianza a las \(told).") + back
@@ -207,7 +207,7 @@ public struct Copy {
         let what = missed
             ? t("Samwise's call went unanswered.", "No contestaste la llamada de Samwise.")
             : t("Samwise did not count that call as your check-in.", "Samwise no contó esa llamada como tu chequeo.")
-        return what + "\n" + t("It tells your trusted people at about \(deadline), unless you call back first.", "Avisa a tus personas de confianza hacia las \(deadline), a menos que llames antes.")
+        return what + "\n" + t("It calls your trusted people at about \(deadline), unless you call back first.", "Llama a tus personas de confianza hacia las \(deadline), a menos que llames antes.")
     }
     public var gotIt: String { t("OK", "Entendido") }
 
