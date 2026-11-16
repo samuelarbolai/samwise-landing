@@ -41,7 +41,7 @@ const STEPS = [
   },
   {
     title: "One minute before.",
-    body: "Every screen is taken over, on top of full-screen apps, and it rings. The ring grows louder if nobody answers.",
+    body: "Every screen is taken over, on top of full-screen apps, with a chime. At check-in time it rings, and the ring grows louder if nobody answers.",
   },
   {
     title: "You type one line.",

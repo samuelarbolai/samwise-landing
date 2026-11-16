@@ -305,6 +305,23 @@ expect "so at 16:00 the screen is left alone" "$S5" desired idle
 expect "no alarm window" "$S5" takeover False
 stop "$S5" "$P5"
 
+# ───────────────────────── 5a. Counted during the last minute ─────────────────────────
+say "== 5a. The check-in is counted while the countdown is on screen =="
+write_config false null false false
+S5A="$WORK/s5a"
+mkdir -p "$S5A"
+printf 'test-token' > "$S5A/token"
+P5A="$(launch "$S5A" "${TODAY}T20:59:02Z" --mute --api-base http://127.0.0.1:8787)"
+expect "the countdown has the screen before 16:00" "$S5A" kind countdown 20
+write_config true '"entry"' false false
+cmd "$S5A" "poll"
+expect "it ends on its own when Samwise counts the check-in" "$S5A" desired idle 20
+expect "the after-check-in card opens" "$S5A" windows True
+expect_contains "the card names tomorrow's check-in, not the one that just ended" "$S5A" after_next "tomorrow 16:00 (Bogota)"
+expect_contains "and so does the menu" "$S5A" next "tomorrow 16:00 (Bogota)"
+shot 26-after-check-in-early
+stop "$S5A" "$P5A"
+
 # ───────────────────────── 5b. A check-in comes near on a quiet Mac ─────────────────────────
 say "== 5b. Asking Samwise again when a check-in comes near =="
 write_config false null false false

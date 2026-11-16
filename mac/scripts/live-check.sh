@@ -240,6 +240,11 @@ if wait_for "phases.$ID" done 480; then
     *"today ${ID#*T}"*) fail "the menu still names the check-in that is done ($(status next))" ;;
     *) pass "the menu moves on to the check-in after this one ($(status next))" ;;
   esac
+  case "$(status after_next)" in
+    *"today ${ID#*T}"*) fail "the card still names the check-in that is done ($(status after_next))" ;;
+    "") fail "the card names no next check-in" ;;
+    *) pass "the card names the check-in after this one too ($(status after_next))" ;;
+  esac
   shot 45-live-after-check-in
   cmd "taskdone"
   # The app drops the task from its own list at once. Only Samwise's next two answers prove it was saved.
