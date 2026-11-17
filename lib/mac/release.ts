@@ -13,3 +13,5 @@ export const MAC_RELEASE = {
 } as const
 
 export const MAC_PAGE_URL = "https://www.samwise.life/mac"
+/** Where "Update available…" in the app leads (download_url in /api/mac/config). */
+export const MAC_UPDATE_URL = "https://www.samwise.life/mac/update"
