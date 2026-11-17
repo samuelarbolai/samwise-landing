@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { NextResponse } from "next/server"
 import { query, toId } from "@/lib/v2/db"
-import { MAC_PAGE_URL, MAC_RELEASE } from "./release"
+import { MAC_RELEASE, MAC_UPDATE_URL } from "./release"
 
 /**
  * Server side of Samwise for Mac (the check-in alarm in mac/).
@@ -403,7 +403,7 @@ export async function loadConfig(device: Device, appVersion: string | null = nul
     journal_url: docUrl(u.doc_id),
     samwise_number: SAMWISE_NUMBER,
     latest_version: MAC_RELEASE.version,
-    download_url: MAC_PAGE_URL,
+    download_url: MAC_UPDATE_URL,
     show_words_right_away: false,
   }
 }
