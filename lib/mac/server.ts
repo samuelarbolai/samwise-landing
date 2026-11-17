@@ -82,16 +82,19 @@ export function deviceInfo(body: Record<string, unknown>): DeviceInfo {
 
 export type Device = { id: number; userId: number }
 
-/** The Mac behind this request, or null. Also notes that the Mac was just seen. */
+/**
+ * The Mac behind this request, or null. Also notes that the Mac was just seen, and the version it
+ * names in its User-Agent, so an app updated in place shows its new version before it reports any event.
+ */
 export async function deviceFromRequest(req: Request): Promise<Device | null> {
   const header = (req.headers.get("authorization") ?? "").trim()
   const m = /^Bearer\s+(swm_[A-Za-z0-9_-]{43})$/.exec(header)
   if (!m) return null
   const [row] = await query<{ id: string; user_id: string }>(
-    `UPDATE mac_devices SET last_seen_at = now()
+    `UPDATE mac_devices SET last_seen_at = now(), app_version = COALESCE($2, app_version)
      WHERE token_hash = $1 AND revoked_at IS NULL
      RETURNING id, user_id`,
-    [sha256(m[1])],
+    [sha256(m[1]), appVersionFromRequest(req)],
   )
   return row ? { id: toId(row.id), userId: toId(row.user_id) } : null
 }
