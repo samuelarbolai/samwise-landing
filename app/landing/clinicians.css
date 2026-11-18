@@ -1,0 +1,20 @@
+/* Clinician page extras on top of landing.css (same house brand). */
+.cl-tag { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--forest); }
+.cl-plan {
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: #fbfaf6;
+  border: 1px solid var(--rule);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+}
+.cl-plan__label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #5a5a66; }
+.ld-root .cl-plan ol { list-style: decimal; padding-left: 20px; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 16px; }
+.cl-plan__yours { color: #8a5a12; font-weight: 600; }
+.cl-sent {
+  padding: 16px 20px;
+  border-radius: 14px;
+  background: var(--forest);
+  color: #eef2ec;
+  font-size: 15px;
+}
+.cl-sent b { display: block; color: var(--gold); font-weight: 600; margin-bottom: 4px; }
