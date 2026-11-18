@@ -134,7 +134,7 @@ export async function userByPhoneDigits(digits: string): Promise<{
      FROM users
      WHERE regexp_replace(phone, '[^0-9]', '', 'g') = $1
         OR (length($1) >= 10 AND right(regexp_replace(phone, '[^0-9]', '', 'g'), length($1)) = $1)
-     ORDER BY (regexp_replace(phone, '[^0-9]', '', 'g') = $1) DESC, id
+     ORDER BY (regexp_replace(phone, '[^0-9]', '', 'g') = $1) DESC, (COALESCE(role, 'user') = 'clinician'), id
      LIMIT 2`,
     [digits],
   )

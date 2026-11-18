@@ -2,6 +2,7 @@ import { query, toId } from "@/lib/v2/db"
 import { createSession } from "@/lib/v2/session"
 import { ok, fail, readJson, handleError } from "@/lib/v2/http"
 import { PHONE_CODE_HOOK } from "@/lib/v2/phone"
+import { getLines, lineFor } from "@/lib/v2/lines"
 
 /**
  * Sign-up step 2 of 2. Checks the code (5 tries, 10 min). A new number becomes a
@@ -27,10 +28,17 @@ export async function POST(req: Request) {
     if (!row) return fail("This code expired. Ask for a new one.", 410)
     if (row.code !== code) return fail("That code is not right. Check it and try again.", 401)
 
-    const [existing] = await query<{ id: string; name: string; role: string }>(
-      `SELECT id, name, role FROM users WHERE regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace($1, '[^0-9]', '', 'g') LIMIT 1`,
-      [row.phone],
+    // Once the clinician WhatsApp line is live, one phone may own two accounts: a user account
+    // (user line) and a clinician account (clinician line). Signing up in one role then finds or
+    // creates the account for that role. Before that: one account per number, as it always was.
+    const lines = await getLines()
+    const wantClinician = row.role === "clinician"
+    const [match] = await query<{ id: string; name: string; role: string }>(
+      `SELECT id, name, role FROM users WHERE regexp_replace(phone, '[^0-9]', '', 'g') = regexp_replace($1, '[^0-9]', '', 'g')
+       ORDER BY ((COALESCE(role, 'user') = 'clinician') = $2) DESC, id LIMIT 1`,
+      [row.phone, wantClinician],
     )
+    const existing = match && (!lines.clinician || (match.role === "clinician") === wantClinician) ? match : undefined
 
     let userId: number
     let name: string
@@ -89,7 +97,7 @@ export async function POST(req: Request) {
     }
 
     await createSession(userId)
-    return ok({ name, existing: !!existing, role })
+    return ok({ name, existing: !!existing, role, wa_number: lineFor(lines, role) })
   } catch (err) {
     return handleError(err)
   }
