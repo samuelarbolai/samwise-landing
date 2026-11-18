@@ -32,7 +32,7 @@ export const V2_STRINGS = {
     clinicianSub:
       "One minute. We send a code to your WhatsApp. Then you tell Samwise your questions in the chat and get a link to send your patient.",
     clinicianDoneSub:
-      "Last step: open WhatsApp and say hi. Samwise asks for your questions there and gives you a link for your patient.",
+      "Last step: open WhatsApp and say hi. Samwise asks for your questions first and gives you the link for your patient as soon as you confirm them.",
     planInvite: "CLINICIAN invited you to “PLAN”.",
     planQuestions: "They would like your check-in call to also ask:",
     planYours:
@@ -42,6 +42,9 @@ export const V2_STRINGS = {
     waPhone: "WhatsApp number",
     waPhonePh: "300 123 4567",
     waPhoneHelp: "We send your code here on WhatsApp. This is also the number Samwise calls.",
+    clinicianWaPhoneHelp: "We send your code here on WhatsApp. Samwise never calls this number; you write your questions in the chat.",
+    clinicianConsentText:
+      "By continuing, you agree to get WhatsApp messages from Samwise about the check-ins you write for your patients. See our",
     codeTitle: "Enter your code.",
     codeSub: "We sent a 6-digit code on WhatsApp to",
     codeBusy: "Checking…",
@@ -184,7 +187,7 @@ export const V2_STRINGS = {
     clinicianSub:
       "Un minuto. Te enviamos un código a tu WhatsApp. Luego le dices a Samwise tus preguntas en el chat y recibes un enlace para enviarle a tu paciente.",
     clinicianDoneSub:
-      "Último paso: abre WhatsApp y saluda. Samwise te pide tus preguntas ahí y te da un enlace para tu paciente.",
+      "Último paso: abre WhatsApp y saluda. Samwise te pide primero tus preguntas y te da el enlace para tu paciente en cuanto las confirmas.",
     planInvite: "CLINICIAN te invitó a «PLAN».",
     planQuestions: "Le gustaría que tu llamada de chequeo también pregunte:",
     planYours:
@@ -194,6 +197,9 @@ export const V2_STRINGS = {
     waPhone: "Número de WhatsApp",
     waPhonePh: "300 123 4567",
     waPhoneHelp: "Aquí te enviamos el código por WhatsApp. También es el número al que te llama Samwise.",
+    clinicianWaPhoneHelp: "Aquí te enviamos el código por WhatsApp. Samwise nunca llama a este número; escribes tus preguntas en el chat.",
+    clinicianConsentText:
+      "Al continuar, aceptas recibir mensajes de WhatsApp de Samwise sobre los chequeos que escribes para tus pacientes. Lee nuestra",
     codeTitle: "Escribe tu código.",
     codeSub: "Te enviamos un código de 6 dígitos por WhatsApp al",
     codeBusy: "Verificando…",

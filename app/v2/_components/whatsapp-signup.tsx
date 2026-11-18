@@ -32,6 +32,7 @@ type Props = {
 
 export function WhatsappSignup({ role, plan, planMissing, waNumber }: Props = {}) {
   const { lang, setLang, s } = useLang()
+  const isClinician = role === "clinician"
   const [step, setStep] = useState<Step>("details")
   const [name, setName] = useState("")
   const [timezone, setTimezone] = useState("UTC")
@@ -314,9 +315,13 @@ export function WhatsappSignup({ role, plan, planMissing, waNumber }: Props = {}
                     onChange={(e) => setNumber(e.target.value)}
                   />
                 </div>
-                <p className="v2-help">{s.waPhoneHelp}</p>
+                <p className="v2-help">{isClinician ? s.clinicianWaPhoneHelp : s.waPhoneHelp}</p>
               </div>
 
+              {/* A clinician is never called: no call language or time zone to ask. The time zone comes
+                  from the browser and the chat language from this page's language (AUDIT-1, 2026-11-18). */}
+              {!isClinician && (
+              <>
               <LanguageSelect
                 value={language}
                 onChange={setLanguage}
@@ -337,17 +342,21 @@ export function WhatsappSignup({ role, plan, planMissing, waNumber }: Props = {}
                 searchPlaceholder={s.tzSearch}
                 emptyLabel={s.tzNoResults}
               />
+              </>
+              )}
 
               <button className="v2-btn" type="submit" disabled={busy} style={{ marginTop: 26 }}>
                 {busy ? s.signupBusy : s.signupCta}
               </button>
               <p className="v2-help" style={{ marginTop: 12 }}>
-                {s.consentText} <Link href="/privacy">{s.privacy}</Link> {s.and} <Link href="/terms">{s.terms}</Link>.
+                {isClinician ? s.clinicianConsentText : s.consentText} <Link href="/privacy">{s.privacy}</Link> {s.and} <Link href="/terms">{s.terms}</Link>.
               </p>
-              <label className="v2-check" style={{ marginTop: 10 }}>
-                <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} />
-                <span>{s.smsConsent}</span>
-              </label>
+              {!isClinician && (
+                <label className="v2-check" style={{ marginTop: 10 }}>
+                  <input type="checkbox" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} />
+                  <span>{s.smsConsent}</span>
+                </label>
+              )}
             </form>
 
             <p className="v2-altline">
