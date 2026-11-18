@@ -11,9 +11,10 @@ import { COUNTRIES, countryFromTimezone, toE164, type CountryIso } from "@/lib/v
 import { DemoVideo } from "@/app/_shared/demo-video"
 import { SRC_KEY, cleanSrc } from "@/lib/v2/src-tag"
 import type { PlanInvite } from "@/lib/v2/plan"
+import { USER_LINE, formatLine } from "@/lib/v2/line-format"
 
 // Samwise's WhatsApp number (Telnyx). After verifying, the person says hi there and setup starts.
-const WA_NUMBER = "15079201622"
+// Clinicians get the clinician line once it is live (lib/v2/lines.ts); the verify API says which.
 const RESEND_SECONDS = 30
 
 type Step = "details" | "code" | "done"
@@ -25,9 +26,11 @@ type Props = {
   plan?: PlanInvite
   /** The invite link's code matched no active plan. Sign-up still works without it. */
   planMissing?: boolean
+  /** The WhatsApp line this page sends people to, E.164. Defaults to the user line. */
+  waNumber?: string
 }
 
-export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
+export function WhatsappSignup({ role, plan, planMissing, waNumber }: Props = {}) {
   const { lang, setLang, s } = useLang()
   const [step, setStep] = useState<Step>("details")
   const [name, setName] = useState("")
@@ -41,7 +44,7 @@ export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
   const [codeId, setCodeId] = useState<number | null>(null)
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""))
   const [resendIn, setResendIn] = useState(0)
-  const [done, setDone] = useState<{ name: string; existing: boolean; role?: string } | null>(null)
+  const [done, setDone] = useState<{ name: string; existing: boolean; role?: string; wa_number?: string } | null>(null)
   const boxes = useRef<(HTMLInputElement | null)[]>([])
   const activeLanguages = useActiveAgentLanguages()
   // Where the person came from (?src=, e.g. "landing"), kept for this tab so it survives a reload.
@@ -114,7 +117,7 @@ export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
         setDigits(Array(6).fill(""))
         setTimeout(() => boxes.current[0]?.focus(), 50)
       } else {
-        setDone({ name: data.name, existing: data.existing, role: data.role })
+        setDone({ name: data.name, existing: data.existing, role: data.role, wa_number: data.wa_number })
         setStep("done")
       }
     } catch {
@@ -147,7 +150,8 @@ export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
     }
   }
 
-  const waLink = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(s.waMessage)}`
+  const line = done?.wa_number || waNumber || USER_LINE
+  const waLink = `https://wa.me/${line.replace(/\D/g, "")}?text=${encodeURIComponent(s.waMessage)}`
 
   return (
     <>
@@ -170,7 +174,7 @@ export function WhatsappSignup({ role, plan, planMissing }: Props = {}) {
             <a className="v2-btn" href={waLink} style={{ marginTop: 32, display: "block", textAlign: "center" }}>
               {s.waOpen}
             </a>
-            <p className="v2-help" style={{ marginTop: 12 }}>{s.waManual}</p>
+            <p className="v2-help" style={{ marginTop: 12 }}>{s.waManual.replace("NUMBER", formatLine(line))}</p>
           </>
         ) : step === "code" ? (
           <>
