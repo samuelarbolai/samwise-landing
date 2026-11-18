@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { LANDING_EN, LANDING_ES, type LandingCopy } from "./landing-copy"
 import { cleanSrc } from "@/lib/v2/src-tag"
-import { DemoVideo } from "../_shared/demo-video"
+import { DemoVideo, type DemoVideoKey } from "../_shared/demo-video"
 import { detectLang, langFromUrl, saveLang, type PageLang } from "@/lib/lang"
 import "./landing.css"
 
@@ -35,14 +35,14 @@ function Arrow() {
  * this page can be counted: an outreach link like samwise.life/?src=itaa-email keeps
  * its own tag, any other visit is tagged "landing".
  */
-function useSignupHref(defaultSrc: string, lang: PageLang) {
+function useSignupHref(defaultSrc: string, lang: PageLang, role?: "clinician") {
   const [src, setSrc] = useState(defaultSrc)
   useEffect(() => {
     const fromUrl = cleanSrc(new URLSearchParams(window.location.search).get("src"))
     if (fromUrl) setSrc(fromUrl)
   }, [])
   // The page's language goes along, so sign-up opens in the language the visitor was reading.
-  return `/v2/signup?src=${encodeURIComponent(src)}&lang=${lang}`
+  return `/v2/signup?src=${encodeURIComponent(src)}&lang=${lang}${role ? `&role=${role}` : ""}`
 }
 
 type Props = {
@@ -56,11 +56,15 @@ type Props = {
    * browser's language.
    */
   pageLang?: PageLang
+  /** "clinician": every button opens the clinician sign-up (/v2/signup?role=clinician). */
+  role?: "clinician"
+  /** Demo video under the hero. Default: the first week. */
+  video?: DemoVideoKey
 }
 
 const HOME_COPY: Record<PageLang, LandingCopy> = { en: LANDING_EN, es: LANDING_ES }
 
-export function Landing({ copy = HOME_COPY, defaultSrc = "landing", pageLang }: Props) {
+export function Landing({ copy = HOME_COPY, defaultSrc = "landing", pageLang, role, video = "first-week" }: Props) {
   // Starts the same on server and client, then reconciles in an effect (no hydration mismatch).
   const [lang, setLang] = useState<PageLang>(pageLang ?? "en")
   useEffect(() => {
@@ -73,7 +77,7 @@ export function Landing({ copy = HOME_COPY, defaultSrc = "landing", pageLang }: 
 
   const t = copy[lang]
   const labels = ENTRY_LABELS[lang]
-  const signup = useSignupHref(defaultSrc, lang)
+  const signup = useSignupHref(defaultSrc, lang, role)
 
   return (
     <div className="ld-root" lang={lang}>
@@ -136,7 +140,7 @@ export function Landing({ copy = HOME_COPY, defaultSrc = "landing", pageLang }: 
         {/* 1b. Demo video: the first week, in the page's language. Loads only on tap. */}
         <section aria-label="Video" className="ld-video">
           <div className="ld-wrap">
-            <DemoVideo video="first-week" lang={lang} />
+            <DemoVideo video={video} lang={lang} />
           </div>
         </section>
 
