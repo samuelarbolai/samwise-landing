@@ -9,8 +9,8 @@ type Lang = "en" | "es"
 
 const LABELS: Record<DemoVideoKey, Record<Lang, { title: string; note: string }>> = {
   "first-week": {
-    en: { title: "See how your first week works (1:25)", note: "Demo with fictional people." },
-    es: { title: "Mira cómo es tu primera semana (1:25)", note: "Demo con personas ficticias." },
+    en: { title: "See how your first week works (1:32)", note: "Demo with fictional people." },
+    es: { title: "Mira cómo es tu primera semana (1:32)", note: "Demo con personas ficticias." },
   },
   "clinician-plan": {
     en: { title: "See how it works (40 s)", note: "Demo with fictional people." },
