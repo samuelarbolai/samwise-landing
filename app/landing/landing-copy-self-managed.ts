@@ -44,7 +44,7 @@ export const LANDING_SELF_ES: LandingCopy = {
     title: "Si faltas a un chequeo, tus personas de confianza reciben una llamada.",
     steps: [
       { label: "Tu hora", body: "Samwise te llama. ¿Sin tiempo? Pídele que te llame más tarde." },
-      { label: "30 minutos", body: "Llama tú a Samwise o haz tu chequeo en los siguientes 30 minutos y nadie recibe aviso." },
+      { label: "30 minutos", body: "En los siguientes 30 minutos, llama a Samwise y haz tu chequeo, o envía una foto de la página de tu cuaderno. Si está completo, nadie recibe aviso." },
       { label: "Después", body: "Samwise llama a tus personas de confianza. Quien no conteste recibe un correo." },
     ],
   },
@@ -62,7 +62,7 @@ export const LANDING_SELF_ES: LandingCopy = {
     items: [
       { q: "¿Necesito una app?", a: "No. Una llamada, WhatsApp y tu cuaderno o Google Doc." },
       { q: "¿Quién lee mi cuaderno?", a: "Tú, quien tú quieras, y Samwise, para seguir tus pasos. Tus personas de confianza solo saben que escribiste una entrada, nunca lo que dice." },
-      { q: "¿Y si no contesto?", a: "Llama tú a Samwise en los siguientes 30 minutos y nadie recibe aviso." },
+      { q: "¿Y si no contesto?", a: "En los siguientes 30 minutos, llama a Samwise y haz tu chequeo, o envía una foto de la página de tu cuaderno. Si tu chequeo está completo, nadie recibe aviso." },
       { q: "¿Qué reviso en mi chequeo?", a: "Lo que tú quieras cambiar o construir. Empiezas con lo básico y agregas pasos uno a la vez." },
       { q: "¿Todo es en español?", a: "Sí: esta página, el chat de WhatsApp y las llamadas." },
     ],
@@ -113,7 +113,7 @@ export const LANDING_SELF_EN: LandingCopy = {
     title: "Miss a check-in, and your trusted people get a call.",
     steps: [
       { label: "Your call time", body: "Samwise calls. Busy? Ask it to call back later." },
-      { label: "30 minutes", body: "Call Samwise yourself or do your check-in within 30 minutes and nobody is told." },
+      { label: "30 minutes", body: "Within 30 minutes, call Samwise back and do your check-in, or send a photo of your journal page. If it's complete, nobody is told." },
       { label: "Then", body: "Samwise calls your trusted people. Anyone who misses the call gets an email." },
     ],
   },
@@ -131,7 +131,7 @@ export const LANDING_SELF_EN: LandingCopy = {
     items: [
       { q: "Do I need an app?", a: "No. A phone call, WhatsApp, and your notebook or Google Doc." },
       { q: "Who reads my journal?", a: "You, whoever you show it to, and Samwise, so it can follow your steps. Your trusted people only hear that you wrote an entry, never what it says." },
-      { q: "What if I miss a call?", a: "Call Samwise yourself within 30 minutes and nobody is told." },
+      { q: "What if I miss a call?", a: "Within 30 minutes, call Samwise back and do your check-in, or send a photo of your journal page. If your check-in is complete, nobody is told." },
       { q: "What does my check-in cover?", a: "Whatever you want to change or build. You start with the basics and add steps one at a time." },
       { q: "Is it in Spanish?", a: "Yes: this page, the WhatsApp chat and the calls." },
     ],
